@@ -1,0 +1,47 @@
+{
+  "planilha": "PLANILHA ORCAMENTARIA",
+  "inicioFimPlanilha": {
+    "colunaInicial": "A",
+    "valorInicial": "ITEM",
+    "colunaFinal": "F",
+    "valorFinal": "VALOR BDI TOTAL"
+  },
+  "colunaParaCopiar": {
+    "de": "G",
+    "para": "K"
+  },
+  "planilhaFator": "RESUMO",
+  "posicaoFator": {
+    "coluna": "G",
+    "linha": 4
+  },
+  "planilhaQuantidade": "F",
+  "planilhaPrecoUnitario": "G",
+  "planilhaPrecoTotal": "H",
+  "planilhaComposicao": "COMPOSICOES",
+  "colunaParaCopiarComposicao": {
+    "de": "E",
+    "para": "L"
+  },
+  "colunaParaCopiarComposicao1": {
+    "de": "F",
+    "para": "M"
+  },
+  "colunaDescricaoEmPlanilhaParaBuscaEmComposicao": "C",
+  "composicaoCoeficiente": "E",
+  "composicaoPrecoUnitario": "F",
+  "valorComBdi": "VALOR COM BDI:",
+  "colunaValorComBdi": "E",
+  "colunaDescricaoComposicao": "A",
+  "colunaTotaisComposicao": "E",
+  "item": {
+    "nome": "Material",
+    "total": "TOTAL Material",
+    "fatorCoeficiente": "Não"
+  },
+  "item1": {
+    "nome": "Mão de Obra com Encargos Complementares",
+    "total": "TOTAL Mão de Obra com Encargos Complementares",
+    "fatorCoeficiente": "Sim"
+  }
+}

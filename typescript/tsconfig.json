@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "commonjs",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "outDir": "./dist" // Saída para os arquivos transpilados TypeScript
+  },
+  "include": [
+    "src/**/*.ts", // Caminho para os seus arquivos TypeScript,
+    "typings/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist" // Exclua a pasta de saída dos arquivos transpilados
+  ]
+}

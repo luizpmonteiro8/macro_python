@@ -1,4 +1,5 @@
 {
+  "BDI": 28.82,
   "planilha": "PLANILHA ORCAMENTARIA",
   "inicioFimPlanilha": {
     "colunaInicial": "A",
@@ -27,21 +28,75 @@
     "de": "F",
     "para": "M"
   },
+  "colunaCodEmPlanilhaParaBuscaEmComposicao": "B",
   "colunaDescricaoEmPlanilhaParaBuscaEmComposicao": "C",
   "composicaoCoeficiente": "E",
   "composicaoPrecoUnitario": "F",
+  "valorBdi": "VALOR BDI",
   "valorComBdi": "VALOR COM BDI:",
   "colunaValorComBdi": "E",
+  "valor": "VALOR:",
+  "colunaValor": "G",
   "colunaDescricaoComposicao": "A",
   "colunaTotaisComposicao": "E",
+  "colunaTotaisValorComposicao": "G",
   "item": {
     "nome": "Material",
-    "total": "TOTAL Material",
-    "fatorCoeficiente": "Não"
+    "total": "TOTAL Material:",
+    "fatorCoeficiente": "Não",
+    "buscarAuxiliar": "Não"
   },
   "item1": {
     "nome": "Mão de Obra com Encargos Complementares",
-    "total": "TOTAL Mão de Obra com Encargos Complementares",
-    "fatorCoeficiente": "Sim"
+    "total": "TOTAL Mão de Obra com Encargos Complementares:",
+    "fatorCoeficiente": "Sim",
+    "buscarAuxiliar": "Sim"
+  },
+  "item2": {
+    "nome": "Equipamento Custo Horário",
+    "total": "TOTAL Equipamento Custo Horário:",
+    "fatorCoeficiente": "Não",
+    "buscarAuxiliar": "Sim"
+  },
+  "item3": {
+    "nome": "Equipamento",
+    "total": "TOTAL Equipamento:",
+    "fatorCoeficiente": "Não",
+    "buscarAuxiliar": "Não"
+  },
+  "item4": {
+    "nome": "Serviço",
+    "total": "TOTAL Serviço:",
+    "fatorCoeficiente": "Não",
+    "buscarAuxiliar": "Sim"
+  },
+  "item5": {
+    "nome": "Mão de Obra",
+    "total": "TOTAL Mão de Obra:",
+    "fatorCoeficiente": "Sim",
+    "buscarAuxiliar": "Não"
+  },
+  "item6": {
+    "nome": "Encargos Complementares",
+    "total": "TOTAL Encargos Complementares:",
+    "fatorCoeficiente": "Não",
+    "buscarAuxiliar": "Não"
+  },
+  "item7": {
+    "nome": "Especiais",
+    "total": "TOTAL Especiais:",
+    "fatorCoeficiente": "Não",
+    "buscarAuxiliar": "Não"
+  },
+  "colunaItemDescricaoComposicao": "B",
+  "planilhaAuxiliar": "COMPOSICOES AUXILIARES",
+  "colunaDescricaoAuxiliar": "A",
+  "colunaParaCopiarAux": {
+    "de": "E",
+    "para": "L"
+  },
+  "colunaParaCopiarAux1": {
+    "de": "F",
+    "para": "M"
   }
 }

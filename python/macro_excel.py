@@ -1,18 +1,21 @@
 import sys
 import tkinter as tk
+import traceback
 from tkinter import filedialog, ttk
 
 import openpyxl
 
+from funcoes.adicionar_bdi import adicionar_bdi
 from funcoes.adicionar_fator import adicionar_fator
+from funcoes.adicionar_fator_aux import adicionar_fator_aux
 from funcoes.adicionar_fator_comp import adicionar_fator_comp
-from funcoes.buscar_palavras import buscar_palavra
-from funcoes.copiar_coluna_planilha import copiar_coluna_planilha
-from funcoes.formula_planilha import formula_planilha
+from funcoes.comum.buscar_palavras import buscar_palavra
+from funcoes.formula_planilha import copiar_coluna_planilha, formula_planilha
 from funcoes.interface_json import (abrir_json, adicionar_item, descer_item,
                                     editar_item, remover_item, salvar_json,
                                     subir_item)
 from funcoes.salvar_arquivo import salvar_arquivo
+from funcoes.somatorio_planilha import somatorio_planilha
 
 
 class InterfaceJSON(tk.Tk):
@@ -143,16 +146,22 @@ class InterfaceJSON(tk.Tk):
                 linhaIni = buscar_palavra(
                     sheet_planilha, coluna_inicial, valor_inicial) + 1
                 linhafinal = buscar_palavra(
-                    sheet_planilha, coluna_final, valor_final) - 1
+                    sheet_planilha, coluna_final, valor_final)
 
                 copiar_coluna_planilha(sheet_planilha, self.dados)
 
                 adicionar_fator(workbook, self.dados)
 
+                adicionar_bdi(workbook, self.dados)
+
                 formula_planilha(workbook, linhaIni, linhafinal, self.dados)
+
+                adicionar_fator_aux(workbook, self.dados)
 
                 adicionar_fator_comp(workbook, self.dados,
                                      linhaIni, linhafinal)
+
+                somatorio_planilha(sheet_planilha)
 
                 salvar_arquivo(workbook, filepath)
 
@@ -164,9 +173,12 @@ class InterfaceJSON(tk.Tk):
         except Exception as e:
             tk.messagebox.showerror("Erro", f"Ocorreu um erro: {str(e)}")
             print(f"Ocorreu um erro: {str(e)}")
+            traceback.print_exc()
             self.lbl_processando.config(text="Ocorreu um erro!")
 
 
 # Instanciar a interface
 interface = InterfaceJSON()
 interface.mainloop()
+
+# pyinstaller --onefile --hide-console=hide-early seu_script.py

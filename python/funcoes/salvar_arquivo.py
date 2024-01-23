@@ -1,5 +1,6 @@
 import os
 import tkinter as tk
+from datetime import datetime
 
 
 def salvar_arquivo(workbook, filepath):
@@ -11,9 +12,11 @@ def salvar_arquivo(workbook, filepath):
     filename_without_extension = os.path.splitext(
         os.path.basename(filepath))[0]
 
+    data_hora_atual = datetime.now().strftime("%d-%m-%Y_%H-%M-%S")
+
     # Constrói o caminho para o novo arquivo na pasta 'excel-final'
     output_filepath = os.path.join(
-        output_folder, f"{filename_without_extension}_alterado.xlsx")
+        output_folder, f"{filename_without_extension}{data_hora_atual}.xlsx")
 
     # Salva as alterações no novo arquivo na pasta 'excel-final'
     workbook.save(output_filepath)

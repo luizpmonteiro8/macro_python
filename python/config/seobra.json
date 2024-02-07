@@ -43,50 +43,72 @@
   "item": {
     "nome": "Material",
     "total": "TOTAL Material:",
+    "adicionarFator": "Sim",
     "fatorCoeficiente": "Não",
     "buscarAuxiliar": "Não"
   },
   "item1": {
     "nome": "Mão de Obra com Encargos Complementares",
     "total": "TOTAL Mão de Obra com Encargos Complementares:",
+    "adicionarFator": "Sim",
     "fatorCoeficiente": "Sim",
     "buscarAuxiliar": "Sim"
   },
   "item2": {
     "nome": "Equipamento Custo Horário",
     "total": "TOTAL Equipamento Custo Horário:",
+    "adicionarFator": "Sim",
     "fatorCoeficiente": "Não",
     "buscarAuxiliar": "Sim"
   },
   "item3": {
     "nome": "Equipamento",
     "total": "TOTAL Equipamento:",
+    "adicionarFator": "Sim",
     "fatorCoeficiente": "Não",
     "buscarAuxiliar": "Não"
   },
   "item4": {
     "nome": "Serviço",
     "total": "TOTAL Serviço:",
+    "adicionarFator": "Sim",
     "fatorCoeficiente": "Não",
     "buscarAuxiliar": "Sim"
   },
   "item5": {
     "nome": "Mão de Obra",
     "total": "TOTAL Mão de Obra:",
+    "adicionarFator": "Não",
     "fatorCoeficiente": "Sim",
     "buscarAuxiliar": "Não"
   },
   "item6": {
     "nome": "Encargos Complementares",
     "total": "TOTAL Encargos Complementares:",
+    "adicionarFator": "Não",
     "fatorCoeficiente": "Não",
     "buscarAuxiliar": "Não"
   },
   "item7": {
     "nome": "Especiais",
     "total": "TOTAL Especiais:",
+    "adicionarFator": "Sim",
     "fatorCoeficiente": "Não",
     "buscarAuxiliar": "Não"
+  },
+  "item8": {
+    "nome": "MATERIAIS",
+    "total": "TOTAL MATERIAIS:",
+    "adicionarFator": "Sim",
+    "fatorCoeficiente": "Não",
+    "buscarAuxiliar": "Não"
+  },
+  "item9": {
+    "nome": "SERVIÇOS",
+    "total": "TOTAL SERVIÇOS:",
+    "adicionarFator": "Sim",
+    "fatorCoeficiente": "Não",
+    "buscarAuxiliar": "Sim"
   },
   "colunaItemDescricaoComposicao": "B",
   "planilhaAuxiliar": "COMPOSICOES AUXILIARES",

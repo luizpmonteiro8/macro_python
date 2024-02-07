@@ -37,9 +37,14 @@ def adicionar_formula_preco_unitario_menos_preco_antigo(sheet, dados):
             sheet.cell(row=x, column=coluna_destino).value = formula
 
 
-def fator_nos_item_totais(sheet, dados, linha_inicial_comp,
-                          linha_final_comp, nome,
-                          totalNome, coeficiente, busca_auxiliar):
+def fator_nos_item_totais(sheet, dados,
+                          linha_inicial_comp,
+                          linha_final_comp,
+                          nome,
+                          totalNome,
+                          coeficiente,
+                          adicionar_fator,
+                          ):
     coluna_descricao_composicao = dados.get(
         'colunaDescricaoComposicao', 'A'
     )
@@ -86,12 +91,12 @@ def fator_nos_item_totais(sheet, dados, linha_inicial_comp,
             sheet[f'{coluna_totais_valor_composicao}{y}'].value = (
                 f'=ROUND({coluna_coefieciente}{y}*{coluna_preco_unit}{y}, 2)'
             )
-            if coeficiente and not busca_auxiliar:
+            if coeficiente and adicionar_fator:
                 sheet[f'{coluna_coefieciente}{y}'].value = (
                     f'={coluna_coeficiente_antigo}{y}*FATOR'
                 )
             else:
-                if not busca_auxiliar:
+                if adicionar_fator:
                     sheet[f'{coluna_preco_unit}{y}'].value = (
                         f'=ROUND({coluna_preco_unitario_antigo}{y}*FATOR, 2)'
                     )
@@ -163,7 +168,8 @@ def buscar_auxiliar_no_aux(workbook, dados, linha, linha_total):
                     linha_final,
                     item['nome'], item['total'],
                     True if item['fatorCoeficiente'] == 'Sim' else False,
-                    True if item['buscarAuxiliar'] == 'Sim' else False)
+                    True if item['adicionarFator'] == 'Sim' else False
+                )
                 if resultado_fator is not None:
                     linha_desc, linha_total = resultado_fator
                 if resultado_fator is not None and linha_total is not None:
@@ -231,7 +237,7 @@ def adicionar_fator_totais_aux(workbook, dados, linhaIni, linhaFim):
             linhaFim,
             item['nome'], item['total'],
             True if item['fatorCoeficiente'] == 'Sim' else False,
-            True if item['buscarAuxiliar'] == 'Sim' else False
+            True if item['adicionarFator'] == 'Sim' else False
         )
 
         if resultado_fator is not None:

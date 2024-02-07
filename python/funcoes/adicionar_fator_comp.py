@@ -1,3 +1,5 @@
+import tkinter as tk
+
 from openpyxl.utils import column_index_from_string
 
 from funcoes.adicionar_fator_aux import adicionar_fator_totais_aux
@@ -38,9 +40,13 @@ def adicionar_formula_preco_unitario_menos_preco_antigo(sheet, dados):
             sheet.cell(row=x, column=coluna_destino).value = formula
 
 
-def fator_nos_item_totais(sheet, dados, linha_inicial_comp,
-                          linha_final_comp, nome,
-                          totalNome, coeficiente, busca_auxiliar):
+def fator_nos_item_totais(sheet, dados,
+                          linha_inicial_comp,
+                          linha_final_comp,
+                          nome,
+                          totalNome,
+                          coeficiente,
+                          adicionar_fator):
     coluna_descricao_composicao = dados.get(
         'colunaDescricaoComposicao', 'A'
     )
@@ -87,12 +93,12 @@ def fator_nos_item_totais(sheet, dados, linha_inicial_comp,
             sheet[f'{coluna_totais_valor_composicao}{y}'].value = (
                 f'=ROUND({coluna_coefieciente}{y}*{coluna_preco_unit}{y}, 2)'
             )
-            if coeficiente and not busca_auxiliar:
+            if coeficiente and adicionar_fator:
                 sheet[f'{coluna_coefieciente}{y}'].value = (
                     f'={coluna_coeficiente_antigo}{y}*FATOR'
                 )
             else:
-                if not busca_auxiliar:
+                if adicionar_fator:
                     sheet[f'{coluna_preco_unit}{y}'].value = (
                         f'=ROUND({coluna_preco_unitario_antigo}{y}*FATOR, 2)'
                     )
@@ -205,10 +211,24 @@ def adicionar_fator_totais(workbook, dados, linhaIni, linhaFim):
 
         if coluna_busca_value is not None:
             # busca nome da descricao na composicao
+            linha_inicial_comp = -1
             linha_inicial_comp = buscar_palavra_com_linha(
                 sheet_planilha_comp, coluna_descricao_composicao,
                 cod + ' ' + coluna_busca_value, linha_final_iniciar_busca,
                 sheet_comp_linha_fim)
+            if (linha_inicial_comp == -1):
+                linha_inicial_comp = buscar_palavra_com_linha(
+                    sheet_planilha_comp, coluna_descricao_composicao,
+                    cod, linha_final_iniciar_busca,
+                    sheet_comp_linha_fim)
+
+            if (linha_inicial_comp == -1):
+                tk.messagebox.showwarning(
+                    "Aviso",
+                    "Não foi encontrado o item na composição. " +
+                    cod + " " + coluna_busca_value +
+                    "Verifique se o item existe em composição. ")
+
             # busca linha final pelo valor bdi
             linha_final_comp = buscar_palavra_com_linha(
                 sheet_planilha_comp, coluna_valor_bdi, valor_com_bdi,
@@ -227,14 +247,16 @@ def adicionar_fator_totais(workbook, dados, linhaIni, linhaFim):
                     sheet_planilha_comp, dados,
                     linha_inicial_comp,
                     linha_final_comp,
-                    item['nome'], item['total'],
+                    item['nome'],
+                    item['total'],
                     True if item['fatorCoeficiente'] == 'Sim' else False,
-                    True if item['buscarAuxiliar'] == 'Sim' else False,
+                    True if item['adicionarFator'] == 'Sim' else False,
                 )
                 if resultado_fator is not None:
                     linha_desc, linha_total = resultado_fator
                 if resultado_fator is not None and linha_total is not None:
                     final_total_linha_array.append(linha_total)
+                # busca auxiliar
                 if (item['buscarAuxiliar'] is not None
                         and item['buscarAuxiliar'] == 'Sim'
                         and resultado_fator is not None
@@ -267,7 +289,7 @@ def adicionar_fator_totais(workbook, dados, linhaIni, linhaFim):
 
 def adicionar_fator_comp(workbook, dados, linhaIniPlan, linhaFimPlan):
     sheet_name_comp = dados.get(
-        'planilhaComposicao', 'COMPOSICAO')
+        'planilhaComposicao', 'COMPOSICOES')
     sheet_planilha_comp = workbook[sheet_name_comp]
 
     copiar_colunas(sheet_planilha_comp, dados)

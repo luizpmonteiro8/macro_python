@@ -110,6 +110,20 @@
     "fatorCoeficiente": "Não",
     "buscarAuxiliar": "Sim"
   },
+  "item10": {
+    "nome": "OUTROS",
+    "total": "TOTAL OUTROS:",
+    "adicionarFator": "Sim",
+    "fatorCoeficiente": "Não",
+    "buscarAuxiliar": "Não"
+  },
+  "item11": {
+    "nome": "COTAÇÃO / MAO DE OBRA (C/ ENCARGOS)",
+    "total": "TOTAL COTAÇÃO / MAO DE OBRA (C/ ENCARGOS):",
+    "adicionarFator": "Sim",
+    "fatorCoeficiente": "Não",
+    "buscarAuxiliar": "Não"
+  },
   "colunaItemDescricaoComposicao": "B",
   "planilhaAuxiliar": "COMPOSICOES AUXILIARES",
   "colunaDescricaoAuxiliar": "A",
@@ -120,5 +134,9 @@
   "colunaParaCopiarAux1": {
     "de": "F",
     "para": "M"
-  }
+  },
+  "auxiliarCoeficiente": "E",
+  "auxiliarPrecoUnitario": "F",
+  "colunaValorComBdiAuxiliar": "E",
+  "colunaValorAuxiliar": "G"
 }

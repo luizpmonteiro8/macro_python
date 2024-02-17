@@ -119,11 +119,11 @@ def buscar_comp_auxiliar(workbook, dados, linha, linha_total):
     coluna_desc_aux = dados.get(
         'colunaDescricaoAuxiliar', 'A'
     )
-    coluna_valor_com_dbi = dados.get(
-        "colunaValorComBdi", "E",
+    coluna_valor_com_dbi_aux = dados.get(
+        "colunaValorComBdiAuxiliar", "E",
     )
-    coluna_valor = dados.get(
-        "colunaValor", "G",
+    coluna_valor_aux = dados.get(
+        "colunaValorAuxiliar", "G",
     )
     coluna_preco_unit = dados.get(
         "composicaoPrecoUnitario", "F"
@@ -144,17 +144,25 @@ def buscar_comp_auxiliar(workbook, dados, linha, linha_total):
             linha_inicial = buscar_palavra_com_linha(
                 sheet_planilha_aux, coluna_desc_aux, cod + ' ' + nome,
                 ultima_linha_busca, ultima_linha_aux)
+
+            if (linha_inicial == -1):
+                linha_inicial = buscar_palavra_com_linha(
+                    sheet_planilha_aux, coluna_desc_aux, cod,
+                    ultima_linha_busca, ultima_linha_aux)
+
             if linha_inicial > -1:
                 linha_final = buscar_palavra_com_linha(
-                    sheet_planilha_aux, coluna_valor_com_dbi, valor_string,
+                    sheet_planilha_aux, coluna_valor_com_dbi_aux, valor_string,
                     linha_inicial, ultima_linha_aux
                 )
+
                 # adiciona fator e totais no auxiliar
                 adicionar_fator_totais_aux(
                     workbook, dados, linha_inicial, linha_final
                 )
+                # coloca valor do auxiliar na composicao
                 sheet_planilha_comp[f'{coluna_preco_unit}{x}'].value = (
-                    f'=\'{sheet_name_aux}\'!{coluna_valor}{linha_final}')
+                    f'=\'{sheet_name_aux}\'!{coluna_valor_aux}{linha_final}')
 
 
 def adicionar_fator_totais(workbook, dados, linhaIni, linhaFim):
@@ -188,10 +196,10 @@ def adicionar_fator_totais(workbook, dados, linhaIni, linhaFim):
         'colunaDescricaoEmPlanilhaParaBuscaEmComposicao', 'C'
     )
     coluna_valor_bdi = dados.get(
-        'colunaValorComBdi', 'E'
+        'colunaTotaisComposicao', 'E'
     )
     coluna_valor_string = dados.get(
-        'colunaValor', 'G'
+        'colunaTotaisValorComposicao', 'G'
     )
 
     itens_array = []
@@ -288,6 +296,7 @@ def adicionar_fator_totais(workbook, dados, linhaIni, linhaFim):
 
 
 def adicionar_fator_comp(workbook, dados, linhaIniPlan, linhaFimPlan):
+
     sheet_name_comp = dados.get(
         'planilhaComposicao', 'COMPOSICOES')
     sheet_planilha_comp = workbook[sheet_name_comp]
@@ -296,4 +305,7 @@ def adicionar_fator_comp(workbook, dados, linhaIniPlan, linhaFimPlan):
     adicionar_formula_preco_unitario_menos_preco_antigo(
         sheet_planilha_comp, dados)
     adicionar_fator_totais(workbook, dados, linhaIniPlan, linhaFimPlan)
-    valor_bdi_final(sheet_planilha_comp, dados)
+    coluna_valor_string = dados.get('colunaValorComBdi', "E")
+    coluna_valor_value = dados.get('colunaValor', "G")
+    valor_bdi_final(sheet_planilha_comp, dados,
+                    coluna_valor_string, coluna_valor_value)

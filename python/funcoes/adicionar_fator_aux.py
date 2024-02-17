@@ -25,40 +25,40 @@ def copiar_colunas(sheet, dados):
 def adicionar_formula_preco_unitario_menos_preco_antigo(sheet, dados):
     coluna_origem = dados.get(
         'colunaParaCopiarAux1', {}).get('para', 'M')
-    coluna_preco_unitario = dados.get(
-        'composicaoPrecoUnitario', 'F')
+    coluna_preco_unitario_aux = dados.get(
+        'auxiliarPrecoUnitario', 'F')
     linha_ini = 1
     final_linha = sheet.max_row + 1
 
     for x in range(linha_ini, final_linha):
         if sheet[f'{coluna_origem}{x}'].value is not None:
             coluna_destino = column_index_from_string(coluna_origem) + 1
-            formula = f'=({coluna_origem}{x}-{coluna_preco_unitario}{x})'
+            formula = f'=({coluna_origem}{x}-{coluna_preco_unitario_aux}{x})'
             sheet.cell(row=x, column=coluna_destino).value = formula
 
 
-def fator_nos_item_totais(sheet, dados,
-                          linha_inicial_comp,
-                          linha_final_comp,
-                          nome,
-                          totalNome,
-                          coeficiente,
-                          adicionar_fator,
-                          ):
+def fator_nos_item_totais_aux(sheet, dados,
+                              linha_inicial_comp,
+                              linha_final_comp,
+                              nome,
+                              totalNome,
+                              coeficiente,
+                              adicionar_fator,
+                              ):
     coluna_descricao_composicao = dados.get(
         'colunaDescricaoComposicao', 'A'
     )
     coluna_totais_composicao = dados.get(
-        'colunaTotaisComposicao', 'E'
+        'colunaValorComBdiAuxiliar', 'E'
     )
     coluna_totais_valor_composicao = dados.get(
-        'colunaTotaisValorComposicao', 'G'
+        'colunaValorAuxiliar', 'G'
     )
     coluna_preco_unit = dados.get(
-        "composicaoPrecoUnitario", "F"
+        "auxiliarPrecoUnitario", "F"
     )
     coluna_coefieciente = dados.get(
-        "composicaoCoeficiente", "E"
+        "auxiliarCoeficiente", "E"
     )
     coluna_preco_unitario_antigo = dados.get(
         'colunaParaCopiarComposicao1', {}).get('para', 'M')
@@ -115,17 +115,17 @@ def buscar_auxiliar_no_aux(workbook, dados, linha, linha_total):
     coluna_desc_aux = dados.get(
         'colunaDescricaoAuxiliar', 'A'
     )
-    coluna_valor_com_dbi = dados.get(
-        "colunaValorComBdi", "E",
+    coluna_valor_com_dbi_aux = dados.get(
+        "colunaValorComBdiAuxiliar", "E",
     )
-    coluna_valor = dados.get(
-        "colunaValor", "G",
+    coluna_valor_aux = dados.get(
+        "colunaValorAuxiliar", "G",
     )
     coluna_preco_aux = dados.get(
-        'composicaoPrecoUnitario', 'F'
+        'auxiliarPrecoUnitario', 'F'
     )
-    coluna_totais_composicao = dados.get(
-        'colunaTotaisComposicao', 'E'
+    coluna_totais_aux = dados.get(
+        'colunaValorComBdiAuxiliar', 'E'
     )
     valor_string = dados.get(
         'valor', 'VALOR:'
@@ -150,19 +150,19 @@ def buscar_auxiliar_no_aux(workbook, dados, linha, linha_total):
             )
 
             linha_final = buscar_palavra_com_linha_exato(
-                sheet_planilha_aux, coluna_valor_com_dbi,
+                sheet_planilha_aux, coluna_valor_com_dbi_aux,
                 valor_string, linha_inicial, ultima_linha
             )
 
             # adicionando formula no preco unitario em auxiliar
             sheet_planilha_aux[f'{coluna_preco_aux}{x}'].value = (
-                f'=\'{sheet_name_aux}\'!{coluna_valor}{linha_final}'
+                f'=\'{sheet_name_aux}\'!{coluna_valor_aux}{linha_final}'
             )
 
             final_total_linha_array = []
 
             for item in itens_array:
-                resultado_fator = fator_nos_item_totais(
+                resultado_fator = fator_nos_item_totais_aux(
                     sheet_planilha_aux, dados,
                     linha_inicial,
                     linha_final,
@@ -186,20 +186,20 @@ def buscar_auxiliar_no_aux(workbook, dados, linha, linha_total):
             # total no VALOR:
             if final_total_linha_array:
                 linha_valor_sum = buscar_palavra_com_linha(
-                    sheet_planilha_aux, coluna_totais_composicao, valor_string,
+                    sheet_planilha_aux, coluna_totais_aux, valor_string,
                     linha_inicial, linha_final+1)
 
                 if linha_valor_sum > 0:
                     formula_soma = (
                         '=SUM(' +
-                        ','.join([f'{coluna_valor}{linha}'
+                        ','.join([f'{coluna_valor_aux}{linha}'
                                   for linha in final_total_linha_array]) +
                         ')'
                     )
 
                     # Atribui a fórmula à célula específica
                     sheet_planilha_aux[
-                        f'{coluna_valor}{linha_valor_sum}'
+                        f'{coluna_valor_aux}{linha_valor_sum}'
                     ].value = formula_soma
                 else:
                     print("A linha_valor_sum não é maior que zero.")
@@ -212,13 +212,13 @@ def adicionar_fator_totais_aux(workbook, dados, linhaIni, linhaFim):
     sheet_planilha_aux = workbook[sheet_name_aux]
 
     coluna_totais_composicao = dados.get(
-        'colunaTotaisComposicao', 'E'
+        'colunaValorComBdiAuxiliar', 'E'
     )
 
     valorString = dados.get(
         'valor', 'VALOR:')
     coluna_valor_string = dados.get(
-        'colunaValor', 'G'
+        'colunaValorAuxiliar', 'G'
     )
 
     itens_array = []
@@ -231,7 +231,7 @@ def adicionar_fator_totais_aux(workbook, dados, linhaIni, linhaFim):
     final_total_linha_array = []
 
     for item in itens_array:
-        resultado_fator = fator_nos_item_totais(
+        resultado_fator = fator_nos_item_totais_aux(
             sheet_planilha_aux, dados,
             linhaIni,
             linhaFim,
@@ -279,4 +279,7 @@ def adicionar_fator_aux(workbook, dados):
     adicionar_formula_preco_unitario_menos_preco_antigo(
         sheet_planilha_aux, dados
     )
-    valor_bdi_final(sheet_planilha_aux, dados)
+    coluna_valor_string = dados.get('colunaValorComBdiAuxiliar', "E")
+    coluna_valor_value = dados.get('colunaValorAuxiliar', "G")
+    valor_bdi_final(sheet_planilha_aux, dados,
+                    coluna_valor_string, coluna_valor_value)

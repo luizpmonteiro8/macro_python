@@ -1,0 +1,42 @@
+# Arquivos Python
+*.pyc
+*.pyo
+__pycache__/
+
+# Ambiente virtual
+venv/
+env/
+
+# Arquivos de configuração
+.vscode/
+.idea/
+
+# Arquivos de compilação
+*.pyc
+*.pyo
+*.pyd
+
+# Logs e saídas
+logs/
+*.log
+
+# Arquivos de cache
+.cache/
+.pytest_cache/
+
+# Arquivos de configuração de ambiente
+.env
+.env.local
+.env.*.local
+.env.override
+
+# Dependências instaladas
+/venv
+/env
+/bin
+/lib
+/include
+/lib64
+/man
+/share
+/dist

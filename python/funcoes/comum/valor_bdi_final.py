@@ -1,7 +1,5 @@
-def valor_bdi_final(sheet, dados):
+def valor_bdi_final(sheet, dados, coluna_valor_string, coluna_valor_value):
     valor_Bdi = dados.get('valorBdi', "VALOR BDI")
-    coluna_valor_string = dados.get('colunaValorComBdi', "E")
-    coluna_valor_value = dados.get('colunaValor', "G")
     linha_final = sheet.max_row
 
     for x in range(2, linha_final + 1):  # Começamos do segundo

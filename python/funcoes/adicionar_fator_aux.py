@@ -130,6 +130,10 @@ def buscar_auxiliar_no_aux(workbook, dados, linha, linha_total):
     valor_string = dados.get(
         'valor', 'VALOR:'
     )
+
+    coluna_preco_unitario_antigo = dados.get(
+        'colunaParaCopiarAux1', {}).get('para', 'M')
+
     ultima_linha = sheet_planilha_aux.max_row
 
     itens_array = []
@@ -149,60 +153,77 @@ def buscar_auxiliar_no_aux(workbook, dados, linha, linha_total):
                 ultima_linha
             )
 
-            linha_final = buscar_palavra_com_linha_exato(
-                sheet_planilha_aux, coluna_valor_com_dbi_aux,
-                valor_string, linha_inicial, ultima_linha
-            )
+            print(linha_inicial)
+            print(cod + ' ' + item)
 
-            # adicionando formula no preco unitario em auxiliar
-            sheet_planilha_aux[f'{coluna_preco_aux}{x}'].value = (
-                f'=\'{sheet_name_aux}\'!{coluna_valor_aux}{linha_final}'
-            )
-
-            final_total_linha_array = []
-
-            for item in itens_array:
-                resultado_fator = fator_nos_item_totais_aux(
-                    sheet_planilha_aux, dados,
-                    linha_inicial,
-                    linha_final,
-                    item['nome'], item['total'],
-                    True if item['fatorCoeficiente'] == 'Sim' else False,
-                    True if item['adicionarFator'] == 'Sim' else False
+            if (linha_inicial == -1):
+                linha_inicial = buscar_palavra_com_linha(
+                    sheet_planilha_aux, coluna_desc_aux, cod, 1,
+                    ultima_linha
                 )
-                if resultado_fator is not None:
-                    linha_desc, linha_total = resultado_fator
-                if resultado_fator is not None and linha_total is not None:
-                    final_total_linha_array.append(linha_total)
 
-                if (item['buscarAuxiliar'] is not None
-                        and item['buscarAuxiliar'] == 'Sim'
-                        and resultado_fator is not None
-                        and linha_desc > 0
-                        and linha_total > 0):
-                    buscar_auxiliar_no_aux(
-                        workbook, dados, linha_desc, linha_total)
+            if (linha_inicial > -1):
+                linha_final = buscar_palavra_com_linha_exato(
+                    sheet_planilha_aux, coluna_valor_com_dbi_aux,
+                    valor_string, linha_inicial, ultima_linha
+                )
 
-            # total no VALOR:
-            if final_total_linha_array:
-                linha_valor_sum = buscar_palavra_com_linha(
-                    sheet_planilha_aux, coluna_totais_aux, valor_string,
-                    linha_inicial, linha_final+1)
-
-                if linha_valor_sum > 0:
-                    formula_soma = (
-                        '=SUM(' +
-                        ','.join([f'{coluna_valor_aux}{linha}'
-                                  for linha in final_total_linha_array]) +
-                        ')'
+                if (cod.startswith('I')):
+                    # adicionando formula no preco unitario em auxiliar
+                    sheet_planilha_aux[f'{coluna_preco_aux}{x}'].value = (
+                        f'=ROUND({coluna_preco_unitario_antigo}{x}*FATOR, 2)'
+                    )
+                else:
+                    # adicionando formula no preco unitario em auxiliar
+                    sheet_planilha_aux[f'{coluna_preco_aux}{x}'].value = (
+                        f'=\'{sheet_name_aux}\'!{
+                            coluna_valor_aux}{linha_final}'
                     )
 
-                    # Atribui a fórmula à célula específica
-                    sheet_planilha_aux[
-                        f'{coluna_valor_aux}{linha_valor_sum}'
-                    ].value = formula_soma
-                else:
-                    print("A linha_valor_sum não é maior que zero.")
+                final_total_linha_array = []
+
+                for item in itens_array:
+                    resultado_fator = fator_nos_item_totais_aux(
+                        sheet_planilha_aux, dados,
+                        linha_inicial,
+                        linha_final,
+                        item['nome'], item['total'],
+                        True if item['fatorCoeficiente'] == 'Sim' else False,
+                        True if item['adicionarFator'] == 'Sim' else False
+                    )
+                    if resultado_fator is not None:
+                        linha_desc, linha_total = resultado_fator
+                    if resultado_fator is not None and linha_total is not None:
+                        final_total_linha_array.append(linha_total)
+
+                    if (item['buscarAuxiliar'] is not None
+                            and item['buscarAuxiliar'] == 'Sim'
+                            and resultado_fator is not None
+                            and linha_desc > 0
+                            and linha_total > 0):
+                        buscar_auxiliar_no_aux(
+                            workbook, dados, linha_desc, linha_total)
+
+                # total no VALOR:
+                if final_total_linha_array:
+                    linha_valor_sum = buscar_palavra_com_linha(
+                        sheet_planilha_aux, coluna_totais_aux, valor_string,
+                        linha_inicial, linha_final+1)
+
+                    if linha_valor_sum > 0:
+                        formula_soma = (
+                            '=SUM(' +
+                            ','.join([f'{coluna_valor_aux}{linha}'
+                                      for linha in final_total_linha_array]) +
+                            ')'
+                        )
+
+                        # Atribui a fórmula à célula específica
+                        sheet_planilha_aux[
+                            f'{coluna_valor_aux}{linha_valor_sum}'
+                        ].value = formula_soma
+                    else:
+                        print("A linha_valor_sum não é maior que zero.")
 
 
 def adicionar_fator_totais_aux(workbook, dados, linhaIni, linhaFim):

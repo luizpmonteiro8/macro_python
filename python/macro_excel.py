@@ -22,7 +22,7 @@ class InterfaceJSON(tk.Tk):
     def __init__(self):
         super().__init__()
 
-        self.title("Macro excel 1.03")
+        self.title("Macro excel 1.04")
         # self.attributes('-fullscreen', True)
         self.geometry("800x600")
 

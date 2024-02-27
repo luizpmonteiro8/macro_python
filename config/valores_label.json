@@ -1,0 +1,41 @@
+{
+  "todos": {
+    "descricao": "Descricão",
+    "quantidade": "Quantidade",
+    "coeficiente": "Coeficiente",
+    "precoUnitario": "Preço unitário",
+    "precoTotal": "Preço total",
+    "valor": "Valor",
+    "valorComBdi": "Valor com BDI",
+    "codigo": "Código"
+  },
+  "planilhaOrcamentaria": {
+    "tituloPlanilhaOrcamentaria": "PLANILHA ORÇAMENTARIA",
+    "planilhaOrcamentariaNome": "Planilha orçamentária",
+    "colunaInicial": "Coluna inicial",
+    "colunaFinal": "Coluna final",
+    "valorInicial": "Valor inicial",
+    "valorFinal": "Valor final"
+  },
+  "planilhaFator": {
+    "tituloPlanilhaFator": "PLANILHA FATOR",
+    "BDI": "BDI",
+    "planilhaFator": "Planilha fator",
+    "colunaFator": "Coluna fator",
+    "linhaFator": "Linha fator"
+  },
+  "planilhaAuxiliar": {
+    "tituloPlanilhaAuxiliar": "PLANILHA AUXILIAR",
+    "planilhaAuxiliar": "Planilha auxiliar"
+  },
+  "planilhaComposicao": {
+    "tituloPlanilhaComposicao": "PLANILHA COMPOSICAO",
+    "planilhaComposicao": "Composicoes"
+  },
+  "planilhaComposicaoAuxiliar": {
+    "coeficienteCopiar": "Coluna copiar coeficiente",
+    "precoUnitarioCopiar": "Coluna copiar preço unitário",
+    "colunaTotais": "Coluna totais",
+    "valorTotais": "Valor totais"
+  }
+}

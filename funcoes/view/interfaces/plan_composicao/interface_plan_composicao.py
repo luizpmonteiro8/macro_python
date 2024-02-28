@@ -6,15 +6,19 @@ from funcoes.get.get_linhas_json import (get_coeficiente_comp,
                                          get_coluna_totais_comp,
                                          get_copiar_coeficiente_comp,
                                          get_copiar_preco_unitario_comp,
+                                         get_descricao_comp,
+                                         get_item_descricao_comp_aux,
                                          get_planilha_comp,
                                          get_preco_unitario_comp,
                                          get_valor_totais_comp)
 from funcoes.get.get_valores_label import (
-    get_label_coeficiente, get_label_composicao_auxiliar_coeficiente_copiar,
+    get_label_coeficiente, get_label_coluna_item,
+    get_label_composicao_auxiliar_coeficiente_copiar,
     get_label_composicao_auxiliar_coluna_totais,
     get_label_composicao_auxiliar_preco_unitario_copiar,
-    get_label_composicao_auxiliar_valor_totais, get_label_planilha_composicao,
-    get_label_preco_unitario, get_title_planilha_composicao)
+    get_label_composicao_auxiliar_valor_totais, get_label_descricao,
+    get_label_planilha_composicao, get_label_preco_unitario,
+    get_title_planilha_composicao)
 
 
 def interface_plan_composicao(self, frame_aux):
@@ -31,6 +35,10 @@ def interface_plan_composicao(self, frame_aux):
     # Variáveis StringVar
     var_planilha_composicao = tk.StringVar(
         value=get_planilha_comp(self.dados))
+    var_descricao_composicao = tk.StringVar(
+        value=get_descricao_comp(self.dados))
+    var_item_descricao_composicao = tk.StringVar(
+        value=get_item_descricao_comp_aux(self.dados))
     var_coefiente_composicao = tk.StringVar(
         value=get_coeficiente_comp(self.dados))
     var_preco_unitario_composicao = tk.StringVar(
@@ -50,32 +58,42 @@ def interface_plan_composicao(self, frame_aux):
         get_label_planilha_composicao(
             valores_label), var_planilha_composicao.get(), row=1)
 
+    # descricao
+    self.entry_descricao_comp = custom_input(
+        frame_aux, get_label_descricao(
+            valores_label), var_descricao_composicao.get(), row=2)
+
+    # coluna item
+    self.entry_item_descricao_comp = custom_input(
+        frame_aux, get_label_coluna_item(
+            valores_label), var_item_descricao_composicao.get(), row=3)
+
     # coeficiente
     self.entry_coeficiente_comp = custom_input(
         frame_aux, get_label_coeficiente(
-            valores_label), var_coefiente_composicao.get(), row=2)
+            valores_label), var_coefiente_composicao.get(), row=4)
 
     # preco unitario
     self.entry_preco_unitario_comp = custom_input(
         frame_aux, get_label_preco_unitario(
-            valores_label), var_preco_unitario_composicao.get(), row=3)
+            valores_label), var_preco_unitario_composicao.get(), row=5)
 
     # coeficiente copiar
     self.entry_coeficiente_copiar_comp = custom_input(
         frame_aux, get_label_composicao_auxiliar_coeficiente_copiar(
-            valores_label), var_coefiente_copiar_composicao.get(), row=4)
+            valores_label), var_coefiente_copiar_composicao.get(), row=6)
 
     # preco unitario copiar
     self.entry_preco_unit_copiar_comp = custom_input(
         frame_aux, get_label_composicao_auxiliar_preco_unitario_copiar(
-            valores_label), var_preco_unit_copiar_composicao.get(), row=5)
+            valores_label), var_preco_unit_copiar_composicao.get(), row=7)
 
     # coluna totias
     self.entry_coluna_totais_comp = custom_input(
         frame_aux, get_label_composicao_auxiliar_coluna_totais(
-            valores_label), var_coluna_totais_composicao.get(), row=6)
+            valores_label), var_coluna_totais_composicao.get(), row=8)
 
     # valor totais
     self.entry_valor_totais_comp = custom_input(
         frame_aux, get_label_composicao_auxiliar_valor_totais(
-            valores_label), var_valor_totais_composicao.get(), row=7)
+            valores_label), var_valor_totais_composicao.get(), row=9)

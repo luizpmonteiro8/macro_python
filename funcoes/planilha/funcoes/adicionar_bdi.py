@@ -11,7 +11,7 @@ def adicionar_bdi(workbook: Workbook, dados):
     # Obter valores
     planilha_fator = get_planilha_fator(dados)
     valor_bdi_formatado = get_valor_bdi_formatado(dados)
-    linha = get_linha_fator(dados)
+    linha = get_linha_fator(dados) + 1
     colunaString = get_coluna_fator(dados)
     colunaNumber = get_coluna_index(colunaString)
 

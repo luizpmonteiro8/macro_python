@@ -1,20 +1,18 @@
 import tkinter as tk
 
-from common.buscar_palavras import (buscar_palavra_com_linha,
-                                    buscar_palavra_com_linha_exato)
-from common.copiar_coluna import copiar_coluna_com_numeros
-from common.custo_unitario import custo_unitario_execucao
-from common.valor_bdi_final import valor_bdi_final
-from funcoes.adicionar_fator_aux import adicionar_fator_totais_aux
 from openpyxl.utils import column_index_from_string
 
-from funcoes.get.get_linhas_json import (get_coeficiente_aux,
-                                         get_coeficiente_comp,
+from funcoes.common.buscar_palavras import (buscar_palavra_com_linha,
+                                            buscar_palavra_com_linha_exato)
+from funcoes.common.copiar_coluna import copiar_coluna_com_numeros
+from funcoes.common.valor_bdi_final import valor_bdi_final
+from funcoes.get.get_linhas_json import (get_coeficiente_comp,
                                          get_coluna_totais_aux,
                                          get_coluna_totais_comp,
                                          get_copiar_coeficiente_comp,
                                          get_copiar_preco_unitario_comp,
                                          get_descricao_aux, get_descricao_comp,
+                                         get_item_descricao_comp_aux,
                                          get_planilha_aux, get_planilha_codigo,
                                          get_planilha_comp,
                                          get_planilha_descricao,
@@ -25,6 +23,8 @@ from funcoes.get.get_linhas_json import (get_coeficiente_aux,
                                          get_valor_string,
                                          get_valor_totais_aux,
                                          get_valor_totais_comp)
+from funcoes.planilha.funcoes.adicionar_fator_aux import \
+    adicionar_fator_totais_aux
 
 
 def copiar_colunas(sheet, dados):
@@ -63,7 +63,7 @@ def fator_nos_item_totais(sheet, dados,
     coluna_totais_composicao = get_coluna_totais_comp(dados)
     coluna_totais_valor_composicao = get_valor_totais_comp(dados)
     coluna_preco_unit = get_preco_unitario_comp(dados)
-    coluna_coefieciente = get_coeficiente_aux(dados)
+    coluna_coefieciente = get_coeficiente_comp(dados)
     coluna_preco_unitario_antigo = get_copiar_preco_unitario_comp(dados)
     coluna_coeficiente_antigo = get_copiar_coeficiente_comp(dados)
 
@@ -106,13 +106,13 @@ def fator_nos_item_totais(sheet, dados,
         return inicial, final
 
 
-def buscar_comp_auxiliar(workbook, dados, linha, linha_total):
+def buscar_comp_auxiliar(workbook, dados, itemChave, linha, linha_total):
     sheet_name_comp = get_planilha_comp(dados)
     sheet_planilha_comp = workbook[sheet_name_comp]
     sheet_name_aux = get_planilha_aux(dados)
     sheet_planilha_aux = workbook[sheet_name_aux]
 
-    coluna_item = get_descricao_comp(dados)
+    coluna_item = get_item_descricao_comp_aux(dados)
     coluna_desc_aux = get_descricao_aux(dados)
     coluna_totais_aux = get_coluna_totais_aux(dados)
     coluna_valor_aux = get_valor_totais_aux(dados)
@@ -145,14 +145,14 @@ def buscar_comp_auxiliar(workbook, dados, linha, linha_total):
 
                 # adiciona fator e totais no auxiliar
                 adicionar_fator_totais_aux(
-                    workbook, dados, linha_inicial, linha_final
+                    workbook, dados, itemChave, linha_inicial, linha_final
                 )
                 # coloca valor do auxiliar na composicao
                 sheet_planilha_comp[f'{coluna_preco_unit}{x}'].value = (
                     f'=\'{sheet_name_aux}\'!{coluna_valor_aux}{linha_final}')
 
 
-def adicionar_fator_totais(workbook, dados, linhaIni, linhaFim):
+def adicionar_fator_totais(workbook, dados, itemChave, linhaIni, linhaFim):
     sheet_name = get_planilha_orcamentaria(dados)
     sheet_planilha = workbook[sheet_name]
     sheet_name_comp = get_planilha_comp(dados)
@@ -163,7 +163,6 @@ def adicionar_fator_totais(workbook, dados, linhaIni, linhaFim):
     coluna_descricao_composicao = get_descricao_comp(dados)
     coluna_totais_composicao = get_coluna_totais_comp(dados)
 
-    #
     valor_com_bdi = get_valor_com_bdi_string(dados)
     valorString = get_valor_string(dados)
     coluna_cod = get_planilha_codigo(dados)
@@ -174,7 +173,7 @@ def adicionar_fator_totais(workbook, dados, linhaIni, linhaFim):
     itens_array = []
 
     # Iterar sobre as chaves que começam com "item"
-    for chave, valor in dados.items():
+    for chave, valor in itemChave.items():
         if chave.startswith("item"):
             itens_array.append(valor)
 
@@ -182,7 +181,7 @@ def adicionar_fator_totais(workbook, dados, linhaIni, linhaFim):
     linha_final_iniciar_busca = 1
 
     for x in range(linhaIni, linhaFim):
-        # busca nome da descricao na planilha
+        # busca nome da descricao na planilha orcamentaria
         cod = sheet_planilha[f'{coluna_cod}{x}'].value
         coluna_busca_value = sheet_planilha[f'{coluna_descricao}{x}'].value
 
@@ -235,13 +234,6 @@ def adicionar_fator_totais(workbook, dados, linhaIni, linhaFim):
                 if resultado_fator is not None and linha_total is not None:
                     final_total_linha_array.append(linha_total)
 
-                if (item['total'] == 'TOTAL EQUIPAMENTOS:'
-                        or item['total'] == 'TOTAL MÃO DE OBRA:'
-                        and linha_total is not None):
-                    custo_unitario_execucao(
-                        sheet_planilha_comp,  linha_inicial_comp, linha_total,
-                        coluna_totais_composicao, coluna_valor_string)
-
                 # busca auxiliar
                 if (item['buscarAuxiliar'] is not None
                         and item['buscarAuxiliar'] == 'Sim'
@@ -249,7 +241,7 @@ def adicionar_fator_totais(workbook, dados, linhaIni, linhaFim):
                         and linha_desc > 0
                         and linha_total > 0):
                     buscar_comp_auxiliar(
-                        workbook, dados, linha_desc, linha_total)
+                        workbook, dados, itemChave, linha_desc, linha_total)
 
             # total no VALOR:
             if final_total_linha_array:
@@ -273,7 +265,8 @@ def adicionar_fator_totais(workbook, dados, linhaIni, linhaFim):
                     print("A linha_valor_sum não é maior que zero.")
 
 
-def adicionar_fator_comp(workbook, dados, linhaIniPlan, linhaFimPlan):
+def adicionar_fator_comp(workbook, dados, itemChave, linhaIniPlan,
+                         linhaFimPlan):
 
     sheet_name_comp = get_planilha_comp(dados)
     sheet_planilha_comp = workbook[sheet_name_comp]
@@ -281,7 +274,8 @@ def adicionar_fator_comp(workbook, dados, linhaIniPlan, linhaFimPlan):
     copiar_colunas(sheet_planilha_comp, dados)
     adicionar_formula_preco_unitario_menos_preco_antigo(
         sheet_planilha_comp, dados)
-    adicionar_fator_totais(workbook, dados, linhaIniPlan, linhaFimPlan)
+    adicionar_fator_totais(workbook, dados, itemChave,
+                           linhaIniPlan, linhaFimPlan)
     coluna_valor_string = get_coluna_totais_comp(dados)
     coluna_valor_value = get_valor_totais_comp(dados)
     valor_bdi_final(sheet_planilha_comp, dados,

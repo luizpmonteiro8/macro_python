@@ -1,6 +1,6 @@
 import json
 import tkinter as tk
-from tkinter import simpledialog
+from tkinter import messagebox, simpledialog
 
 from funcoes.config.open_config import open_valores_colunas
 
@@ -22,7 +22,18 @@ def atualizar_dropdown(
         frame_menu, dropdown_valor,
         *nomes_colunas)
     # Configurar a largura do OptionMenu (ajuste conforme necessário)
-    menu_dropdown.config(width=40)
+    menu_dropdown.config(font=(None, 18), width=40)
+    # Crie um novo menu com a fonte desejada
+    novo_menu = tk.Menu(menu_dropdown, tearoff=0, font=(None, 18))
+    # Adicione as opções ao novo menu
+    for opcao in dados:
+        novo_menu.add_command(
+            label=opcao.get("nome"), command=lambda opcao=opcao:
+                dropdown_valor.set(opcao.get("nome")))
+
+    # Configure o novo menu como o menu do OptionMenu
+    menu_dropdown["menu"] = novo_menu
+
     menu_dropdown.grid(row=0, column=0, padx=10, sticky="w")
 
 
@@ -36,6 +47,7 @@ def local_abrir_janela_editar(
     abrir_janela_editar(nome_coluna)
     self.todos_dados = open_valores_colunas()
     atualizar_dropdown(menu_dropdown, frame_menu, dropdown_valor)
+    messagebox.showinfo("Atualizado", "Selecione o item novamente")
 
 
 def salvar_alteracoes(nome_antigo, novo_nome):

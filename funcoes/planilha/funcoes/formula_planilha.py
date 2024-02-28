@@ -1,9 +1,9 @@
 from copy import copy
 
-from common.copiar_coluna import copiar_coluna
 from openpyxl import Workbook
 from openpyxl.utils import column_index_from_string
 
+from funcoes.common.copiar_coluna import copiar_coluna
 from funcoes.get.get_linhas_json import (get_planilha_orcamentaria,
                                          get_planilha_preco_total,
                                          get_planilha_preco_unitario,

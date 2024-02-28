@@ -1,9 +1,10 @@
 {
   "todos": {
-    "descricao": "Descricão",
+    "descricao": "Descricão/Título",
     "quantidade": "Quantidade",
     "coeficiente": "Coeficiente",
     "precoUnitario": "Preço unitário",
+    "precoUnitarioCopiar": "Preço unitário copiar",
     "precoTotal": "Preço total",
     "valor": "Valor",
     "valorComBdi": "Valor com BDI",
@@ -13,7 +14,7 @@
     "tituloPlanilhaOrcamentaria": "PLANILHA ORÇAMENTARIA",
     "planilhaOrcamentariaNome": "Planilha orçamentária",
     "colunaInicial": "Coluna inicial",
-    "colunaFinal": "Coluna final",
+    "colunaFinal": "Coluna texto valor total",
     "valorInicial": "Valor inicial",
     "valorFinal": "Valor final"
   },
@@ -30,7 +31,8 @@
   },
   "planilhaComposicao": {
     "tituloPlanilhaComposicao": "PLANILHA COMPOSICAO",
-    "planilhaComposicao": "Composicoes"
+    "planilhaComposicao": "Composicoes",
+    "colunaItem": "Coluna descrição itens"
   },
   "planilhaComposicaoAuxiliar": {
     "coeficienteCopiar": "Coluna copiar coeficiente",

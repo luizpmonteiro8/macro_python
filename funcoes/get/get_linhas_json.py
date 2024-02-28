@@ -39,7 +39,7 @@ def get_planilha_codigo(dados):
 
 
 def get_planilha_descricao(dados):
-    return dados.get('planilhaDescicao', 'C')
+    return dados.get('planilhaDescricao', 'C')
 
 
 def get_planilha_preco_unitario_copiar(dados):
@@ -81,6 +81,10 @@ def get_descricao_comp(dados):
     return dados.get('composicaoDescricao', 'A')
 
 
+def get_item_descricao_comp_aux(dados):
+    return dados.get('colunaItemDescricaoComposicao', 'B')
+
+
 def get_coeficiente_comp(dados):
     return dados.get('composicaoCoeficiente', 'E')
 
@@ -102,14 +106,14 @@ def get_copiar_preco_unitario_comp(dados):
 
 def get_coluna_totais_comp(dados):
     return dados.get(
-        'colunaTotaiscomposicao',
+        'colunaTotaisComposicao',
         'E'
     )
 
 
 def get_valor_totais_comp(dados):
     return dados.get(
-        'valorTotaiscomposicao',
+        'valorTotaisComposicao',
         'G'
     )
 
@@ -159,8 +163,8 @@ def get_valor_totais_aux(dados):
 
 
 def get_valor_string(dados):
-    return dados.get('valor', 'Valor')
+    return dados.get('valor', 'VALOR:')
 
 
 def get_valor_com_bdi_string(dados):
-    return dados.get('valorComBdi', 'Valor com BDI')
+    return dados.get('valorComBdi', 'VALOR COM BDI')

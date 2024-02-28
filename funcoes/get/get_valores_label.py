@@ -29,11 +29,13 @@ def get_label_valor_final(valores):
                                                'Valor final')
 
 
-def get_label_codigo(valores):
-    return valores['todos'].get('codigo', 'Código')
-
+def get_label_preco_unitario_copiar(valores):
+    return valores['planilhaOrcamentaria'].get('precoUnitarioCopiar',
+                                               'Preço unitário copiar')
 
 # fator
+
+
 def get_title_planilha_fator(valores):
     return valores['planilhaFator'].get('tituloPlanilhaFator',
                                         'PLANILHA FATOR')
@@ -78,6 +80,10 @@ def get_label_planilha_composicao(valores):
                                              'Composicoes')
 
 
+def get_label_coluna_item(valores):
+    return valores['planilhaComposicao'].get('colunaItem', 'Coluna item')
+
+
 # composicao aux
 def get_label_composicao_auxiliar_coeficiente_copiar(valores):
     return valores['planilhaComposicaoAuxiliar'].get(
@@ -108,6 +114,10 @@ def get_label_composicao_auxiliar_valor_totais(valores):
 
 
 # todos
+
+def get_label_codigo(valores):
+    return valores['todos'].get('codigo', 'Código')
+
 
 def get_label_descricao(valores):
     return valores['todos'].get('descricao', 'Descricão')

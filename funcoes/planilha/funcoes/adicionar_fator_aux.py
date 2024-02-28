@@ -1,20 +1,19 @@
-from common.buscar_palavras import (buscar_palavra_com_linha,
-                                    buscar_palavra_com_linha_exato)
-from common.copiar_coluna import copiar_coluna_com_numeros
-from common.valor_bdi_final import valor_bdi_final
 from openpyxl.utils import column_index_from_string
 
+from funcoes.common.buscar_palavras import (buscar_palavra_com_linha,
+                                            buscar_palavra_com_linha_exato)
+from funcoes.common.copiar_coluna import copiar_coluna_com_numeros
+from funcoes.common.valor_bdi_final import valor_bdi_final
 from funcoes.get.get_linhas_json import (get_coeficiente_aux,
                                          get_coluna_totais_aux,
-                                         get_coluna_totais_comp,
                                          get_copiar_coeficiente_aux,
                                          get_copiar_preco_unitario_aux,
-                                         get_descricao_aux, get_descricao_comp,
+                                         get_descricao_aux,
+                                         get_item_descricao_comp_aux,
                                          get_planilha_aux,
                                          get_preco_unitario_aux,
                                          get_valor_string,
-                                         get_valor_totais_aux,
-                                         get_valor_totais_comp)
+                                         get_valor_totais_aux)
 
 
 def copiar_colunas(sheet, dados):
@@ -50,9 +49,9 @@ def fator_nos_item_totais_aux(sheet, dados,
                               coeficiente,
                               adicionar_fator,
                               ):
-    coluna_descricao_composicao = get_descricao_comp(dados)
-    coluna_totais_composicao = get_coluna_totais_comp(dados)
-    coluna_totais_valor_composicao = get_valor_totais_comp(dados)
+    coluna_descricao_aux = get_descricao_aux(dados)
+    coluna_totais_aux = get_coluna_totais_aux(dados)
+    coluna_totais_valor_aux = get_valor_totais_aux(dados)
     coluna_preco_unit = get_preco_unitario_aux(dados)
     coluna_coefieciente = get_coeficiente_aux(dados)
     coluna_preco_unitario_antigo = get_copiar_preco_unitario_aux(dados)
@@ -60,11 +59,11 @@ def fator_nos_item_totais_aux(sheet, dados,
 
     # verifica se tem material na composicao
     inicial = buscar_palavra_com_linha_exato(
-        sheet, coluna_descricao_composicao,
+        sheet, coluna_descricao_aux,
         nome,
         linha_inicial_comp, linha_final_comp)
     final = buscar_palavra_com_linha_exato(
-        sheet, coluna_totais_composicao,
+        sheet, coluna_totais_aux,
         totalNome,
         linha_inicial_comp, linha_final_comp)
 
@@ -74,14 +73,14 @@ def fator_nos_item_totais_aux(sheet, dados,
         # total final
         soma_formula = (
             f'=SUM('
-            f'{coluna_totais_valor_composicao}{inicial+1}:'
-            f'{coluna_totais_valor_composicao}{final-1}'
+            f'{coluna_totais_valor_aux}{inicial+1}:'
+            f'{coluna_totais_valor_aux}{final-1}'
             f')'
         )
-        sheet[f'{coluna_totais_valor_composicao}{final}'].value = soma_formula
+        sheet[f'{coluna_totais_valor_aux}{final}'].value = soma_formula
         for y in range(inicial+1, final):
             # total linha
-            sheet[f'{coluna_totais_valor_composicao}{y}'].value = (
+            sheet[f'{coluna_totais_valor_aux}{y}'].value = (
                 f'=ROUND({coluna_coefieciente}{y}*{coluna_preco_unit}{y}, 2)'
             )
             if coeficiente and adicionar_fator:
@@ -97,12 +96,12 @@ def fator_nos_item_totais_aux(sheet, dados,
         return inicial, final
 
 
-def buscar_auxiliar_no_aux(workbook, dados, linha, linha_total):
+def buscar_auxiliar_no_aux(workbook, dados, itemChave, linha, linha_total):
     # busca dentro de auxiliar os auxiliares
     sheet_name_aux = get_planilha_aux(dados)
     sheet_planilha_aux = workbook[sheet_name_aux]
 
-    coluna_item = get_descricao_comp(dados)
+    coluna_item = get_item_descricao_comp_aux(dados)
     coluna_desc_aux = get_descricao_aux(dados)
     coluna_valor_aux = get_valor_totais_aux(dados)
     coluna_preco_aux = get_preco_unitario_aux(dados)
@@ -116,7 +115,7 @@ def buscar_auxiliar_no_aux(workbook, dados, linha, linha_total):
     itens_array = []
 
     # Iterar sobre as chaves que começam com "item"
-    for chave, valor in dados.items():
+    for chave, valor in itemChave.items():
         if chave.startswith("item"):
             itens_array.append(valor)
 
@@ -129,9 +128,6 @@ def buscar_auxiliar_no_aux(workbook, dados, linha, linha_total):
                 sheet_planilha_aux, coluna_desc_aux, cod + ' ' + item, 1,
                 ultima_linha
             )
-
-            print(linha_inicial)
-            print(cod + ' ' + item)
 
             if (linha_inicial == -1):
                 linha_inicial = buscar_palavra_com_linha(
@@ -179,7 +175,8 @@ def buscar_auxiliar_no_aux(workbook, dados, linha, linha_total):
                             and linha_desc > 0
                             and linha_total > 0):
                         buscar_auxiliar_no_aux(
-                            workbook, dados, linha_desc, linha_total)
+                            workbook, dados, itemChave, linha_desc,
+                            linha_total)
 
                 # total no VALOR:
                 if final_total_linha_array:
@@ -203,12 +200,12 @@ def buscar_auxiliar_no_aux(workbook, dados, linha, linha_total):
                         print("A linha_valor_sum não é maior que zero.")
 
 
-def adicionar_fator_totais_aux(workbook, dados, linhaIni, linhaFim):
+def adicionar_fator_totais_aux(workbook, dados, itemChave, linhaIni, linhaFim):
     # chamado no adicionar_fator_comp
     sheet_name_aux = get_planilha_aux(dados)
     sheet_planilha_aux = workbook[sheet_name_aux]
 
-    coluna_totais_composicao = get_coluna_totais_comp(dados)
+    coluna_totais_aux = get_coluna_totais_aux(dados)
 
     valorString = get_valor_string(dados)
     coluna_valor_string = get_valor_totais_aux(dados)
@@ -216,7 +213,7 @@ def adicionar_fator_totais_aux(workbook, dados, linhaIni, linhaFim):
     itens_array = []
 
     # Iterar sobre as chaves que começam com "item"
-    for chave, valor in dados.items():
+    for chave, valor in itemChave.items():
         if chave.startswith("item"):
             itens_array.append(valor)
 
@@ -241,12 +238,13 @@ def adicionar_fator_totais_aux(workbook, dados, linhaIni, linhaFim):
                 and resultado_fator is not None
                 and linha_desc > 0
                 and linha_total > 0):
-            buscar_auxiliar_no_aux(workbook, dados, linha_desc, linha_total)
+            buscar_auxiliar_no_aux(
+                workbook, dados, itemChave, linha_desc, linha_total)
 
         # total no VALOR:
         if final_total_linha_array:
             linha_valor_sum = buscar_palavra_com_linha(
-                sheet_planilha_aux, coluna_totais_composicao, valorString,
+                sheet_planilha_aux, coluna_totais_aux, valorString,
                 linhaIni, linhaFim+1)
             if linha_valor_sum > 0:
                 formula_soma = (

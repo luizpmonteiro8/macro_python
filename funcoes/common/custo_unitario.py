@@ -79,7 +79,7 @@ def custo_unitario_execucao(workbook, dados):
             sheet_planilha_comp[f'{col_valor_comp}{linha_custo}'].value = (
                 formula_soma)
             sheet_planilha_comp[f'{col_valor_comp}{linha_custo+2}'].value = (
-                f'=ROUND({coluna_valor_aux}' +
+                f'=ROUND({col_valor_comp}' +
                 f'{linha_custo}/{col_valor_comp}{linha_custo+1}, 4)'
             )
 

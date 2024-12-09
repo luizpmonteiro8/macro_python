@@ -16,6 +16,7 @@ from funcoes.planilha.funcoes.adicionar_fator_aux import adicionar_fator_aux
 from funcoes.planilha.funcoes.adicionar_fator_comp import adicionar_fator_comp
 from funcoes.planilha.funcoes.formula_planilha import (copiar_coluna_planilha,
                                                        formula_planilha)
+from funcoes.planilha.funcoes.resume import resumo_totais
 from funcoes.planilha.funcoes.somatorio_planilha import somatorio_planilha
 from funcoes.planilha.salvar.salvar_arquivo import salvar_arquivo
 
@@ -71,9 +72,11 @@ def selecionar_arquivo_excel(self):
             adicionar_fator_comp(workbook, self.dados, self.item,
                                  linhaIni, linhafinal)
 
-            somatorio_planilha(sheet_planilha)
+            # somatorio_planilha(sheet_planilha)
 
             custo_unitario_execucao(workbook, self.dados)
+
+            resumo_totais(workbook, self.dados)
 
             salvar_arquivo(workbook, filepath)
 

@@ -59,6 +59,6 @@ def formula_planilha(woorBook: Workbook, linhaIni, linhaFin, dados):
                                              column=coluna_preco_total_number))
 
             # Calcular e atribuir o valor na coluna de preço total
-            ws.cell(row=x, column=coluna_preco_total_number).value = (
-                f"=ROUND({quantidade_string}{x}*{preco_unitario_string}{x}, 2)"
-            )
+            #ws.cell(row=x, column=coluna_preco_total_number).value = (
+            #    f"=ROUND({quantidade_string}{x}*{preco_unitario_string}{x}, 2)"
+            #)

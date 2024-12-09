@@ -80,9 +80,10 @@ def fator_nos_item_totais_aux(sheet, dados,
         sheet[f'{coluna_totais_valor_aux}{final}'].value = soma_formula
         for y in range(inicial+1, final):
             # total linha
-            sheet[f'{coluna_totais_valor_aux}{y}'].value = (
-                f'=ROUND({coluna_coefieciente}{y}*{coluna_preco_unit}{y}, 2)'
-            )
+            #sheet[f'{coluna_totais_valor_aux}{y}'].value = (
+            #    f'=ROUND({coluna_coefieciente}{y}*{coluna_preco_unit}{y}, 2)'
+            #)
+            
             if coeficiente and adicionar_fator:
                 sheet[f'{coluna_coefieciente}{y}'].value = (
                     f'={coluna_coeficiente_antigo}{y}*FATOR'

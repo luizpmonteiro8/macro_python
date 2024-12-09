@@ -70,7 +70,7 @@ class MacroExcel(tk.Tk):
     def __init__(self):
         super().__init__()
 
-        self.title("Macro excel 2.0")
+        self.title("Macro excel 3.0")
         self.geometry("1200x800")
 
         self.todos_dados = open_valores_colunas()

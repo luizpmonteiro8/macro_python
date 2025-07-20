@@ -19,8 +19,8 @@
       "nome": "Equipamento Custo Horário",
       "total": "TOTAL Equipamento Custo Horário:",
       "adicionarFator": "Sim",
-      "fatorCoeficiente": "Não",
-      "buscarAuxiliar": "Sim"
+      "fatorCoeficiente": "Sim",
+      "buscarAuxiliar": "Não"
     },
     "item4": {
       "nome": "Equipamento",
@@ -83,6 +83,13 @@
       "total": "TOTAL COTAÇÃO / MAO DE OBRA (C/ ENCARGOS):",
       "adicionarFator": "Sim",
       "fatorCoeficiente": "Não",
+      "buscarAuxiliar": "Não"
+    },
+    "item13": {
+      "nome": "Não cadastrado",
+      "total": "TOTAL Não cadastrado:",
+      "adicionarFator": "Sim",
+      "fatorCoeficiente": "Sim",
       "buscarAuxiliar": "Não"
     }
   },
@@ -106,8 +113,8 @@
       "nome": "Equipamento Custo Horário",
       "total": "TOTAL Equipamento Custo Horário:",
       "adicionarFator": "Sim",
-      "fatorCoeficiente": "Não",
-      "buscarAuxiliar": "Sim"
+      "fatorCoeficiente": "Sim",
+      "buscarAuxiliar": "Não"
     },
     "item4": {
       "nome": "Equipamento",
@@ -170,6 +177,13 @@
       "total": "TOTAL COTAÇÃO / MAO DE OBRA (C/ ENCARGOS):",
       "adicionarFator": "Sim",
       "fatorCoeficiente": "Não",
+      "buscarAuxiliar": "Não"
+    },
+    "item13": {
+      "nome": "Não cadastrado",
+      "total": "TOTAL Não cadastrado:",
+      "adicionarFator": "Sim",
+      "fatorCoeficiente": "Sim",
       "buscarAuxiliar": "Não"
     }
   }

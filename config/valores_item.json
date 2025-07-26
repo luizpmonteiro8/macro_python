@@ -6,91 +6,126 @@
       "total": "TOTAL Material:",
       "adicionarFator": "Sim",
       "fatorCoeficiente": "Não",
-      "buscarAuxiliar": "Não"
+      "buscarAuxiliar": "Não",
+      "iniciaPor": "",
+      "naoIniciaPor": ""
     },
     "item2": {
       "nome": "Mão de Obra com Encargos Complementares",
       "total": "TOTAL Mão de Obra com Encargos Complementares:",
       "adicionarFator": "Sim",
       "fatorCoeficiente": "Sim",
-      "buscarAuxiliar": "Sim"
+      "buscarAuxiliar": "Não",
+      "iniciaPor": "",
+      "naoIniciaPor": ""
     },
     "item3": {
       "nome": "Equipamento Custo Horário",
       "total": "TOTAL Equipamento Custo Horário:",
       "adicionarFator": "Sim",
       "fatorCoeficiente": "Sim",
-      "buscarAuxiliar": "Não"
+      "buscarAuxiliar": "Não",
+      "iniciaPor": "",
+      "naoIniciaPor": ""
     },
     "item4": {
       "nome": "Equipamento",
       "total": "TOTAL Equipamento:",
       "adicionarFator": "Sim",
       "fatorCoeficiente": "Não",
-      "buscarAuxiliar": "Não"
+      "buscarAuxiliar": "Não",
+      "iniciaPor": "",
+      "naoIniciaPor": ""
     },
     "item5": {
       "nome": "Serviço",
       "total": "TOTAL Serviço:",
       "adicionarFator": "Sim",
       "fatorCoeficiente": "Não",
-      "buscarAuxiliar": "Sim"
+      "buscarAuxiliar": "Sim",
+      "iniciaPor": "",
+      "naoIniciaPor": ""
     },
     "item6": {
       "nome": "Mão de Obra",
       "total": "TOTAL Mão de Obra:",
       "adicionarFator": "Sim",
-      "fatorCoeficiente": "Sim",
-      "buscarAuxiliar": "Não"
+      "fatorCoeficiente": "Não",
+      "buscarAuxiliar": "Não",
+      "iniciaPor": "",
+      "naoIniciaPor": "I"
     },
     "item7": {
       "nome": "Encargos Complementares",
       "total": "TOTAL Encargos Complementares:",
-      "adicionarFator": "Não",
-      "fatorCoeficiente": "Não",
-      "buscarAuxiliar": "Não"
+      "adicionarFator": "Sim",
+      "fatorCoeficiente": "Sim",
+      "buscarAuxiliar": "Não",
+      "iniciaPor": "",
+      "naoIniciaPor": ""
     },
     "item8": {
       "nome": "Especiais",
       "total": "TOTAL Especiais:",
       "adicionarFator": "Sim",
       "fatorCoeficiente": "Não",
-      "buscarAuxiliar": "Não"
+      "buscarAuxiliar": "Não",
+      "iniciaPor": "",
+      "naoIniciaPor": ""
     },
     "item9": {
       "nome": "MATERIAIS",
       "total": "TOTAL MATERIAIS:",
       "adicionarFator": "Sim",
       "fatorCoeficiente": "Não",
-      "buscarAuxiliar": "Não"
+      "buscarAuxiliar": "Não",
+      "iniciaPor": "",
+      "naoIniciaPor": ""
     },
     "item10": {
       "nome": "SERVIÇOS",
       "total": "TOTAL SERVIÇOS:",
       "adicionarFator": "Sim",
       "fatorCoeficiente": "Não",
-      "buscarAuxiliar": "Sim"
+      "buscarAuxiliar": "Sim",
+      "iniciaPor": "",
+      "naoIniciaPor": ""
     },
     "item11": {
       "nome": "OUTROS",
       "total": "TOTAL OUTROS:",
       "adicionarFator": "Sim",
       "fatorCoeficiente": "Não",
-      "buscarAuxiliar": "Não"
+      "buscarAuxiliar": "Não",
+      "iniciaPor": "",
+      "naoIniciaPor": ""
     },
     "item12": {
       "nome": "COTAÇÃO / MAO DE OBRA (C/ ENCARGOS)",
       "total": "TOTAL COTAÇÃO / MAO DE OBRA (C/ ENCARGOS):",
       "adicionarFator": "Sim",
       "fatorCoeficiente": "Não",
-      "buscarAuxiliar": "Não"
+      "buscarAuxiliar": "Não",
+      "iniciaPor": "",
+      "naoIniciaPor": ""
     },
     "item13": {
       "nome": "Não cadastrado",
       "total": "TOTAL Não cadastrado:",
       "adicionarFator": "Sim",
       "fatorCoeficiente": "Sim",
-      "buscarAuxiliar": "Não"
+      "buscarAuxiliar": "Não",
+      "iniciaPor": "",
+      "naoIniciaPor": ""
+    },
+    "item14": {
+      "nome": "Mão de Obra",
+      "total": "TOTAL Mão de Obra:",
+      "adicionarFator": "Sim",
+      "fatorCoeficiente": "Não",
+      "buscarAuxiliar": "Não",
+      "iniciaPor": "I",
+      "naoIniciaPor": ""
     }
   },
   {

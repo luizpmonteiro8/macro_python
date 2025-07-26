@@ -2,42 +2,44 @@ import tkinter as tk
 
 from funcoes.config.open_config import open_valores_colunas, open_valores_item
 from funcoes.view.interfaces.menu.interface_menu import interface_menu
-from funcoes.view.interfaces.plan_auxiliar.interface_plan_auxiliar import \
-    interface_plan_auxiliar
-from funcoes.view.interfaces.plan_composicao.interface_plan_composicao import \
-    interface_plan_composicao
-from funcoes.view.interfaces.plan_fator.interface_plan_fator import \
-    interface_planilha_fator
-from funcoes.view.interfaces.plan_orcament.interface_plan_orcament import \
-    interface_plan_orcamentaria
-from funcoes.view.interfaces.selecionar_excel.interface_select_excel import \
-    interface_select_excel
-from funcoes.view.interfaces.selecionar_item.interface_select_item import \
-    interface_select_item
+from funcoes.view.interfaces.plan_auxiliar.interface_plan_auxiliar import (
+    interface_plan_auxiliar,
+)
+from funcoes.view.interfaces.plan_composicao.interface_plan_composicao import (
+    interface_plan_composicao,
+)
+from funcoes.view.interfaces.plan_fator.interface_plan_fator import (
+    interface_planilha_fator,
+)
+from funcoes.view.interfaces.plan_orcament.interface_plan_orcament import (
+    interface_plan_orcamentaria,
+)
+from funcoes.view.interfaces.selecionar_excel.interface_select_excel import (
+    interface_select_excel,
+)
+from funcoes.view.interfaces.selecionar_item.interface_select_item import (
+    interface_select_item,
+)
 
 
 class MacroExcel(tk.Tk):
 
     def atualizar_dados(
-            self,
-            dropdown_valor,
-            frame_fator,
-            frame_aux,
-            frame_orcamentaria,
-            frame_compo):
+        self, dropdown_valor, frame_fator, frame_aux, frame_orcamentaria, frame_compo
+    ):
         # Atualizar self.dados com base no novo valor do dropdown
         nome_selecionado = dropdown_valor.get()
         self.dados = next(
-            (dado for dado in self.todos_dados if
-             dado.get('nome') == nome_selecionado), None)
+            (dado for dado in self.todos_dados if dado.get("nome") == nome_selecionado),
+            None,
+        )
 
         # Limpar o frame_fator
         for widget in frame_fator.winfo_children():
             widget.destroy()
 
         # Criar uma nova instância
-        interface_planilha_fator(
-            self, frame_fator)
+        interface_planilha_fator(self, frame_fator)
 
         # Limpar frame_aux
         for widget in frame_aux.winfo_children():
@@ -64,13 +66,14 @@ class MacroExcel(tk.Tk):
         # Atualizar self.dados com base no novo valor do dropdown
         nome_selecionado = dropdown_valor_item.get()
         self.item = next(
-            (dado for dado in self.todos_item if
-             dado.get('nome') == nome_selecionado), None)
+            (dado for dado in self.todos_item if dado.get("nome") == nome_selecionado),
+            None,
+        )
 
     def __init__(self):
         super().__init__()
 
-        self.title("Macro excel 3.1")
+        self.title("Macro excel 3.2")
         self.geometry("1200x800")
 
         self.todos_dados = open_valores_colunas()
@@ -107,8 +110,14 @@ class MacroExcel(tk.Tk):
         interface_menu(self, frame_menu, dropdown_valor_nome_dados)
 
         # valor selecionado dados
-        self.dados = next((dado for dado in self.todos_dados if dado.get(
-            'nome') == dropdown_valor_nome_dados.get()), None)
+        self.dados = next(
+            (
+                dado
+                for dado in self.todos_dados
+                if dado.get("nome") == dropdown_valor_nome_dados.get()
+            ),
+            None,
+        )
 
         # valor selecionado item
         dropdown_valor_item = tk.StringVar()
@@ -118,14 +127,19 @@ class MacroExcel(tk.Tk):
         interface_select_item(self, frame_item, dropdown_valor_item)
 
         # valor selecionado item
-        self.item = next((dado for dado in self.todos_item if dado.get(
-            'nome') == dropdown_valor_item.get()), None)
+        self.item = next(
+            (
+                dado
+                for dado in self.todos_item
+                if dado.get("nome") == dropdown_valor_item.get()
+            ),
+            None,
+        )
 
         # selecionar arquivo
         interface_select_excel(self, frame_arquivo_excel)
 
-        self.lbl_processando = tk.Label(
-            frame_arquivo_excel, text="", font=(None, 18))
+        self.lbl_processando = tk.Label(frame_arquivo_excel, text="", font=(None, 18))
         self.lbl_processando.pack(pady=0)
 
         # planilha orcamentaria
@@ -134,8 +148,7 @@ class MacroExcel(tk.Tk):
 
         # planilha_fator
 
-        interface_planilha_fator(
-            self, frame_fator)
+        interface_planilha_fator(self, frame_fator)
 
         # planilha compo
 
@@ -147,18 +160,18 @@ class MacroExcel(tk.Tk):
 
         # vincular a função de callback ao menu dropdown
         dropdown_valor_nome_dados.trace_add(
-            "write", lambda *args:
-                self.atualizar_dados(
-                    dropdown_valor_nome_dados,
-                    frame_fator,
-                    frame_aux,
-                    frame_orcamentaria,
-                    frame_compo
-                ))
+            "write",
+            lambda *args: self.atualizar_dados(
+                dropdown_valor_nome_dados,
+                frame_fator,
+                frame_aux,
+                frame_orcamentaria,
+                frame_compo,
+            ),
+        )
         # atualiza item quando ocorrer troca
         dropdown_valor_item.trace_add(
-            "write", lambda *args:
-                self.atualizar_item(dropdown_valor_item)
+            "write", lambda *args: self.atualizar_item(dropdown_valor_item)
         )
 
         # Configurar o canvas para o frame principal (centralizado)
@@ -177,16 +190,16 @@ class MacroExcel(tk.Tk):
             x_center,  # Centralizar horizontalmente
             y_center,  # Centralizar verticalmente
             window=main_frame,
-            anchor="center"
+            anchor="center",
         )
 
-        canvas.config(
-            scrollregion=canvas.bbox("all"), yscrollcommand=scrollbar.set
-        )
+        canvas.config(scrollregion=canvas.bbox("all"), yscrollcommand=scrollbar.set)
 
         # Configurar a função de rolagem do canvas
-        canvas.bind_all("<MouseWheel>", lambda event: canvas.yview_scroll(
-            int(-1 * (event.delta / 120)), "units"))
+        canvas.bind_all(
+            "<MouseWheel>",
+            lambda event: canvas.yview_scroll(int(-1 * (event.delta / 120)), "units"),
+        )
 
 
 interface = MacroExcel()

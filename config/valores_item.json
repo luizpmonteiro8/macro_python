@@ -23,8 +23,8 @@
       "nome": "Equipamento Custo Horário",
       "total": "TOTAL Equipamento Custo Horário:",
       "adicionarFator": "Sim",
-      "fatorCoeficiente": "Sim",
-      "buscarAuxiliar": "Não",
+      "fatorCoeficiente": "Não",
+      "buscarAuxiliar": "Sim",
       "iniciaPor": "",
       "naoIniciaPor": ""
     },

@@ -113,7 +113,10 @@ def fator_nos_item_totais_aux(
         return inicial, final
 
 
-def buscar_auxiliar_no_aux(workbook, dados, itemChave, linha, linha_total):
+def buscar_auxiliar_no_aux(workbook, dados, itemChave, linha, linha_total, nivel=1):
+    if nivel > 50:  # evita travar o programa
+        print("⚠️ Recursão profunda demais — possível loop infinito.")
+        return
     # busca dentro de auxiliar os auxiliares
     sheet_name_aux = get_planilha_aux(dados)
     sheet_planilha_aux = workbook[sheet_name_aux]
@@ -198,8 +201,16 @@ def buscar_auxiliar_no_aux(workbook, dados, itemChave, linha, linha_total):
                         and linha_desc > 0
                         and linha_total > 0
                     ):
+                        print(
+                            f"[DEBUG] Nível {nivel} | Item: {itemChave} | Linha desc: {linha_desc} | Linha total: {linha_total}"
+                        )
                         buscar_auxiliar_no_aux(
-                            workbook, dados, itemChave, linha_desc, linha_total
+                            workbook,
+                            dados,
+                            itemChave,
+                            linha_desc,
+                            linha_total,
+                            nivel + 1,
                         )
 
                 # total no VALOR:
@@ -276,7 +287,9 @@ def adicionar_fator_totais_aux(workbook, dados, itemChave, linhaIni, linhaFim):
             and linha_desc > 0
             and linha_total > 0
         ):
-            buscar_auxiliar_no_aux(workbook, dados, itemChave, linha_desc, linha_total)
+            buscar_auxiliar_no_aux(
+                workbook, dados, itemChave, linha_desc, linha_total, nivel=1
+            )
 
         # total no VALOR:
         if final_total_linha_array:

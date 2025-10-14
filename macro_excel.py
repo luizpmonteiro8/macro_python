@@ -1,4 +1,7 @@
 import tkinter as tk
+import sys
+
+sys.setrecursionlimit(3000)
 
 from funcoes.config.open_config import open_valores_colunas, open_valores_item
 from funcoes.view.interfaces.menu.interface_menu import interface_menu
@@ -73,7 +76,7 @@ class MacroExcel(tk.Tk):
     def __init__(self):
         super().__init__()
 
-        self.title("Macro excel 3.2")
+        self.title("Macro excel 3.3")
         self.geometry("1200x800")
 
         self.todos_dados = open_valores_colunas()

@@ -261,7 +261,7 @@ def adicionar_fator_totais(workbook, dados, itemChave, linhaIni, linhaFim):
                 f"={sheet_name_comp}!{coluna_valor_string}{linha_final_comp}"
             )
 
-            final_total_linha_array = []
+            final_total_linha_array = set()
 
             for item in itens_array:
                 resultado_fator = fator_nos_item_totais(
@@ -280,7 +280,7 @@ def adicionar_fator_totais(workbook, dados, itemChave, linhaIni, linhaFim):
                 if resultado_fator is not None:
                     linha_desc, linha_total = resultado_fator
                 if resultado_fator is not None and linha_total is not None:
-                    final_total_linha_array.append(linha_total)
+                    final_total_linha_array.add(linha_total)
 
                 # busca auxiliar
                 if (

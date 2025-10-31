@@ -174,7 +174,7 @@ def buscar_auxiliar_no_aux(workbook, dados, itemChave, linha, linha_total, nivel
                             coluna_valor_aux}{linha_final}"
                     )
 
-                final_total_linha_array = []
+                final_total_linha_array = set()
 
                 for item in itens_array:
                     resultado_fator = fator_nos_item_totais_aux(
@@ -192,7 +192,7 @@ def buscar_auxiliar_no_aux(workbook, dados, itemChave, linha, linha_total, nivel
                     if resultado_fator is not None:
                         linha_desc, linha_total = resultado_fator
                     if resultado_fator is not None and linha_total is not None:
-                        final_total_linha_array.append(linha_total)
+                        final_total_linha_array.add(linha_total)
 
                     if (
                         item["buscarAuxiliar"] is not None
@@ -201,9 +201,6 @@ def buscar_auxiliar_no_aux(workbook, dados, itemChave, linha, linha_total, nivel
                         and linha_desc > 0
                         and linha_total > 0
                     ):
-                        print(
-                            f"[DEBUG] Nível {nivel} | Item: {itemChave} | Linha desc: {linha_desc} | Linha total: {linha_total}"
-                        )
                         buscar_auxiliar_no_aux(
                             workbook,
                             dados,
@@ -260,7 +257,7 @@ def adicionar_fator_totais_aux(workbook, dados, itemChave, linhaIni, linhaFim):
         if chave.startswith("item"):
             itens_array.append(valor)
 
-    final_total_linha_array = []
+    final_total_linha_array = set()
 
     for item in itens_array:
         resultado_fator = fator_nos_item_totais_aux(
@@ -279,7 +276,7 @@ def adicionar_fator_totais_aux(workbook, dados, itemChave, linhaIni, linhaFim):
         if resultado_fator is not None:
             linha_desc, linha_total = resultado_fator
         if resultado_fator is not None and linha_total is not None:
-            final_total_linha_array.append(linha_total)
+            final_total_linha_array.add(linha_total)
         if (
             item["buscarAuxiliar"] is not None
             and item["buscarAuxiliar"] == "Sim"

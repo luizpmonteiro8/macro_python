@@ -7,25 +7,30 @@ import openpyxl
 
 from funcoes.common.buscar_palavras import buscar_palavra
 from funcoes.common.custo_unitario import custo_unitario_execucao
-from funcoes.get.get_linhas_json import (get_coluna_final, get_coluna_inicial,
-                                         get_planilha_orcamentaria,
-                                         get_valor_final, get_valor_inicial)
+from funcoes.get.get_linhas_json import (
+    get_coluna_final,
+    get_coluna_inicial,
+    get_planilha_orcamentaria,
+    get_valor_final,
+    get_valor_inicial,
+)
 from funcoes.planilha.funcoes.adicionar_bdi import adicionar_bdi
 from funcoes.planilha.funcoes.adicionar_fator import adicionar_fator
 from funcoes.planilha.funcoes.adicionar_fator_aux import adicionar_fator_aux
 from funcoes.planilha.funcoes.adicionar_fator_comp import adicionar_fator_comp
-from funcoes.planilha.funcoes.formula_planilha import (copiar_coluna_planilha,
-                                                       formula_planilha)
+from funcoes.planilha.funcoes.formula_planilha import (
+    copiar_coluna_planilha,
+    formula_planilha,
+)
 from funcoes.planilha.funcoes.resume import resumo_totais
-from funcoes.planilha.funcoes.somatorio_planilha import somatorio_planilha
 from funcoes.planilha.salvar.salvar_arquivo import salvar_arquivo
 
 
 def selecionar_arquivo_excel(self):
     if not self.dados:
         tk.messagebox.showwarning(
-            "Aviso",
-            "Os dados estão vazios.Abra um arquivo JSON primeiro.")
+            "Aviso", "Os dados estão vazios.Abra um arquivo JSON primeiro."
+        )
         return
 
     try:
@@ -54,10 +59,8 @@ def selecionar_arquivo_excel(self):
             coluna_final = get_coluna_final(self.dados)
             valor_final = get_valor_final(self.dados)
 
-            linhaIni = buscar_palavra(
-                sheet_planilha, coluna_inicial, valor_inicial) + 1
-            linhafinal = buscar_palavra(
-                sheet_planilha, coluna_final, valor_final)
+            linhaIni = buscar_palavra(sheet_planilha, coluna_inicial, valor_inicial) + 1
+            linhafinal = buscar_palavra(sheet_planilha, coluna_final, valor_final)
 
             copiar_coluna_planilha(sheet_planilha, self.dados)
 
@@ -69,8 +72,7 @@ def selecionar_arquivo_excel(self):
 
             adicionar_fator_aux(workbook, self.dados)
 
-            adicionar_fator_comp(workbook, self.dados, self.item,
-                                 linhaIni, linhafinal)
+            adicionar_fator_comp(workbook, self.dados, self.item, linhaIni, linhafinal)
 
             # somatorio_planilha(sheet_planilha)
 
@@ -86,8 +88,9 @@ def selecionar_arquivo_excel(self):
             total_time = end_time - start_time
             # Limpar mensagem de processamento
             self.lbl_processando.config(
-                text="Arquivo gerado com sucesso!" +
-                f"Tempo total de execução: {total_time:.2f} segundos")
+                text="Arquivo gerado com sucesso!"
+                + f"Tempo total de execução: {total_time:.2f} segundos"
+            )
 
     except Exception as e:
         tk.messagebox.showerror("Erro", f"Ocorreu um erro: {str(e)}")

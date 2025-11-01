@@ -3,6 +3,7 @@ from openpyxl.utils import column_index_from_string
 from funcoes.common.buscar_palavras import (
     buscar_palavra_com_linha,
     buscar_palavra_com_linha_exato,
+    buscar_palavra_com_linha_iniciando,
 )
 from funcoes.common.copiar_coluna import copiar_coluna_com_numeros
 from funcoes.common.valor_bdi_final import valor_bdi_final
@@ -155,11 +156,11 @@ def buscar_auxiliar_no_aux(workbook, dados, itemChave, linha, linha_total, nivel
                     sheet_planilha_aux, coluna_desc_aux, cod + " ", 1, ultima_linha
                 )
 
-            if linha_inicial == -1 and cod.startswith("I"):
-                linha_inicial = buscar_palavra_com_linha(
+            if linha_inicial == -1:
+                linha_inicial = buscar_palavra_com_linha_iniciando(
                     sheet_planilha_aux,
                     coluna_desc_aux,
-                    cod + " " + item + " (H)",
+                    cod + " " + item,
                     1,
                     ultima_linha,
                 )
@@ -173,7 +174,7 @@ def buscar_auxiliar_no_aux(workbook, dados, itemChave, linha, linha_total, nivel
                     ultima_linha,
                 )
 
-                if cod.startswith("I") and linha_final > 0:
+                if linha_final > 0:
                     # Evita apontar para o próprio somatório
                     if not (linha_inicial <= x <= linha_final):
                         sheet_planilha_aux[f"{coluna_preco_aux}{x}"].value = (

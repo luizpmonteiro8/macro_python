@@ -30,20 +30,40 @@ def salvar_alteracao_json(
     var_nao_inicia_por_values,
     nova_janela,
 ):
-    with open("config/valores_item.json", "r", encoding="utf-8") as arquivo_json:
-        dados_json = json.load(arquivo_json)
+    try:
+        with open("config/valores_item.json", "r", encoding="utf-8") as arquivo_json:
+            dados_json = json.load(arquivo_json)
 
-    for item in dados_json:
-        if item["nome"] == old_name:
-            # Remove todos os itens existentes
-            keys_to_remove = [key for key in item if key.startswith("item")]
-            for key in keys_to_remove:
-                del item[key]
+        item_encontrado = False
+        for item in dados_json:
+            if item["nome"] == old_name:
+                item_encontrado = True
+                # Remove todos os itens existentes
+                keys_to_remove = [key for key in item if key.startswith("item")]
+                for key in keys_to_remove:
+                    del item[key]
 
-            # Adiciona os itens na nova ordem
+                # Adiciona os itens na nova ordem
+                for i, key in enumerate(var_nome_values.keys(), 1):
+                    new_key = f"item{i}"
+                    item[new_key] = {
+                        "nome": var_nome_values[key].get(),
+                        "total": var_total_values[key].get(),
+                        "adicionarFator": var_add_fator_values[key].get(),
+                        "fatorCoeficiente": var_fator_coef_values[key].get(),
+                        "buscarAuxiliar": var_buscar_auxiliar_values[key].get(),
+                        "iniciaPor": var_inicia_por_values[key].get(),
+                        "naoIniciaPor": var_nao_inicia_por_values[key].get(),
+                    }
+                item["nome"] = var_nome.get()
+                break
+
+        if not item_encontrado:
+            # Se não encontrou, cria um novo item
+            novo_item = {"nome": var_nome.get()}
             for i, key in enumerate(var_nome_values.keys(), 1):
                 new_key = f"item{i}"
-                item[new_key] = {
+                novo_item[new_key] = {
                     "nome": var_nome_values[key].get(),
                     "total": var_total_values[key].get(),
                     "adicionarFator": var_add_fator_values[key].get(),
@@ -52,31 +72,23 @@ def salvar_alteracao_json(
                     "iniciaPor": var_inicia_por_values[key].get(),
                     "naoIniciaPor": var_nao_inicia_por_values[key].get(),
                 }
-            item["nome"] = var_nome.get()
+            dados_json.append(novo_item)
 
-    with open("config/valores_item.json", "w", encoding="utf-8") as arquivo_json:
-        json.dump(dados_json, arquivo_json, indent=2, ensure_ascii=False)
+        with open("config/valores_item.json", "w", encoding="utf-8") as arquivo_json:
+            json.dump(dados_json, arquivo_json, indent=2, ensure_ascii=False)
 
-    self.todos_item = open_valores_item()
-    dropdown_valor_item.set(var_nome.get())
-    nova_janela.destroy()
+        self.todos_item = open_valores_item()
+        dropdown_valor_item.set(var_nome.get())
+        nova_janela.destroy()
+
+        # Mostrar mensagem de sucesso
+        show_success("Alterações salvas com sucesso!")
+
+    except Exception as e:
+        show_error(f"Erro ao salvar: {str(e)}")
 
 
-def adicionar_item(
-    self,
-    dropdown_valor_item,
-    select_item,
-    nova_janela,
-    frame_itens,
-    var_nome_values,
-    var_total_values,
-    var_adicionar_fator_values,
-    var_fator_coeficiente_values,
-    var_buscar_auxiliar_values,
-    var_inicia_por_values,
-    var_nao_inicia_por_values,
-    dynamic_items,
-):
+def adicionar_item(self, dropdown_valor_item, select_item, nova_janela):
     # Encontrar o próximo número disponível
     existing_numbers = [
         int(k.replace("item", "")) for k in select_item.keys() if k.startswith("item")
@@ -113,6 +125,9 @@ def mover_item(
     self, dropdown_valor_item, select_item, item_key, direction, nova_janela
 ):
     item_keys = [k for k in select_item.keys() if k.startswith("item")]
+
+    if not item_keys:
+        return
 
     if direction == "up":
         if item_key != item_keys[0]:
@@ -151,14 +166,22 @@ def interface_editar_item(self, dropdown_valor_item, updated_item=None):
     nova_janela = tk.Toplevel()
     nova_janela.geometry("900x700")
     nova_janela.title("Editar item")
-    # iniciar tela cheia
     nova_janela.attributes("-fullscreen", True)
 
-    canvas_editar = tk.Canvas(nova_janela)
+    # Container principal
+    main_frame = tk.Frame(nova_janela)
+    main_frame.pack(fill="both", expand=True)
+
+    # Frame para botões principais (fixo no topo)
+    frame_botoes_principais = tk.Frame(main_frame)
+    frame_botoes_principais.pack(fill="x", pady=10)
+
+    # Canvas e scrollbar
+    canvas_editar = tk.Canvas(main_frame)
     canvas_editar.pack(side="left", fill="both", expand=True)
 
     scrollbar = ttk.Scrollbar(
-        nova_janela, orient="vertical", command=canvas_editar.yview
+        main_frame, orient="vertical", command=canvas_editar.yview
     )
     scrollbar.pack(side="right", fill="y")
 
@@ -166,6 +189,7 @@ def interface_editar_item(self, dropdown_valor_item, updated_item=None):
     frame = tk.Frame(canvas_editar)
     canvas_editar.create_window((0, 0), window=frame, anchor="nw")
 
+    # Obter dados do item
     select_item = updated_item or next(
         (
             dado
@@ -182,6 +206,8 @@ def interface_editar_item(self, dropdown_valor_item, updated_item=None):
 
     old_name = select_item["nome"]
     var_nome = tk.StringVar(value=select_item["nome"])
+
+    # Dicionários para armazenar as variáveis
     var_nome_values = {}
     var_total_values = {}
     var_adicionar_fator_values = {}
@@ -190,10 +216,7 @@ def interface_editar_item(self, dropdown_valor_item, updated_item=None):
     var_inicia_por_values = {}
     var_nao_inicia_por_values = {}
 
-    # Frame para botões principais
-    frame_botoes_principais = tk.Frame(frame)
-    frame_botoes_principais.grid(row=0, column=0, columnspan=3, pady=10, sticky="ew")
-
+    # Botões principais
     btn_salvar = tk.Button(
         frame_botoes_principais,
         text="Salvar",
@@ -212,6 +235,8 @@ def interface_editar_item(self, dropdown_valor_item, updated_item=None):
             nova_janela,
         ),
         font=(None, 16),
+        bg="green",
+        fg="white",
     )
     btn_salvar.pack(side="left", padx=5)
 
@@ -219,19 +244,7 @@ def interface_editar_item(self, dropdown_valor_item, updated_item=None):
         frame_botoes_principais,
         text="Adicionar item",
         command=lambda: adicionar_item(
-            self,
-            dropdown_valor_item,
-            select_item,
-            nova_janela,
-            frame,
-            var_nome_values,
-            var_total_values,
-            var_adicionar_fator_values,
-            var_fator_coeficiente_values,
-            var_buscar_auxiliar_values,
-            var_inicia_por_values,
-            var_nao_inicia_por_values,
-            [],
+            self, dropdown_valor_item, select_item, nova_janela
         ),
         font=(None, 16),
     )
@@ -248,23 +261,29 @@ def interface_editar_item(self, dropdown_valor_item, updated_item=None):
     btn_fechar.pack(side="left", padx=5)
 
     # Nome do item principal
-    entry_nome_titulo = custom_input(frame, "Nome", var_nome.get(), row=1)
-    entry_nome_titulo.bind(
-        "<KeyRelease>", lambda e, v=var_nome: v.set(entry_nome_titulo.get())
+    row_counter = 0
+
+    label_nome = tk.Label(frame, text="Nome", font=(None, 16))
+    label_nome.grid(row=row_counter, column=0, sticky="w", padx=10, pady=5)
+
+    entry_nome_titulo = tk.Entry(frame, textvariable=var_nome, font=(None, 16))
+    entry_nome_titulo.grid(
+        row=row_counter, column=1, columnspan=2, sticky="ew", padx=10, pady=5
     )
+    row_counter += 1
 
     ttk.Separator(frame, orient="horizontal").grid(
-        row=2, column=0, columnspan=3, sticky="ew", pady=10
+        row=row_counter, column=0, columnspan=3, sticky="ew", pady=10
     )
-
-    row_counter = 3
-    items = 1
+    row_counter += 1
 
     # Lista para armazenar informações dos itens dinâmicos
     dynamic_items = []
 
+    # Processar cada item
     for key, value in select_item.items():
         if isinstance(value, dict):
+            # Criar variáveis para este item
             var_nome_values[key] = tk.StringVar(value=value["nome"])
             var_total_values[key] = tk.StringVar(value=value["total"])
             var_adicionar_fator_values[key] = tk.StringVar(
@@ -282,14 +301,15 @@ def interface_editar_item(self, dropdown_valor_item, updated_item=None):
             )
 
             # Frame para cada item
-            item_frame = tk.Frame(frame, relief="groove", bd=1)
+            item_frame = tk.Frame(frame, relief="groove", bd=2)
             item_frame.grid(
-                row=row_counter, column=0, columnspan=3, sticky="ew", padx=5, pady=2
+                row=row_counter, column=0, columnspan=3, sticky="ew", padx=10, pady=5
             )
+            row_counter += 1
 
-            # Botões de controle do item (mover para cima/baixo, excluir)
+            # Botões de controle do item
             btn_frame = tk.Frame(item_frame)
-            btn_frame.grid(row=0, column=0, rowspan=8, sticky="ns", padx=5)
+            btn_frame.grid(row=0, column=0, rowspan=8, sticky="ns", padx=5, pady=5)
 
             btn_mover_cima = tk.Button(
                 btn_frame,
@@ -325,86 +345,76 @@ def interface_editar_item(self, dropdown_valor_item, updated_item=None):
             )
             btn_excluir.pack(pady=2)
 
-            # Calcular posições fixas para cada elemento deste item
-            current_rows = {
-                "item": 0,
-                "total": 1,
-                "adicionar_fator": 2,
-                "fator_coeficiente": 3,
-                "texto_dinamico": 4,
-                "buscar_auxiliar": 5,
-                "inicia_por": 6,
-                "nao_inicia_por": 7,
-            }
+            # Campos do item
+            current_row = 0
 
-            entry_nome = custom_input(
-                item_frame,
-                f"Item {items}",
-                var_nome_values[key].get(),
-                row=current_rows["item"],
+            # Nome do item
+            label_item = tk.Label(
+                item_frame, text=f"Item {len(var_nome_values)}", font=(None, 14)
             )
-            entry_nome.grid(column=1, sticky="ew", padx=5)
-            entry_nome.bind(
-                "<KeyRelease>",
-                lambda e, v=var_nome_values[key], e2=entry_nome: v.set(e2.get()),
-            )
+            label_item.grid(row=current_row, column=1, sticky="w", padx=5, pady=2)
 
-            total_entry = custom_input(
-                item_frame,
-                "Total",
-                var_total_values[key].get(),
-                row=current_rows["total"],
+            entry_nome = tk.Entry(
+                item_frame, textvariable=var_nome_values[key], font=(None, 14)
             )
-            total_entry.grid(column=1, sticky="ew", padx=5)
-            total_entry.bind(
-                "<KeyRelease>",
-                lambda e, v=var_total_values[key], e2=total_entry: v.set(e2.get()),
+            entry_nome.grid(row=current_row, column=2, sticky="ew", padx=5, pady=2)
+            current_row += 1
+
+            # Total
+            label_total = tk.Label(item_frame, text="Total", font=(None, 14))
+            label_total.grid(row=current_row, column=1, sticky="w", padx=5, pady=2)
+
+            entry_total = tk.Entry(
+                item_frame, textvariable=var_total_values[key], font=(None, 14)
             )
+            entry_total.grid(row=current_row, column=2, sticky="ew", padx=5, pady=2)
+            current_row += 1
 
             # Adicionar Fator
             label_adicionar_fator = tk.Label(
-                item_frame, text="Adicionar Fator", font=(None, 16)
+                item_frame, text="Adicionar Fator", font=(None, 14)
             )
             label_adicionar_fator.grid(
-                row=current_rows["adicionar_fator"], column=1, sticky="w", padx=5
+                row=current_row, column=1, sticky="w", padx=5, pady=2
             )
 
             adicionar_fator_dropdown = ttk.Combobox(
                 item_frame,
                 values=["Sim", "Não"],
                 textvariable=var_adicionar_fator_values[key],
-                font=(None, 16),
+                font=(None, 14),
+                state="readonly",
             )
             adicionar_fator_dropdown.grid(
-                row=current_rows["adicionar_fator"], column=2, sticky="ew", padx=5
+                row=current_row, column=2, sticky="ew", padx=5, pady=2
             )
-            adicionar_fator_dropdown.set(var_adicionar_fator_values[key].get())
-            adicionar_fator_dropdown.config(state="readonly")
+            current_row += 1
 
             # Fator Coeficiente
             label_fator_coeficiente = tk.Label(
-                item_frame, text="Fator Coeficiente", font=(None, 16)
+                item_frame, text="Fator Coeficiente", font=(None, 14)
             )
             label_fator_coeficiente.grid(
-                row=current_rows["fator_coeficiente"], column=1, sticky="w", padx=5
+                row=current_row, column=1, sticky="w", padx=5, pady=2
             )
 
             fator_coeficiente_dropdown = ttk.Combobox(
                 item_frame,
                 values=["Sim", "Não"],
                 textvariable=var_fator_coeficiente_values[key],
-                font=(None, 16),
+                font=(None, 14),
+                state="readonly",
             )
             fator_coeficiente_dropdown.grid(
-                row=current_rows["fator_coeficiente"], column=2, sticky="ew", padx=5
+                row=current_row, column=2, sticky="ew", padx=5, pady=2
             )
-            fator_coeficiente_dropdown.set(var_fator_coeficiente_values[key].get())
-            fator_coeficiente_dropdown.config(state="readonly")
+            current_row += 1
 
-            # Texto dinâmico - sempre criado mas visível condicionalmente
-            texto_fator_label = tk.Label(item_frame, font=(None, 12))
+            # Texto dinâmico
+            texto_fator_label = tk.Label(item_frame, font=(None, 12), fg="blue")
 
-            # Função de atualização com todas as referências necessárias
+            text_position = current_row
+
             def criar_funcao_atualizacao(k, label, row_pos):
                 def atualizar_texto(*args):
                     if var_adicionar_fator_values[k].get() == "Sim":
@@ -420,97 +430,83 @@ def interface_editar_item(self, dropdown_valor_item, updated_item=None):
                             columnspan=2,
                             sticky="w",
                             padx=5,
-                            pady=(0, 5),
+                            pady=2,
                         )
                     else:
                         label.grid_forget()
 
                 return atualizar_texto
 
-            # Criar e armazenar a função de atualização
             atualizar_texto_func = criar_funcao_atualizacao(
-                key, texto_fator_label, current_rows["texto_dinamico"]
+                key, texto_fator_label, text_position
             )
-
-            # Chamar inicialmente para configurar o estado
             atualizar_texto_func()
 
-            # Registrar as traças
             var_adicionar_fator_values[key].trace("w", atualizar_texto_func)
             var_fator_coeficiente_values[key].trace("w", atualizar_texto_func)
-
-            # Armazenar informações para referência
-            dynamic_items.append(
-                {
-                    "key": key,
-                    "label": texto_fator_label,
-                    "update_func": atualizar_texto_func,
-                    "row": current_rows["texto_dinamico"],
-                }
-            )
+            current_row += 1
 
             # Buscar Auxiliar
             label_buscar_auxiliar = tk.Label(
-                item_frame, text="Buscar Auxiliar", font=(None, 16)
+                item_frame, text="Buscar Auxiliar", font=(None, 14)
             )
             label_buscar_auxiliar.grid(
-                row=current_rows["buscar_auxiliar"], column=1, sticky="w", padx=5
+                row=current_row, column=1, sticky="w", padx=5, pady=2
             )
 
             buscar_auxiliar_dropdown = ttk.Combobox(
                 item_frame,
                 values=["Sim", "Não"],
                 textvariable=var_buscar_auxiliar_values[key],
-                font=(None, 16),
+                font=(None, 14),
+                state="readonly",
             )
             buscar_auxiliar_dropdown.grid(
-                row=current_rows["buscar_auxiliar"], column=2, sticky="ew", padx=5
+                row=current_row, column=2, sticky="ew", padx=5, pady=2
             )
-            buscar_auxiliar_dropdown.set(var_buscar_auxiliar_values[key].get())
-            buscar_auxiliar_dropdown.config(state="readonly")
+            current_row += 1
 
-            inicia_por_entry = custom_input(
-                item_frame,
-                "Inicia por:",
-                var_inicia_por_values[key].get(),
-                row=current_rows["inicia_por"],
-            )
-            inicia_por_entry.grid(column=1, sticky="ew", padx=5)
-            inicia_por_entry.bind(
-                "<KeyRelease>",
-                lambda _, v=var_inicia_por_values[key], e=inicia_por_entry: v.set(
-                    e.get()
-                ),
-            )
+            # Inicia por
+            label_inicia_por = tk.Label(item_frame, text="Inicia por", font=(None, 14))
+            label_inicia_por.grid(row=current_row, column=1, sticky="w", padx=5, pady=2)
 
-            nao_inicia_por_entry = custom_input(
-                item_frame,
-                "Nao inicia por:",
-                var_nao_inicia_por_values[key].get(),
-                row=current_rows["nao_inicia_por"],
+            entry_inicia_por = tk.Entry(
+                item_frame, textvariable=var_inicia_por_values[key], font=(None, 14)
             )
-            nao_inicia_por_entry.grid(column=1, sticky="ew", padx=5)
-            nao_inicia_por_entry.bind(
-                "<KeyRelease>",
-                lambda _, v=var_nao_inicia_por_values[
-                    key
-                ], e=nao_inicia_por_entry: v.set(e.get()),
+            entry_inicia_por.grid(
+                row=current_row, column=2, sticky="ew", padx=5, pady=2
+            )
+            current_row += 1
+
+            # Não inicia por
+            label_nao_inicia_por = tk.Label(
+                item_frame, text="Não inicia por", font=(None, 14)
+            )
+            label_nao_inicia_por.grid(
+                row=current_row, column=1, sticky="w", padx=5, pady=2
             )
 
-            # Configurar o grid para expandir
-            item_frame.columnconfigure(1, weight=1)
+            entry_nao_inicia_por = tk.Entry(
+                item_frame, textvariable=var_nao_inicia_por_values[key], font=(None, 14)
+            )
+            entry_nao_inicia_por.grid(
+                row=current_row, column=2, sticky="ew", padx=5, pady=2
+            )
+
+            # Configurar pesos das colunas
             item_frame.columnconfigure(2, weight=1)
 
-            row_counter += 1
-            items += 1
-
     # Configurar o grid do frame principal
-    frame.columnconfigure(1, weight=1)
     frame.columnconfigure(2, weight=1)
 
+    # Atualizar a região de scroll
     frame.update_idletasks()
     canvas_editar.config(scrollregion=canvas_editar.bbox("all"))
+
+    # Bind do mousewheel
     canvas_editar.bind("<MouseWheel>", lambda e: mousewheel(e, canvas_editar, frame))
+
+    # Protocolo de fechamento
     nova_janela.protocol(
         "WM_DELETE_WINDOW", lambda: fechar_janela(canvas_editar, nova_janela)
     )
@@ -522,9 +518,29 @@ def show_error(message):
     """Função auxiliar para mostrar mensagens de erro"""
     error_window = tk.Toplevel()
     error_window.title("Erro")
-    error_window.geometry("300x100")
+    error_window.geometry("400x150")
+    error_window.transient()
+    error_window.grab_set()
 
-    tk.Label(error_window, text=message, wraplength=280).pack(
+    tk.Label(error_window, text=message, wraplength=380, justify="left").pack(
         expand=True, fill="both", padx=10, pady=10
     )
-    tk.Button(error_window, text="OK", command=error_window.destroy).pack(pady=5)
+    tk.Button(error_window, text="OK", command=error_window.destroy, width=10).pack(
+        pady=10
+    )
+
+
+def show_success(message):
+    """Função auxiliar para mostrar mensagens de sucesso"""
+    success_window = tk.Toplevel()
+    success_window.title("Sucesso")
+    success_window.geometry("400x150")
+    success_window.transient()
+    success_window.grab_set()
+
+    tk.Label(
+        success_window, text=message, wraplength=380, justify="left", fg="green"
+    ).pack(expand=True, fill="both", padx=10, pady=10)
+    tk.Button(success_window, text="OK", command=success_window.destroy, width=10).pack(
+        pady=10
+    )

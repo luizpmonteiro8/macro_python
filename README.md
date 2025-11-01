@@ -4,6 +4,7 @@
 3.2- adicionado iniciapor e naoiniciapor
 3.3- recursao limite aumentando para 3000
 3.4- impedido repeticao no valor total usando set()
+3.5- item com i que na busca tem (H) no final, corrigido auxiliar para adicionar fator corretamente
 
 virtualenv .venv
 

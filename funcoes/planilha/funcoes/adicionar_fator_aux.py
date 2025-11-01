@@ -125,10 +125,12 @@ def buscar_auxiliar_no_aux(workbook, dados, itemChave, linha, linha_total, nivel
     coluna_desc_aux = get_descricao_aux(dados)
     coluna_valor_aux = get_valor_totais_aux(dados)
     coluna_preco_aux = get_preco_unitario_aux(dados)
+    coluna_coeficiente_aux = get_coeficiente_aux(dados)
     coluna_totais_aux = get_coluna_totais_aux(dados)
     valor_string = get_valor_string(dados)
 
     coluna_preco_unitario_antigo = get_copiar_preco_unitario_aux(dados)
+    coluna_coeficiente_antigo = get_copiar_coeficiente_aux(dados)
 
     ultima_linha = sheet_planilha_aux.max_row
 
@@ -150,7 +152,16 @@ def buscar_auxiliar_no_aux(workbook, dados, itemChave, linha, linha_total, nivel
 
             if linha_inicial == -1:
                 linha_inicial = buscar_palavra_com_linha(
-                    sheet_planilha_aux, coluna_desc_aux, cod, 1, ultima_linha
+                    sheet_planilha_aux, coluna_desc_aux, cod + " ", 1, ultima_linha
+                )
+
+            if linha_inicial == -1 and cod.startswith("I"):
+                linha_inicial = buscar_palavra_com_linha(
+                    sheet_planilha_aux,
+                    coluna_desc_aux,
+                    cod + " " + item + " (H)",
+                    1,
+                    ultima_linha,
                 )
 
             if linha_inicial > -1:
@@ -162,17 +173,12 @@ def buscar_auxiliar_no_aux(workbook, dados, itemChave, linha, linha_total, nivel
                     ultima_linha,
                 )
 
-                if cod.startswith("I"):
-                    # adicionando formula no preco unitario em auxiliar
-                    sheet_planilha_aux[f"{coluna_preco_aux}{x}"].value = (
-                        f"=ROUND({coluna_preco_unitario_antigo}{x}*FATOR, 2)"
-                    )
-                else:
-                    # adicionando formula no preco unitario em auxiliar
-                    sheet_planilha_aux[f"{coluna_preco_aux}{x}"].value = (
-                        f"='{sheet_name_aux}'!{
-                            coluna_valor_aux}{linha_final}"
-                    )
+                if cod.startswith("I") and linha_final > 0:
+                    # Evita apontar para o próprio somatório
+                    if not (linha_inicial <= x <= linha_final):
+                        sheet_planilha_aux[f"{coluna_preco_aux}{x}"].value = (
+                            f"='COMPOSICOES AUXILIARES'!{coluna_valor_aux}{linha_final}"
+                        )
 
                 final_total_linha_array = set()
 

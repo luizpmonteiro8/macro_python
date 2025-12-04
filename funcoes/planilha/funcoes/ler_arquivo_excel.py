@@ -52,6 +52,9 @@ def selecionar_arquivo_excel(self):
 
             # Carregar o arquivo Excel
             print(">>> Carregando arquivo Excel...")
+            print(
+                ">>> Este processo demora de acordo com o tamanho do arquivo. Por favor, aguarde..."
+            )
             workbook = openpyxl.load_workbook(filepath)
 
             # Ler nome da planilha
@@ -104,6 +107,7 @@ def selecionar_arquivo_excel(self):
             resumo_totais(workbook, self.dados)
 
             print(">>> Salvando arquivo...")
+            print(">>> Confirme na tela principal se foi salvo com sucesso.")
             salvar_arquivo(workbook, filepath)
 
             print(

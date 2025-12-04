@@ -87,3 +87,17 @@ def buscar_palavra_com_linha_iniciando(
                 return linha
 
     return -1
+
+
+def buscar_palavra_contem(sheet, coluna, texto, lin_ini, lin_fim):
+    numero_coluna = ord(coluna.upper()) - ord("A") + 1
+    lin_fim = lin_fim or sheet.max_row
+    texto_normalizado = re.sub(r"\s+", " ", texto.strip().lower())
+
+    for linha in range(lin_ini, lin_fim + 1):
+        valor_celula = sheet.cell(row=linha, column=numero_coluna).value
+        if valor_celula:
+            celula_normalizada = re.sub(r"\s+", " ", str(valor_celula).strip().lower())
+            if texto_normalizado in celula_normalizada:
+                return linha
+    return -1

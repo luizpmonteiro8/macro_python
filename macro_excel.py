@@ -76,7 +76,7 @@ class MacroExcel(tk.Tk):
     def __init__(self):
         super().__init__()
 
-        self.title("Macro excel 3.6")
+        self.title("Macro excel 3.7")
         self.geometry("1200x800")
 
         self.todos_dados = open_valores_colunas()
@@ -211,3 +211,4 @@ interface.mainloop()
 
 
 # pyinstaller --onefile --hide-console=hide-early macro_excel.py
+# pyinstaller --onefile macro_excel.py

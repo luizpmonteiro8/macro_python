@@ -1,5 +1,4 @@
 from openpyxl.utils import column_index_from_string
-
 from funcoes.common.buscar_palavras import (
     buscar_palavra_com_linha,
     buscar_palavra_com_linha_exato,
@@ -7,50 +6,35 @@ from funcoes.common.buscar_palavras import (
 )
 from funcoes.common.copiar_coluna import copiar_coluna_com_numeros
 from funcoes.common.valor_bdi_final import valor_bdi_final
-from funcoes.get.get_linhas_json import (
-    get_coeficiente_aux,
-    get_coluna_totais_aux,
-    get_copiar_coeficiente_aux,
-    get_copiar_preco_unitario_aux,
-    get_descricao_aux,
-    get_item_descricao_comp_aux,
-    get_planilha_aux,
-    get_preco_unitario_aux,
-    get_valor_string,
-    get_valor_totais_aux,
-)
+from funcoes.get.get_linhas_json import *
 
 
 def copiar_colunas(sheet, dados):
-    # Obter informações de coluna do JSON
-    coluna_origem = get_coeficiente_aux(dados)
-    coluna_destino = get_copiar_coeficiente_aux(dados)
-
-    coluna_origem1 = get_preco_unitario_aux(dados)
-    coluna_destino1 = get_copiar_preco_unitario_aux(dados)
-
-    copiar_coluna_com_numeros(sheet, coluna_origem, coluna_destino)
-    copiar_coluna_com_numeros(sheet, coluna_origem1, coluna_destino1)
+    copiar_coluna_com_numeros(
+        sheet, get_coeficiente_aux(dados), get_copiar_coeficiente_aux(dados)
+    )
+    copiar_coluna_com_numeros(
+        sheet, get_preco_unitario_aux(dados), get_copiar_preco_unitario_aux(dados)
+    )
 
 
 def adicionar_formula_preco_unitario_menos_preco_antigo(sheet, dados):
-    coluna_origem = get_copiar_preco_unitario_aux(dados)
-    coluna_preco_unitario_aux = get_preco_unitario_aux(dados)
-    linha_ini = 1
-    final_linha = sheet.max_row + 1
+    origem = get_copiar_preco_unitario_aux(dados)
+    destino_idx = column_index_from_string(origem) + 1
+    preco_unit = get_preco_unitario_aux(dados)
 
-    for x in range(linha_ini, final_linha):
-        if sheet[f"{coluna_origem}{x}"].value is not None:
-            coluna_destino = column_index_from_string(coluna_origem) + 1
-            formula = f"=({coluna_origem}{x}-{coluna_preco_unitario_aux}{x})"
-            sheet.cell(row=x, column=coluna_destino).value = formula
+    for i, cell in enumerate(sheet[origem], start=1):
+        if cell.value is not None:
+            sheet.cell(row=i, column=destino_idx).value = (
+                f"=({origem}{i}-{preco_unit}{i})"
+            )
 
 
 def fator_nos_item_totais_aux(
     sheet,
     dados,
-    linha_inicial_comp,
-    linha_final_comp,
+    lin_ini,
+    lin_fim,
     nome,
     totalNome,
     coeficiente,
@@ -58,285 +42,205 @@ def fator_nos_item_totais_aux(
     inicia_por=None,
     nao_inicia_por=None,
 ):
-    coluna_descricao_aux = get_descricao_aux(dados)
-    coluna_totais_aux = get_coluna_totais_aux(dados)
-    coluna_totais_valor_aux = get_valor_totais_aux(dados)
-    coluna_preco_unit = get_preco_unitario_aux(dados)
-    coluna_coefieciente = get_coeficiente_aux(dados)
-    coluna_preco_unitario_antigo = get_copiar_preco_unitario_aux(dados)
-    coluna_coeficiente_antigo = get_copiar_coeficiente_aux(dados)
+    col_desc = get_descricao_aux(dados)
+    col_totais = get_coluna_totais_aux(dados)
+    col_valor = get_valor_totais_aux(dados)
+    col_preco = get_preco_unitario_aux(dados)
+    col_coef = get_coeficiente_aux(dados)
+    col_preco_antigo = get_copiar_preco_unitario_aux(dados)
+    col_coef_antigo = get_copiar_coeficiente_aux(dados)
 
-    # verifica se tem material na composicao
-    inicial = buscar_palavra_com_linha_exato(
-        sheet, coluna_descricao_aux, nome, linha_inicial_comp, linha_final_comp
-    )
+    inicial = buscar_palavra_com_linha_exato(sheet, col_desc, nome, lin_ini, lin_fim)
     final = buscar_palavra_com_linha_exato(
-        sheet, coluna_totais_aux, totalNome, linha_inicial_comp, linha_final_comp
+        sheet, col_totais, totalNome, lin_ini, lin_fim
     )
 
-    if (
-        inicial > -1
-        and final > -1
-        and inicial < linha_final_comp
-        and inicial > linha_inicial_comp
-    ):
-        # total final
-        soma_formula = (
-            f"=SUM("
-            f"{coluna_totais_valor_aux}{inicial+1}:"
-            f"{coluna_totais_valor_aux}{final-1}"
-            f")"
+    if -1 < inicial < final:
+        sheet[f"{col_valor}{final}"].value = (
+            f"=SUM({col_valor}{inicial+1}:{col_valor}{final-1})"
         )
-        sheet[f"{coluna_totais_valor_aux}{final}"].value = soma_formula
+
         for y in range(inicial + 1, final):
-            if inicia_por:
-                descricao_atual = sheet[f"{coluna_descricao_aux}{y}"].value
-                if descricao_atual is None or not descricao_atual.startswith(
-                    inicia_por
-                ):
-                    continue
-            if nao_inicia_por:
-                descricao_atual = sheet[f"{coluna_descricao_aux}{y}"].value
-                if descricao_atual is None or descricao_atual.startswith(
-                    nao_inicia_por
-                ):
-                    continue
+            desc = sheet[f"{col_desc}{y}"].value
+            if inicia_por and (desc is None or not desc.startswith(inicia_por)):
+                continue
+            if nao_inicia_por and (desc is None or desc.startswith(nao_inicia_por)):
+                continue
+
             if coeficiente and adicionar_fator:
-                sheet[f"{coluna_coefieciente}{y}"].value = (
-                    f"={coluna_coeficiente_antigo}{y}*FATOR"
+                sheet[f"{col_coef}{y}"].value = f"={col_coef_antigo}{y}*FATOR"
+            elif adicionar_fator:
+                sheet[f"{col_preco}{y}"].value = (
+                    f"=ROUND({col_preco_antigo}{y}*FATOR, 2)"
                 )
-            else:
-                if adicionar_fator:
-                    sheet[f"{coluna_preco_unit}{y}"].value = (
-                        f"=ROUND({coluna_preco_unitario_antigo}{y}*FATOR, 2)"
-                    )
 
         return inicial, final
 
 
-def buscar_auxiliar_no_aux(workbook, dados, itemChave, linha, linha_total, nivel=1):
-    if nivel > 50:  # evita travar o programa
+# no topo do módulo
+cache_encontrados = {}
+cache_nao_encontrados = {}
+
+
+def buscar_auxiliar_no_aux(workbook, dados, itemChave, lin, lin_total, nivel=1):
+    if nivel > 50:
         print("⚠️ Recursão profunda demais — possível loop infinito.")
         return
-    # busca dentro de auxiliar os auxiliares
-    sheet_name_aux = get_planilha_aux(dados)
-    sheet_planilha_aux = workbook[sheet_name_aux]
 
-    coluna_item = get_item_descricao_comp_aux(dados)
-    coluna_desc_aux = get_descricao_aux(dados)
-    coluna_valor_aux = get_valor_totais_aux(dados)
-    coluna_preco_aux = get_preco_unitario_aux(dados)
-    coluna_coeficiente_aux = get_coeficiente_aux(dados)
-    coluna_totais_aux = get_coluna_totais_aux(dados)
-    valor_string = get_valor_string(dados)
+    sheet_aux = workbook[get_planilha_aux(dados)]
+    ultima_linha = sheet_aux.max_row
 
-    coluna_preco_unitario_antigo = get_copiar_preco_unitario_aux(dados)
-    coluna_coeficiente_antigo = get_copiar_coeficiente_aux(dados)
+    col_item = get_item_descricao_comp_aux(dados)
+    col_desc = get_descricao_aux(dados)
+    col_valor = get_valor_totais_aux(dados)
+    col_preco = get_preco_unitario_aux(dados)
+    col_totais = get_coluna_totais_aux(dados)
+    val_str = get_valor_string(dados)
 
-    ultima_linha = sheet_planilha_aux.max_row
+    itens_array = [v for k, v in itemChave.items() if k.startswith("item")]
 
-    itens_array = []
+    for x in range(lin, lin_total):
+        cod = sheet_aux[f"{col_desc}{x}"].value
+        item = sheet_aux[f"{col_item}{x}"].value
+        if item is None:
+            continue
 
-    # Iterar sobre as chaves que começam com "item"
-    for chave, valor in itemChave.items():
-        if chave.startswith("item"):
-            itens_array.append(valor)
+        chave_busca = f"{cod} {item}"
 
-    for x in range(linha, linha_total):
-        cod = sheet_planilha_aux[f"{coluna_desc_aux}{x}"].value
-        item = sheet_planilha_aux[f"{coluna_item}{x}"].value
+        # pula item que já sabemos que não existe
+        if chave_busca in cache_nao_encontrados:
+            continue
 
-        if item is not None:
-            print(
-                "busca item na auxiliar: ",
-                cod + " " + item,
-                "na linha ",
-                x,
-                " tabela auxiliar",
+        # usa valor já encontrado
+        if chave_busca in cache_encontrados:
+            linha_ini = cache_encontrados[chave_busca]
+        else:
+            print(f"busca item na auxiliar: {chave_busca} na linha {x}")
+            linha_ini = buscar_palavra_com_linha(
+                sheet_aux, col_desc, chave_busca, 1, ultima_linha
             )
-            linha_inicial = buscar_palavra_com_linha(
-                sheet_planilha_aux, coluna_desc_aux, cod + " " + item, 1, ultima_linha
+            if linha_ini == -1:
+                linha_ini = buscar_palavra_com_linha(
+                    sheet_aux, col_desc, f"{cod} ", 1, ultima_linha
+                )
+            if linha_ini == -1:
+                linha_ini = buscar_palavra_com_linha_iniciando(
+                    sheet_aux, col_desc, chave_busca, 1, ultima_linha
+                )
+
+            # atualiza cache
+            if linha_ini == -1:
+                cache_nao_encontrados[chave_busca] = True
+                print(f"⚠️ Item não encontrado na auxiliar: {chave_busca}")
+                continue
+            else:
+                cache_encontrados[chave_busca] = linha_ini
+                print(
+                    f"✅ Item encontrado na auxiliar: {chave_busca} — linha {linha_ini}"
+                )
+
+        linha_fim = buscar_palavra_com_linha_exato(
+            sheet_aux, col_totais, val_str, linha_ini, ultima_linha
+        )
+        if linha_fim <= 0:
+            cache_nao_encontrados[chave_busca] = True
+            print(f"⚠️ Item não encontrado na auxiliar (valor final): {chave_busca}")
+            continue
+
+        if not (linha_ini <= x <= linha_fim):
+            sheet_aux[f"{col_preco}{x}"].value = (
+                f"='COMPOSICOES AUXILIARES'!{col_valor}{linha_fim}"
             )
 
-            if linha_inicial == -1:
-                linha_inicial = buscar_palavra_com_linha(
-                    sheet_planilha_aux, coluna_desc_aux, cod + " ", 1, ultima_linha
-                )
+        final_total_linha_array = set()
+        for item_cfg in itens_array:
+            resultado_fator = fator_nos_item_totais_aux(
+                sheet_aux,
+                dados,
+                linha_ini,
+                linha_fim,
+                item_cfg["nome"],
+                item_cfg["total"],
+                item_cfg["fatorCoeficiente"] == "Sim",
+                item_cfg["adicionarFator"] == "Sim",
+                item_cfg.get("iniciaPor"),
+                item_cfg.get("naoIniciaPor"),
+            )
 
-            if linha_inicial == -1:
-                linha_inicial = buscar_palavra_com_linha_iniciando(
-                    sheet_planilha_aux,
-                    coluna_desc_aux,
-                    cod + " " + item,
-                    1,
-                    ultima_linha,
-                )
+            if resultado_fator:
+                linha_desc, linha_total = resultado_fator
+                final_total_linha_array.add(linha_total)
 
-            if linha_inicial > -1:
-                linha_final = buscar_palavra_com_linha_exato(
-                    sheet_planilha_aux,
-                    coluna_totais_aux,
-                    valor_string,
-                    linha_inicial,
-                    ultima_linha,
-                )
-
-                if linha_final > 0:
-                    print("Item encontrado na auxiliar", cod + " " + item)
-                    # Evita apontar para o próprio somatório
-                    if not (linha_inicial <= x <= linha_final):
-                        sheet_planilha_aux[f"{coluna_preco_aux}{x}"].value = (
-                            f"='COMPOSICOES AUXILIARES'!{coluna_valor_aux}{linha_final}"
-                        )
-
-                final_total_linha_array = set()
-
-                for item in itens_array:
-                    resultado_fator = fator_nos_item_totais_aux(
-                        sheet_planilha_aux,
-                        dados,
-                        linha_inicial,
-                        linha_final,
-                        item["nome"],
-                        item["total"],
-                        True if item["fatorCoeficiente"] == "Sim" else False,
-                        True if item["adicionarFator"] == "Sim" else False,
-                        item["iniciaPor"],
-                        item["naoIniciaPor"],
-                    )
-                    if resultado_fator is not None:
-                        linha_desc, linha_total = resultado_fator
-                    if resultado_fator is not None and linha_total is not None:
-                        final_total_linha_array.add(linha_total)
-
-                    if (
-                        item["buscarAuxiliar"] is not None
-                        and item["buscarAuxiliar"] == "Sim"
-                        and resultado_fator is not None
-                        and linha_desc > 0
-                        and linha_total > 0
-                    ):
-                        buscar_auxiliar_no_aux(
-                            workbook,
-                            dados,
-                            itemChave,
-                            linha_desc,
-                            linha_total,
-                            nivel + 1,
-                        )
-
-                # total no VALOR:
-                if final_total_linha_array:
-                    linha_valor_sum = buscar_palavra_com_linha(
-                        sheet_planilha_aux,
-                        coluna_totais_aux,
-                        valor_string,
-                        linha_inicial,
-                        linha_final + 1,
+                if (
+                    item_cfg.get("buscarAuxiliar") == "Sim"
+                    and linha_desc > 0
+                    and linha_total > 0
+                ):
+                    buscar_auxiliar_no_aux(
+                        workbook, dados, itemChave, linha_desc, linha_total, nivel + 1
                     )
 
-                    if linha_valor_sum > 0:
-                        formula_soma = (
-                            "=SUM("
-                            + ",".join(
-                                [
-                                    f"{coluna_valor_aux}{linha}"
-                                    for linha in final_total_linha_array
-                                ]
-                            )
-                            + ")"
-                        )
-
-                        # Atribui a fórmula à célula específica
-                        sheet_planilha_aux[
-                            f"{coluna_valor_aux}{linha_valor_sum}"
-                        ].value = formula_soma
-                    else:
-                        print("A linha_valor_sum não é maior que zero.")
+        if final_total_linha_array:
+            linha_valor_sum = buscar_palavra_com_linha(
+                sheet_aux, col_totais, val_str, linha_ini, linha_fim + 1
+            )
+            if linha_valor_sum > 0:
+                sheet_aux[f"{col_valor}{linha_valor_sum}"].value = (
+                    f"=SUM({','.join(f'{col_valor}{linha}' for linha in final_total_linha_array)})"
+                )
 
 
-def adicionar_fator_totais_aux(workbook, dados, itemChave, linhaIni, linhaFim):
-    # chamado no adicionar_fator_comp
-    sheet_name_aux = get_planilha_aux(dados)
-    sheet_planilha_aux = workbook[sheet_name_aux]
+def adicionar_fator_totais_aux(workbook, dados, itemChave, lin_ini, lin_fim):
+    sheet_aux = workbook[get_planilha_aux(dados)]
+    col_totais = get_coluna_totais_aux(dados)
+    col_valor = get_valor_totais_aux(dados)
+    val_str = get_valor_string(dados)
 
-    coluna_totais_aux = get_coluna_totais_aux(dados)
-
-    valorString = get_valor_string(dados)
-    coluna_valor_string = get_valor_totais_aux(dados)
-
-    itens_array = []
-
-    # Iterar sobre as chaves que começam com "item"
-    for chave, valor in itemChave.items():
-        if chave.startswith("item"):
-            itens_array.append(valor)
+    itens_array = [v for k, v in itemChave.items() if k.startswith("item")]
 
     final_total_linha_array = set()
 
-    for item in itens_array:
+    for item_cfg in itens_array:
         resultado_fator = fator_nos_item_totais_aux(
-            sheet_planilha_aux,
+            sheet_aux,
             dados,
-            linhaIni,
-            linhaFim,
-            item["nome"],
-            item["total"],
-            True if item["fatorCoeficiente"] == "Sim" else False,
-            True if item["adicionarFator"] == "Sim" else False,
-            item["iniciaPor"],
-            item["naoIniciaPor"],
+            lin_ini,
+            lin_fim,
+            item_cfg["nome"],
+            item_cfg["total"],
+            item_cfg["fatorCoeficiente"] == "Sim",
+            item_cfg["adicionarFator"] == "Sim",
+            item_cfg.get("iniciaPor"),
+            item_cfg.get("naoIniciaPor"),
         )
 
-        if resultado_fator is not None:
+        if resultado_fator:
             linha_desc, linha_total = resultado_fator
-        if resultado_fator is not None and linha_total is not None:
             final_total_linha_array.add(linha_total)
-        if (
-            item["buscarAuxiliar"] is not None
-            and item["buscarAuxiliar"] == "Sim"
-            and resultado_fator is not None
-            and linha_desc > 0
-            and linha_total > 0
-        ):
-            buscar_auxiliar_no_aux(
-                workbook, dados, itemChave, linha_desc, linha_total, nivel=1
-            )
 
-        # total no VALOR:
-        if final_total_linha_array:
-            linha_valor_sum = buscar_palavra_com_linha(
-                sheet_planilha_aux,
-                coluna_totais_aux,
-                valorString,
-                linhaIni,
-                linhaFim + 1,
+            if (
+                item_cfg.get("buscarAuxiliar") == "Sim"
+                and linha_desc > 0
+                and linha_total > 0
+            ):
+                buscar_auxiliar_no_aux(
+                    workbook, dados, itemChave, linha_desc, linha_total
+                )
+
+    if final_total_linha_array:
+        linha_valor_sum = buscar_palavra_com_linha(
+            sheet_aux, col_totais, val_str, lin_ini, lin_fim + 1
+        )
+        if linha_valor_sum > 0:
+            sheet_aux[f"{col_valor}{linha_valor_sum}"].value = (
+                f"=SUM({','.join(f'{col_valor}{linha}' for linha in final_total_linha_array)})"
             )
-            if linha_valor_sum > 0:
-                formula_soma = (
-                    "=SUM("
-                    + ",".join(
-                        [
-                            f"{coluna_valor_string}{linha}"
-                            for linha in final_total_linha_array
-                        ]
-                    )
-                    + ")"
-                )
-                # Atribui a fórmula à célula específica
-                sheet_planilha_aux[f"{coluna_valor_string}{linha_valor_sum}"].value = (
-                    formula_soma
-                )
-            else:
-                print("A linha_valor_sum não é maior que zero.")
 
 
 def adicionar_fator_aux(workbook, dados):
-    sheet_name_aux = get_planilha_aux(dados)
-    sheet_planilha_aux = workbook[sheet_name_aux]
-
-    copiar_colunas(sheet_planilha_aux, dados)
-    adicionar_formula_preco_unitario_menos_preco_antigo(sheet_planilha_aux, dados)
-    coluna_valor_string = get_coluna_totais_aux(dados)
-    coluna_valor_value = get_valor_totais_aux(dados)
-    valor_bdi_final(sheet_planilha_aux, dados, coluna_valor_string, coluna_valor_value)
+    sheet_aux = workbook[get_planilha_aux(dados)]
+    copiar_colunas(sheet_aux, dados)
+    adicionar_formula_preco_unitario_menos_preco_antigo(sheet_aux, dados)
+    valor_bdi_final(
+        sheet_aux, dados, get_coluna_totais_aux(dados), get_valor_totais_aux(dados)
+    )

@@ -22,8 +22,8 @@
     "item3": {
       "nome": "Mão de Obra",
       "total": "TOTAL Mão de Obra:",
-      "adicionarFator": "Sim",
-      "fatorCoeficiente": "Sim",
+      "adicionarFator": "Não",
+      "fatorCoeficiente": "Não",
       "buscarAuxiliar": "Não",
       "iniciaPor": "",
       "naoIniciaPor": "I"
@@ -42,15 +42,15 @@
       "total": "TOTAL Mão de Obra com Encargos Complementares:",
       "adicionarFator": "Sim",
       "fatorCoeficiente": "Sim",
-      "buscarAuxiliar": "Não",
+      "buscarAuxiliar": "Sim",
       "iniciaPor": "",
       "naoIniciaPor": ""
     },
     "item6": {
       "nome": "Encargos Complementares",
       "total": "TOTAL Encargos Complementares:",
-      "adicionarFator": "Sim",
-      "fatorCoeficiente": "Sim",
+      "adicionarFator": "Não",
+      "fatorCoeficiente": "Não",
       "buscarAuxiliar": "Não",
       "iniciaPor": "",
       "naoIniciaPor": ""
@@ -85,9 +85,9 @@
     "item10": {
       "nome": "Equipamento Custo Horário",
       "total": "TOTAL Equipamento Custo Horário:",
-      "adicionarFator": "Sim",
+      "adicionarFator": "Não",
       "fatorCoeficiente": "Não",
-      "buscarAuxiliar": "Não",
+      "buscarAuxiliar": "Sim",
       "iniciaPor": "",
       "naoIniciaPor": "I"
     },
@@ -130,10 +130,46 @@
     "item15": {
       "nome": "Geral",
       "total": "TOTAL Geral:",
-      "adicionarFator": "Não",
+      "adicionarFator": "Sim",
       "fatorCoeficiente": "Não",
       "buscarAuxiliar": "Sim",
       "iniciaPor": "",
+      "naoIniciaPor": ""
+    },
+    "item16": {
+      "nome": "Não cadastrado",
+      "total": "TOTAL Não cadastrado:",
+      "adicionarFator": "Sim",
+      "fatorCoeficiente": "Não",
+      "buscarAuxiliar": "Não",
+      "iniciaPor": "",
+      "naoIniciaPor": ""
+    },
+    "item17": {
+      "nome": "Encargos Complementares",
+      "total": "TOTAL Encargos Complementares:",
+      "adicionarFator": "Sim",
+      "fatorCoeficiente": "Sim",
+      "buscarAuxiliar": "Sim",
+      "iniciaPor": "S",
+      "naoIniciaPor": ""
+    },
+    "item18": {
+      "nome": "Mão de Obra",
+      "total": "TOTAL Mão de Obra:",
+      "adicionarFator": "Sim",
+      "fatorCoeficiente": "Sim",
+      "buscarAuxiliar": "Não",
+      "iniciaPor": "09",
+      "naoIniciaPor": ""
+    },
+    "item19": {
+      "nome": "Serviço",
+      "total": "TOTAL Serviço:",
+      "adicionarFator": "Sim",
+      "fatorCoeficiente": "Não",
+      "buscarAuxiliar": "Não",
+      "iniciaPor": "I",
       "naoIniciaPor": ""
     }
   }

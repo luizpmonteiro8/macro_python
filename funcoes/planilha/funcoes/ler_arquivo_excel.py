@@ -42,45 +42,75 @@ def selecionar_arquivo_excel(self):
         )
 
         if filepath:
+            print(">>> Início do processamento do arquivo")
             start_time = time.time()
+
             # Mostrar mensagem de processamento
+            print(">>> Atualizando label para 'Processando...'")
             self.lbl_processando.config(text="Processando...")
             self.update_idletasks()
+
             # Carregar o arquivo Excel
+            print(">>> Carregando arquivo Excel...")
             workbook = openpyxl.load_workbook(filepath)
 
-            # Realizar operações com o workbook conforme necessário
+            # Ler nome da planilha
+            print(">>> Obtendo nome da planilha orçamentária...")
             sheet_name = get_planilha_orcamentaria(self.dados)
+            print(f"--- Planilha encontrada: {sheet_name}")
             sheet_planilha = workbook[sheet_name]
 
-            # Obter informações de coluna do JSON
+            # Obter colunas e valores do JSON
+            print(">>> Obtendo colunas e valores iniciais/finais do JSON...")
             coluna_inicial = get_coluna_inicial(self.dados)
             valor_inicial = get_valor_inicial(self.dados)
             coluna_final = get_coluna_final(self.dados)
             valor_final = get_valor_final(self.dados)
+            print(f"--- coluna_inicial={coluna_inicial}, valor_inicial={valor_inicial}")
+            print(f"--- coluna_final={coluna_final}, valor_final={valor_final}")
 
+            # Buscar linhas
+            print(">>> Buscando linha inicial...")
             linhaIni = buscar_palavra(sheet_planilha, coluna_inicial, valor_inicial) + 1
-            linhafinal = buscar_palavra(sheet_planilha, coluna_final, valor_final)
+            print(f"--- linhaIni = {linhaIni}")
 
+            print(">>> Buscando linha final...")
+            linhafinal = buscar_palavra(sheet_planilha, coluna_final, valor_final)
+            print(f"--- linhaFinal = {linhafinal}")
+
+            # Começo das funções de processamento
+            print(">>> Copiando colunas da planilha...")
             copiar_coluna_planilha(sheet_planilha, self.dados)
 
+            print(">>> Adicionando Fator...")
             adicionar_fator(workbook, self.dados)
 
+            print(">>> Adicionando BDI...")
             adicionar_bdi(workbook, self.dados)
 
+            print(">>> Inserindo fórmulas na planilha...")
             formula_planilha(workbook, linhaIni, linhafinal, self.dados)
 
+            print(">>> Adicionando Fator Auxiliar...")
             adicionar_fator_aux(workbook, self.dados)
 
+            print(">>> Adicionando Fator de Composição...")
             adicionar_fator_comp(workbook, self.dados, self.item, linhaIni, linhafinal)
 
-            # somatorio_planilha(sheet_planilha)
-
+            print(">>> Calculando custo unitário de execução...")
             custo_unitario_execucao(workbook, self.dados)
 
+            print(">>> Gerando resumo de totais...")
             resumo_totais(workbook, self.dados)
 
+            print(">>> Salvando arquivo...")
             salvar_arquivo(workbook, filepath)
+
+            print(
+                ">>> PROCESSAMENTO FINALIZADO EM {:.2f} segundos".format(
+                    time.time() - start_time
+                )
+            )
 
             # sys.exit()
 

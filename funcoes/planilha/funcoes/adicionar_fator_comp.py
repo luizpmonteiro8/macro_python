@@ -3,6 +3,7 @@ import tkinter as tk
 from openpyxl.utils import column_index_from_string
 
 from funcoes.common.buscar_palavras import (
+    buscar_palavra,
     buscar_palavra_com_linha,
     buscar_palavra_com_linha_exato,
 )
@@ -164,6 +165,9 @@ def buscar_comp_auxiliar(workbook, dados, itemChave, linha, linha_total):
                     ultima_linha_aux,
                 )
 
+            if cod == "I0690" or cod == "I0769":
+                print(cod, nome, linha_inicial, ultima_linha_aux, coluna_desc_aux)
+
             if linha_inicial > -1:
                 linha_final = buscar_palavra_com_linha(
                     sheet_planilha_aux,
@@ -172,6 +176,16 @@ def buscar_comp_auxiliar(workbook, dados, itemChave, linha, linha_total):
                     linha_inicial,
                     ultima_linha_aux,
                 )
+
+                if cod == "I0690" or cod == "I0769":
+                    print(
+                        "final",
+                        linha_final,
+                        "valor_string",
+                        valor_string,
+                        "linha_inicial",
+                        linha_inicial,
+                    )
 
                 # adiciona fator e totais no auxiliar
                 adicionar_fator_totais_aux(
@@ -217,6 +231,14 @@ def adicionar_fator_totais(workbook, dados, itemChave, linhaIni, linhaFim):
         coluna_busca_value = sheet_planilha[f"{coluna_descricao}{x}"].value
 
         if coluna_busca_value is not None:
+            print(
+                "busca item",
+                cod + " " + coluna_busca_value,
+                "na linha",
+                x,
+                " na planilha ",
+                sheet_name,
+            )
             # busca nome da descricao na composicao
             linha_inicial_comp = -1
             linha_inicial_comp = buscar_palavra_com_linha(
@@ -235,6 +257,7 @@ def adicionar_fator_totais(workbook, dados, itemChave, linhaIni, linhaFim):
                     sheet_comp_linha_fim,
                 )
 
+            print("encontrado item", cod, coluna_busca_value, linha_inicial_comp)
             if linha_inicial_comp == -1:
                 tk.messagebox.showwarning(
                     "Aviso",
@@ -244,6 +267,11 @@ def adicionar_fator_totais(workbook, dados, itemChave, linhaIni, linhaFim):
                     + coluna_busca_value
                     + "Verifique se o item existe em composição. ",
                 )
+                print(
+                    "Nao foi encontrado o item na composicao. ",
+                    cod + " " + coluna_busca_value,
+                )
+                return
 
             # busca linha final pelo valor bdi
             linha_final_comp = buscar_palavra_com_linha(

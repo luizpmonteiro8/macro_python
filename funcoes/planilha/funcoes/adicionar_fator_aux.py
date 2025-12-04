@@ -147,6 +147,13 @@ def buscar_auxiliar_no_aux(workbook, dados, itemChave, linha, linha_total, nivel
         item = sheet_planilha_aux[f"{coluna_item}{x}"].value
 
         if item is not None:
+            print(
+                "busca item na auxiliar: ",
+                cod + " " + item,
+                "na linha ",
+                x,
+                " tabela auxiliar",
+            )
             linha_inicial = buscar_palavra_com_linha(
                 sheet_planilha_aux, coluna_desc_aux, cod + " " + item, 1, ultima_linha
             )
@@ -175,6 +182,7 @@ def buscar_auxiliar_no_aux(workbook, dados, itemChave, linha, linha_total, nivel
                 )
 
                 if linha_final > 0:
+                    print("Item encontrado na auxiliar", cod + " " + item)
                     # Evita apontar para o próprio somatório
                     if not (linha_inicial <= x <= linha_final):
                         sheet_planilha_aux[f"{coluna_preco_aux}{x}"].value = (

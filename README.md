@@ -7,6 +7,7 @@
 3.5- item com i que na busca tem (H) no final, corrigido auxiliar para adicionar fator corretamente
 3.6- adiciona buscar iniciando por 
 3.7 - uso de memoria e log
+3.8 - buscar na composicao inicia na linha 1 e adiciona link
 
 virtualenv .venv
 

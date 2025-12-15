@@ -12,6 +12,21 @@ from funcoes.get.get_linhas_json import *
 from funcoes.planilha.funcoes.adicionar_fator_aux import adicionar_fator_totais_aux
 
 
+def criar_link_composicao(
+    sheet_origem,
+    col_desc,
+    linha_origem,
+    nome_planilha_destino,
+    col_valor,
+    linha_destino,
+):
+    """
+    Cria um hyperlink na célula de descrição apontando para o total da composição
+    """
+    celula = sheet_origem[f"{col_desc}{linha_origem}"]
+    celula.hyperlink = f"#{nome_planilha_destino}!{col_valor}{linha_destino}"
+
+
 def copiar_colunas(sheet, dados):
     copiar_coluna_com_numeros(
         sheet, get_coeficiente_comp(dados), get_copiar_coeficiente_comp(dados)
@@ -175,7 +190,7 @@ def adicionar_fator_totais(workbook, dados, itemChave, lin_ini, lin_fim):
             tk.messagebox.showwarning(
                 "Aviso", f"Não foi encontrado o item na composição: {cod} {descricao}"
             )
-            print(f"Nao encontrado na composicao: {cod} {descricao}")
+            print(f"❌ Nao encontrado na composicao: {cod} {descricao}")
             continue
 
         print(
@@ -184,7 +199,15 @@ def adicionar_fator_totais(workbook, dados, itemChave, lin_ini, lin_fim):
         linha_fim_comp = buscar_palavra_com_linha(
             sheet_comp, col_totais_comp, valor_com_bdi, linha_ini_comp, sheet_comp_max
         )
-        linha_busca_ini = linha_fim_comp
+        criar_link_composicao(
+            sheet_origem=sheet,
+            col_desc=col_desc,
+            linha_origem=x,
+            nome_planilha_destino=get_planilha_comp(dados),
+            col_valor=col_valor_comp,
+            linha_destino=linha_fim_comp,
+        )
+        linha_busca_ini = 1
 
         sheet[f"{col_preco_planilha}{x}"].value = (
             f"={get_planilha_comp(dados)}!{col_valor_comp}{linha_fim_comp}"

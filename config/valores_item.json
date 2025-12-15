@@ -40,8 +40,8 @@
     "item5": {
       "nome": "Mão de Obra com Encargos Complementares",
       "total": "TOTAL Mão de Obra com Encargos Complementares:",
-      "adicionarFator": "Sim",
-      "fatorCoeficiente": "Sim",
+      "adicionarFator": "Não",
+      "fatorCoeficiente": "Não",
       "buscarAuxiliar": "Sim",
       "iniciaPor": "",
       "naoIniciaPor": ""
@@ -148,8 +148,8 @@
     "item17": {
       "nome": "Encargos Complementares",
       "total": "TOTAL Encargos Complementares:",
-      "adicionarFator": "Sim",
-      "fatorCoeficiente": "Sim",
+      "adicionarFator": "Não",
+      "fatorCoeficiente": "Não",
       "buscarAuxiliar": "Sim",
       "iniciaPor": "S",
       "naoIniciaPor": ""

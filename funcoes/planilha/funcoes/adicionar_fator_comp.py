@@ -123,12 +123,18 @@ def buscar_comp_auxiliar(workbook, dados, itemChave, lin, lin_total):
                 sheet_aux, col_desc_aux, cod, ultima_busca, ultima_linha_aux
             )
 
+        if linha_ini == -1:
+            linha_ini = buscar_palavra_com_linha(
+                sheet_aux, col_desc_aux, cod, 1, ultima_linha_aux
+            )
+
         if cod in ("I0690", "I0769"):
             print(
                 f"{cod} {nome} -> linha_ini: {linha_ini}, ultima_linha_aux: {ultima_linha_aux}"
             )
 
         if linha_ini > -1:
+            ultima_busca = linha_ini
             linha_fim = buscar_palavra_com_linha(
                 sheet_aux, col_totais_aux, valor_string, linha_ini, ultima_linha_aux
             )
@@ -187,6 +193,11 @@ def adicionar_fator_totais(workbook, dados, itemChave, lin_ini, lin_fim):
             )
 
         if linha_ini_comp == -1:
+            linha_ini_comp = buscar_palavra_contem(
+                sheet_comp, col_desc_comp, cod, 1, sheet_comp_max
+            )
+
+        if linha_ini_comp == -1:
             tk.messagebox.showwarning(
                 "Aviso", f"Não foi encontrado o item na composição: {cod} {descricao}"
             )
@@ -207,7 +218,7 @@ def adicionar_fator_totais(workbook, dados, itemChave, lin_ini, lin_fim):
             col_valor=col_valor_comp,
             linha_destino=linha_fim_comp,
         )
-        linha_busca_ini = 1
+        linha_busca_ini = linha_fim_comp
 
         sheet[f"{col_preco_planilha}{x}"].value = (
             f"={get_planilha_comp(dados)}!{col_valor_comp}{linha_fim_comp}"

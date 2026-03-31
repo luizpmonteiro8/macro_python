@@ -99,6 +99,8 @@ def buscar_auxiliar_no_aux(workbook, dados, itemChave, lin, lin_total, nivel=1):
 
     itens_array = [v for k, v in itemChave.items() if k.startswith("item")]
 
+    ultima_busca = 1
+
     for x in range(lin, lin_total):
         cod = sheet_aux[f"{col_desc}{x}"].value
         item = sheet_aux[f"{col_item}{x}"].value
@@ -117,11 +119,15 @@ def buscar_auxiliar_no_aux(workbook, dados, itemChave, lin, lin_total, nivel=1):
         else:
             print(f"busca item na auxiliar: {chave_busca} na linha {x}")
             linha_ini = buscar_palavra_com_linha(
-                sheet_aux, col_desc, chave_busca, 1, ultima_linha
+                sheet_aux, col_desc, chave_busca, ultima_busca, ultima_linha
             )
             if linha_ini == -1:
                 linha_ini = buscar_palavra_com_linha(
-                    sheet_aux, col_desc, f"{cod} ", 1, ultima_linha
+                    sheet_aux, col_desc, f"{cod} ", ultima_busca, ultima_linha
+                )
+            if linha_ini == -1:
+                linha_ini = buscar_palavra_com_linha_iniciando(
+                    sheet_aux, col_desc, chave_busca, ultima_busca, ultima_linha
                 )
             if linha_ini == -1:
                 linha_ini = buscar_palavra_com_linha_iniciando(
@@ -134,6 +140,7 @@ def buscar_auxiliar_no_aux(workbook, dados, itemChave, lin, lin_total, nivel=1):
                 print(f"⚠️ Item não encontrado na auxiliar: {chave_busca}")
                 continue
             else:
+                ultima_busca = linha_ini
                 cache_encontrados[chave_busca] = linha_ini
                 print(
                     f"✅ Item encontrado na auxiliar: {chave_busca} — linha {linha_ini}"

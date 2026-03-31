@@ -8,6 +8,8 @@
 3.6- adiciona buscar iniciando por 
 3.7 - uso de memoria e log
 3.8 - buscar na composicao inicia na linha 1 e adiciona link
+3.9 - ler linha final usando max_row
+3.9.1 - busca auxiliares e composição apartir da ultima linha encontrada
 
 virtualenv .venv
 

@@ -80,6 +80,8 @@ def selecionar_arquivo_excel(self):
             print(">>> Buscando linha final...")
             linhafinal = buscar_palavra(sheet_planilha, coluna_final, valor_final)
             print(f"--- linhaFinal = {linhafinal}")
+            if linhafinal == -1:
+                linhafinal = sheet_planilha.max_row
 
             # Começo das funções de processamento
             print(">>> Copiando colunas da planilha...")

@@ -46,6 +46,7 @@ new_item = {
     "valorComBdi": "VALOR COM BDI",
     "valorBdi": "VALOR COM BDI",
     "valorTotal": "VALOR COM BDI:",
+    "valorTotalResumo": "Valor total resumo",
 }
 
 
@@ -83,6 +84,7 @@ def atualizar_valores_json(
     valorComBdi,
     valorBdi,
     valorTotal,
+    valorTotalResumo,
     # aux
     planilhaAuxiliar,
     descricaoAuxiliar,
@@ -135,6 +137,7 @@ def atualizar_valores_json(
             item["valorComBdi"] = valorComBdi
             item["valorBdi"] = valorBdi
             item["valorTotal"] = valorTotal
+            item["valorTotalResumo"] = valorTotalResumo
             # aux
             item["planilhaAuxiliar"] = planilhaAuxiliar
             item["auxiliarDescricao"] = descricaoAuxiliar
@@ -180,6 +183,7 @@ def atualizar_valores_json(
             "valorComBdi": valorComBdi,
             "valorBdi": valorBdi,
             "valorTotal": valorTotal,
+            "valorTotalResumo": valorTotalResumo,
             # aux
             "planilhaAuxiliar": planilhaAuxiliar,
             "auxiliarDescricao": descricaoAuxiliar,
@@ -256,6 +260,7 @@ def salvar_valores_colunas(self, dropdown_valor):
     var_valor_com_bdi = self.entry_valor_com_bdi_comp.get()
     var_valor_bdi = self.entry_valor_bdi_comp.get()
     var_valor_total = self.entry_valor_total_comp.get()
+    var_valor_total_resumo = self.entry_valor_total_resumo.get()
 
     # aux
     var_planilha_auxiliar = self.entry_planilha_aux.get()
@@ -298,6 +303,7 @@ def salvar_valores_colunas(self, dropdown_valor):
         var_valor_com_bdi,
         var_valor_bdi,
         var_valor_total,
+        var_valor_total_resumo,
         var_planilha_auxiliar,
         var_descricao_aux,
         var_coefiente_aux,

@@ -171,3 +171,7 @@ def get_valor_com_bdi_string(dados):
 
 def get_valor_total_string(dados):
     return dados.get("valorTotal", "VALOR TOTAL:")
+
+
+def get_valor_total_resumo_string(dados):
+    return dados.get("valorTotalResumo", "Valor total resumo")

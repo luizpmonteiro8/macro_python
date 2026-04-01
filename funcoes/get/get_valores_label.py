@@ -113,6 +113,10 @@ def get_label_valor_total_comp(valores):
     return valores["planilhaComposicao"].get("valorTotal", "Valor Total")
 
 
+def get_label_valor_total_resumo_comp(valores):
+    return valores["planilhaComposicao"].get("valorTotalResumo", "Valor Total Resumo")
+
+
 def get_label_valor_com_bdi_comp(valores):
     return valores["planilhaComposicao"].get("valorComBdi", "Valor Com BDI")
 

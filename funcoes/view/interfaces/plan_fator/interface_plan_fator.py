@@ -7,11 +7,13 @@ from funcoes.get.get_linhas_json import (
     get_linha_fator,
     get_planilha_fator,
     get_valor_bdi,
+    get_valor_total_resumo_string,
 )
 from funcoes.get.get_valores_label import (
     get_label_coluna_fator,
     get_label_linha_fator,
     get_label_planilha_fator,
+    get_label_valor_total_resumo_comp,
     get_title_planilha_fator,
 )
 
@@ -60,4 +62,15 @@ def interface_planilha_fator(self, frame_fator):
     # linha fator
     self.entry_linha_fator = custom_input(
         frame_fator, get_label_linha_fator(valores_label), var_linha_fator.get(), row=4
+    )
+
+    # valor total resumo
+    var_valor_total_resumo = tk.StringVar(
+        value=get_valor_total_resumo_string(self.dados)
+    )
+    self.entry_valor_total_resumo = custom_input(
+        frame_fator,
+        get_label_valor_total_resumo_comp(valores_label),
+        var_valor_total_resumo.get(),
+        row=5,
     )

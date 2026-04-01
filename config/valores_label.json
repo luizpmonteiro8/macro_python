@@ -19,7 +19,7 @@
     "valorFinal": "Valor final"
   },
   "planilhaFator": {
-    "tituloPlanilhaFator": "PLANILHA FATOR",
+    "tituloPlanilhaFator": "PLANILHA RESUMO",
     "BDI": "BDI",
     "planilhaFator": "Planilha fator",
     "colunaFator": "Coluna fator",
@@ -36,6 +36,7 @@
     "valor": "Valor",
     "valorBdi": "Valor BDI",
     "valorTotal": "Valor Total",
+    "valorTotalResumo": "Valor Total Resumo",
     "valorComBdi": "Valor Com BDI"
   },
   "planilhaComposicaoAuxiliar": {

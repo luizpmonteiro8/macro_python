@@ -113,7 +113,12 @@ def selecionar_arquivo_excel(self):
             adicionar_fator_aux(workbook, self.dados)
 
             print(">>> Adicionando Fator de Composição...")
-            adicionar_fator_comp(workbook, self.dados, self.item, linhaIni, linhafinal)
+            sucesso, erro = adicionar_fator_comp(
+                workbook, self.dados, self.item, linhaIni, linhafinal
+            )
+            if not sucesso:
+                tk.messagebox.showerror("Erro", erro)
+                return
 
             print(">>> Calculando custo unitário de execução...")
             custo_unitario_execucao(workbook, self.dados)

@@ -209,19 +209,24 @@ def adicionar_fator_totais(workbook, dados, itemChave, lin_ini, lin_fim):
         if linha_ini_comp == -1:
             itens_nao_encontrados.append(f"{cod} {descricao}")
             print(f"⚠️ Item não encontrado na composição: {cod} {descricao}")
-            continue  # Continua em vez de parar
+            return False, f"ERRO: Item não encontrado na composição: {cod} {descricao}"
 
         print(
             f"encontrado item {cod} {descricao} -> linha da composicao: {linha_ini_comp}"
         )
+        print(f">>> BUSCANDO: '{valor_com_bdi}' na coluna {col_totais_comp}...")
         linha_fim_comp = buscar_palavra_com_linha(
             sheet_comp, col_totais_comp, valor_com_bdi, linha_ini_comp, sheet_comp_max
         )
+        print(f">>> RESULTADO DA BUSCA: linha_fim_comp = {linha_fim_comp}")
 
         if linha_fim_comp <= 0:
             itens_nao_encontrados.append(f"{cod} {descricao} (total: {valor_com_bdi})")
             print(f"⚠️ Total não encontrado na composição para: {cod} {descricao}")
-            continue  # Continua em vez de parar
+            return (
+                False,
+                f"ERRO: Total não encontrado na composição para: {cod} {descricao}",
+            )
 
         criar_link_composicao(
             sheet_origem=sheet,
@@ -276,13 +281,22 @@ def adicionar_fator_totais(workbook, dados, itemChave, lin_ini, lin_fim):
             else:
                 print("linha_valor_sum <= 0")
 
+    return True, None
+
 
 def adicionar_fator_comp(workbook, dados, itemChave, lin_ini, lin_fim):
     sheet_comp = workbook[get_planilha_comp(dados)]
 
     copiar_colunas(sheet_comp, dados)
     adicionar_formula_preco_unitario_menos_preco_antigo(sheet_comp, dados)
-    adicionar_fator_totais(workbook, dados, itemChave, lin_ini, lin_fim)
+
+    # Verifica se houve erro na função adicionar_fator_totais
+    sucesso, erro = adicionar_fator_totais(workbook, dados, itemChave, lin_ini, lin_fim)
+    if not sucesso:
+        return False, erro
+
     valor_bdi_final(
         sheet_comp, dados, get_coluna_totais_comp(dados), get_valor_totais_comp(dados)
     )
+
+    return True, None

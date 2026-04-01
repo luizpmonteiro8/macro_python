@@ -25,6 +25,7 @@ from funcoes.planilha.funcoes.formula_planilha import (
 )
 from funcoes.planilha.funcoes.resume import resumo_totais
 from funcoes.planilha.salvar.salvar_arquivo import salvar_arquivo
+from funcoes.planilha.funcoes.validar_arquivo_excel import validar_arquivo_excel
 
 
 def selecionar_arquivo_excel(self):
@@ -56,6 +57,18 @@ def selecionar_arquivo_excel(self):
                 ">>> Este processo demora de acordo com o tamanho do arquivo. Por favor, aguarde..."
             )
             workbook = openpyxl.load_workbook(filepath)
+
+            # ============================================
+            # VALIDAÇÃO DO ARQUIVO ANTES DO PROCESSAMENTO
+            # ============================================
+            print(">>> Validando estrutura do arquivo Excel...")
+            valido, mensagem_erro = validar_arquivo_excel(workbook, self.dados)
+
+            if not valido:
+                tk.messagebox.showerror("Erro de Validação", mensagem_erro)
+                print(f">>> ERRO: {mensagem_erro}")
+                self.lbl_processando.config(text="Validação falhou!")
+                return  # PARA o processamento
 
             # Ler nome da planilha
             print(">>> Obtendo nome da planilha orçamentária...")

@@ -135,9 +135,31 @@ def buscar_comp_auxiliar(workbook, dados, itemChave, lin, lin_total):
 
         if linha_ini > -1:
             ultima_busca = linha_ini
+
+            # Procurar "VALOR TOTAL:" primeiro (texto correto na Composicoes Auxiliares)
             linha_fim = buscar_palavra_com_linha(
-                sheet_aux, col_totais_aux, valor_string, linha_ini, ultima_linha_aux
+                sheet_aux, col_totais_aux, "VALOR TOTAL:", linha_ini, ultima_linha_aux
             )
+
+            # Fallback: Se não encontrou "VALOR TOTAL:", tenta buscar "VALOR:"
+            if linha_fim <= 0:
+                print(f"[DEBUG] Tentando fallback para valor_string na auxiliar")
+                linha_fim = buscar_palavra_com_linha(
+                    sheet_aux,
+                    col_totais_aux,
+                    valor_string,
+                    linha_ini,
+                    ultima_linha_aux,
+                )
+                print(f"[DEBUG] linha_fim fallback={linha_fim}")
+
+            # Se ainda não encontrou, usa ultima_linha_aux - 1 como fallback
+            if linha_fim <= 0:
+                print(
+                    f"[AVISO] Não encontrou linha final na auxiliar, usando ultima_linha_aux - 1"
+                )
+                linha_fim = ultima_linha_aux - 1
+
             if cod in ("I0690", "I0769"):
                 print(
                     f"final: {linha_fim}, valor_string: {valor_string}, linha_inicial: {linha_ini}"
@@ -154,6 +176,7 @@ def adicionar_fator_totais(workbook, dados, itemChave, lin_ini, lin_fim):
     sheet_comp = workbook[get_planilha_comp(dados)]
     sheet_comp_max = sheet_comp.max_row + 1
 
+    # LOG DEBUG: Mostrar os valores das colunas que serão usadas
     col_preco_planilha = get_planilha_preco_unitario(dados)
     col_desc_comp = get_descricao_comp(dados)
     col_totais_comp = get_coluna_totais_comp(dados)
@@ -162,6 +185,15 @@ def adicionar_fator_totais(workbook, dados, itemChave, lin_ini, lin_fim):
     col_desc = get_planilha_descricao(dados)
     valor_com_bdi = get_valor_com_bdi_string(dados)
     valor_string = get_valor_string(dados)
+
+    print(f"[DEBUG adicionar_fator_totais] col_preco_planilha={col_preco_planilha}")
+    print(f"[DEBUG adicionar_fator_totais] col_desc_comp={col_desc_comp}")
+    print(f"[DEBUG adicionar_fator_totais] col_totais_comp={col_totais_comp}")
+    print(f"[DEBUG adicionar_fator_totais] col_valor_comp={col_valor_comp}")
+    print(f"[DEBUG adicionar_fator_totais] col_cod={col_cod}")
+    print(f"[DEBUG adicionar_fator_totais] col_desc={col_desc}")
+    print(f"[DEBUG adicionar_fator_totais] valor_com_bdi={valor_com_bdi}")
+    print(f"[DEBUG adicionar_fator_totais] valor_string={valor_string}")
 
     itens_array = [v for k, v in itemChave.items() if k.startswith("item")]
     linha_busca_ini = 1
@@ -207,9 +239,50 @@ def adicionar_fator_totais(workbook, dados, itemChave, lin_ini, lin_fim):
         print(
             f"encontrado item {cod} {descricao} -> linha da composicao: {linha_ini_comp}"
         )
+        # Procurar "VALOR TOTAL:" primeiro (texto correto na Composicoes)
         linha_fim_comp = buscar_palavra_com_linha(
-            sheet_comp, col_totais_comp, valor_com_bdi, linha_ini_comp, sheet_comp_max
+            sheet_comp, col_totais_comp, "VALOR TOTAL:", linha_ini_comp, sheet_comp_max
         )
+
+        # LOG DEBUG: Mostrar o resultado da busca
+        print(f"[DEBUG] linha_fim_comp={linha_fim_comp} para VALOR TOTAL:")
+
+        # Fallback: Se não encontrou "VALOR TOTAL:", tenta buscar "VALOR COM BDI"
+        if linha_fim_comp <= 0:
+            print(f"[DEBUG] Tentando fallback para valor_com_bdi={valor_com_bdi}")
+            linha_fim_comp = buscar_palavra_com_linha(
+                sheet_comp,
+                col_totais_comp,
+                valor_com_bdi,
+                linha_ini_comp,
+                sheet_comp_max,
+            )
+            print(f"[DEBUG] linha_fim_comp fallback={linha_fim_comp}")
+
+        # Fallback adicional: Se ainda não encontrou, tenta buscar "VALOR:"
+        if linha_fim_comp <= 0:
+            print(f"[DEBUG] Tentando fallback para valor_string={valor_string}")
+            linha_fim_comp = buscar_palavra_com_linha(
+                sheet_comp,
+                col_totais_comp,
+                valor_string,
+                linha_ini_comp,
+                sheet_comp_max,
+            )
+            print(f"[DEBUG] linha_fim_comp fallback2={linha_fim_comp}")
+
+        # Se ainda não encontrou, usa sheet_comp_max - 1 como fallback
+        if linha_fim_comp <= 0:
+            print(f"[AVISO] Não encontrou linha final, usando sheet_comp_max - 1")
+            linha_fim_comp = sheet_comp_max - 1
+
+        # Verificar se linha_fim_comp é válido antes de usar
+        if linha_fim_comp <= 0:
+            print(
+                f"[ERRO] linha_fim_comp inválido ({linha_fim_comp}), pulando item {cod}"
+            )
+            continue
+
         criar_link_composicao(
             sheet_origem=sheet,
             col_desc=col_desc,
@@ -249,13 +322,29 @@ def adicionar_fator_totais(workbook, dados, itemChave, lin_ini, lin_fim):
 
         # soma final
         if final_total_linha_array:
+            # Procurar "VALOR TOTAL:" primeiro (texto correto na Composicoes)
             linha_valor_sum = buscar_palavra_com_linha(
                 sheet_comp,
                 col_totais_comp,
-                valor_string,
+                "VALOR TOTAL:",
                 linha_ini_comp,
                 linha_fim_comp,
             )
+
+            # Fallback: Se não encontrou "VALOR TOTAL:", tenta buscar valor_string
+            if linha_valor_sum <= 0:
+                print(
+                    f"[DEBUG] Tentando fallback para valor_string na composicao soma final"
+                )
+                linha_valor_sum = buscar_palavra_com_linha(
+                    sheet_comp,
+                    col_totais_comp,
+                    valor_string,
+                    linha_ini_comp,
+                    linha_fim_comp,
+                )
+                print(f"[DEBUG] linha_valor_sum fallback={linha_valor_sum}")
+
             if linha_valor_sum > 0:
                 sheet_comp[f"{col_valor_comp}{linha_valor_sum}"].value = (
                     f"=SUM({','.join(f'{col_valor_comp}{linha}' for linha in final_total_linha_array)})"

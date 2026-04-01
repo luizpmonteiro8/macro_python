@@ -146,9 +146,26 @@ def buscar_auxiliar_no_aux(workbook, dados, itemChave, lin, lin_total, nivel=1):
                     f"✅ Item encontrado na auxiliar: {chave_busca} — linha {linha_ini}"
                 )
 
+        # Procurar "VALOR TOTAL:" primeiro (texto correto na Composicoes Auxiliares)
         linha_fim = buscar_palavra_com_linha_exato(
-            sheet_aux, col_totais, val_str, linha_ini, ultima_linha
+            sheet_aux, col_totais, "VALOR TOTAL:", linha_ini, ultima_linha
         )
+
+        # Fallback: Se não encontrou "VALOR TOTAL:", tenta buscar val_str
+        if linha_fim <= 0:
+            print(f"[DEBUG] Tentando fallback para val_str na auxiliar no_aux")
+            linha_fim = buscar_palavra_com_linha_exato(
+                sheet_aux, col_totais, val_str, linha_ini, ultima_linha
+            )
+            print(f"[DEBUG] linha_fim fallback={linha_fim}")
+
+        # Se ainda não encontrou, usa ultima_linha - 1 como fallback
+        if linha_fim <= 0:
+            print(
+                f"[AVISO] Não encontrou linha final na auxiliar, usando ultima_linha - 1"
+            )
+            linha_fim = ultima_linha - 1
+
         if linha_fim <= 0:
             cache_nao_encontrados[chave_busca] = True
             print(f"⚠️ Item não encontrado na auxiliar (valor final): {chave_busca}")
@@ -188,9 +205,21 @@ def buscar_auxiliar_no_aux(workbook, dados, itemChave, lin, lin_total, nivel=1):
                     )
 
         if final_total_linha_array:
+            # Procurar "VALOR TOTAL:" primeiro (texto correto na Composicoes Auxiliares)
             linha_valor_sum = buscar_palavra_com_linha(
-                sheet_aux, col_totais, val_str, linha_ini, linha_fim + 1
+                sheet_aux, col_totais, "VALOR TOTAL:", linha_ini, linha_fim + 1
             )
+
+            # Fallback: Se não encontrou "VALOR TOTAL:", tenta buscar val_str
+            if linha_valor_sum <= 0:
+                print(
+                    f"[DEBUG] Tentando fallback para val_str na fator_nos_item_totais_aux"
+                )
+                linha_valor_sum = buscar_palavra_com_linha(
+                    sheet_aux, col_totais, val_str, linha_ini, linha_fim + 1
+                )
+                print(f"[DEBUG] linha_valor_sum fallback={linha_valor_sum}")
+
             if linha_valor_sum > 0:
                 sheet_aux[f"{col_valor}{linha_valor_sum}"].value = (
                     f"=SUM({','.join(f'{col_valor}{linha}' for linha in final_total_linha_array)})"
@@ -235,9 +264,19 @@ def adicionar_fator_totais_aux(workbook, dados, itemChave, lin_ini, lin_fim):
                 )
 
     if final_total_linha_array:
+        # Procurar "VALOR TOTAL:" primeiro (texto correto na Composicoes Auxiliares)
         linha_valor_sum = buscar_palavra_com_linha(
-            sheet_aux, col_totais, val_str, lin_ini, lin_fim + 1
+            sheet_aux, col_totais, "VALOR TOTAL:", lin_ini, lin_fim + 1
         )
+
+        # Fallback: Se não encontrou "VALOR TOTAL:", tenta buscar val_str
+        if linha_valor_sum <= 0:
+            print(f"[DEBUG] Tentando fallback para val_str na auxiliar totais")
+            linha_valor_sum = buscar_palavra_com_linha(
+                sheet_aux, col_totais, val_str, lin_ini, lin_fim + 1
+            )
+            print(f"[DEBUG] linha_valor_sum fallback={linha_valor_sum}")
+
         if linha_valor_sum > 0:
             sheet_aux[f"{col_valor}{linha_valor_sum}"].value = (
                 f"=SUM({','.join(f'{col_valor}{linha}' for linha in final_total_linha_array)})"

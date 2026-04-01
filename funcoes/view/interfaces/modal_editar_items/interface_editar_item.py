@@ -3,7 +3,7 @@ import tkinter as tk
 from tkinter import ttk
 
 from funcoes.common.custom_input import custom_input
-from funcoes.config.open_config import open_valores_item
+from config.open_config import open_valores_item
 
 
 def fechar_janela(canvas_editar, nova_janela):

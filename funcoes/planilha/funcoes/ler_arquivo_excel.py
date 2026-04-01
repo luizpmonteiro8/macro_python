@@ -6,6 +6,7 @@ from tkinter import filedialog
 import openpyxl
 
 from funcoes.common.buscar_palavras import buscar_palavra
+from funcoes.planilha.funcoes.adicionar_fator_aux import itens_nao_encontrados
 from funcoes.common.custo_unitario import custo_unitario_execucao
 from funcoes.get.get_linhas_json import (
     get_coluna_final,
@@ -33,15 +34,14 @@ def selecionar_arquivo_excel(self):
         )
         return
 
-    try:
+    # Abrir janela para selecionar arquivo Excel
+    filepath = filedialog.askopenfilename(
+        title="Selecione um arquivo Excel",
+        filetypes=[("Arquivos Excel", "*.xlsx;*.xls")],
+    )
 
-        # Abrir janela para selecionar arquivo Excel
-        filepath = filedialog.askopenfilename(
-            title="Selecione um arquivo Excel",
-            filetypes=[("Arquivos Excel", "*.xlsx;*.xls")],
-        )
-
-        if filepath:
+    if filepath:
+        try:
             print(">>> Início do processamento do arquivo")
             start_time = time.time()
 
@@ -128,8 +128,21 @@ def selecionar_arquivo_excel(self):
                 + f"Tempo total de execução: {total_time:.2f} segundos"
             )
 
-    except Exception as e:
-        tk.messagebox.showerror("Erro", f"Ocorreu um erro: {str(e)}")
-        print(f"Ocorreu um erro: {str(e)}")
-        traceback.print_exc()
-        self.lbl_processando.config(text="Ocorreu um erro!")
+        except Exception as e:
+            tk.messagebox.showerror("Erro", f"Ocorreu um erro: {str(e)}")
+            print(f"Ocorreu um erro: {str(e)}")
+            traceback.print_exc()
+            self.lbl_processando.config(text="Ocorreu um erro!")
+
+        finally:
+            # Mostrar itens não encontrados ao final (tanto em sucesso quanto em erro)
+            if itens_nao_encontrados:
+                lista_formatada = "\n".join(
+                    f"  - {item}" for item in itens_nao_encontrados
+                )
+                tk.messagebox.showwarning(
+                    "Itens não encontrados",
+                    f"Os seguintes itens não foram encontrados:\n\n{lista_formatada}\n\nVerifique se existem na planilha.",
+                )
+                # Limpa a lista para próxima execução
+                itens_nao_encontrados.clear()

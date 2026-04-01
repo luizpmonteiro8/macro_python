@@ -9,7 +9,10 @@ from funcoes.common.buscar_palavras import (
 from funcoes.common.copiar_coluna import copiar_coluna_com_numeros
 from funcoes.common.valor_bdi_final import valor_bdi_final
 from funcoes.get.get_linhas_json import *
-from funcoes.planilha.funcoes.adicionar_fator_aux import adicionar_fator_totais_aux
+from funcoes.planilha.funcoes.adicionar_fator_aux import (
+    adicionar_fator_totais_aux,
+    itens_nao_encontrados,
+)
 
 
 def criar_link_composicao(
@@ -175,34 +178,38 @@ def adicionar_fator_totais(workbook, dados, itemChave, lin_ini, lin_fim):
         print(f"busca item {cod} {descricao} na linha {x}")
 
         # busca inicial e final na composição
-        linha_ini_comp = buscar_palavra_com_linha(
+        # 1ª tentativa: busca por "código + descrição" usando contém (funciona com prefixos como "1.1. 103689")
+        linha_ini_comp = buscar_palavra_contem(
             sheet_comp,
             col_desc_comp,
             f"{cod} {descricao}",
             linha_busca_ini,
             sheet_comp_max,
         )
+        # 2ª tentativa: busca por "código + descrição" no início da linha
         if linha_ini_comp == -1:
             linha_ini_comp = buscar_palavra_com_linha(
-                sheet_comp, col_desc_comp, cod, linha_busca_ini, sheet_comp_max
+                sheet_comp,
+                col_desc_comp,
+                f"{cod} {descricao}",
+                linha_busca_ini,
+                sheet_comp_max,
             )
-
+        # 3ª tentativa: busca pelo código apenas (pode estar no prefixo)
         if linha_ini_comp == -1:
             linha_ini_comp = buscar_palavra_contem(
                 sheet_comp, col_desc_comp, cod, linha_busca_ini, sheet_comp_max
             )
-
+        # 4ª tentativa: busca pelo código do início da planilha
         if linha_ini_comp == -1:
             linha_ini_comp = buscar_palavra_contem(
                 sheet_comp, col_desc_comp, cod, 1, sheet_comp_max
             )
 
         if linha_ini_comp == -1:
-            tk.messagebox.showwarning(
-                "Aviso", f"Não foi encontrado o item na composição: {cod} {descricao}"
-            )
-            print(f"❌ Nao encontrado na composicao: {cod} {descricao}")
-            continue
+            itens_nao_encontrados.append(f"{cod} {descricao}")
+            print(f"⚠️ Item não encontrado na composição: {cod} {descricao}")
+            continue  # Continua em vez de parar
 
         print(
             f"encontrado item {cod} {descricao} -> linha da composicao: {linha_ini_comp}"
@@ -210,6 +217,12 @@ def adicionar_fator_totais(workbook, dados, itemChave, lin_ini, lin_fim):
         linha_fim_comp = buscar_palavra_com_linha(
             sheet_comp, col_totais_comp, valor_com_bdi, linha_ini_comp, sheet_comp_max
         )
+
+        if linha_fim_comp <= 0:
+            itens_nao_encontrados.append(f"{cod} {descricao} (total: {valor_com_bdi})")
+            print(f"⚠️ Total não encontrado na composição para: {cod} {descricao}")
+            continue  # Continua em vez de parar
+
         criar_link_composicao(
             sheet_origem=sheet,
             col_desc=col_desc,
@@ -218,7 +231,7 @@ def adicionar_fator_totais(workbook, dados, itemChave, lin_ini, lin_fim):
             col_valor=col_valor_comp,
             linha_destino=linha_fim_comp,
         )
-        linha_busca_ini = linha_fim_comp
+        linha_busca_ini = max(1, linha_fim_comp)
 
         sheet[f"{col_preco_planilha}{x}"].value = (
             f"={get_planilha_comp(dados)}!{col_valor_comp}{linha_fim_comp}"

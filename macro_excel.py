@@ -3,7 +3,7 @@ import sys
 
 sys.setrecursionlimit(3000)
 
-from funcoes.config.open_config import open_valores_colunas, open_valores_item
+from config.open_config import open_valores_colunas, open_valores_item
 from funcoes.view.interfaces.menu.interface_menu import interface_menu
 from funcoes.view.interfaces.plan_auxiliar.interface_plan_auxiliar import (
     interface_plan_auxiliar,

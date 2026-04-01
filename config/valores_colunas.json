@@ -34,7 +34,9 @@
     "colunaTotaisAuxiliar": "E",
     "valorTotaisAuxiliar": "G",
     "valor": "VALOR:",
-    "valorComBdi": "VALOR COM BDI"
+    "valorComBdi": "VALOR TOTAL:",
+    "valorBdi": "VALOR BDI (00.00%):",
+    "valorTotal": "VALOR TOTAL:"
   },
   {
     "nome": "Totais - Composicao - E - Auxiliar - G",
@@ -72,7 +74,9 @@
     "colunaTotaisAuxiliar": "G",
     "valorTotaisAuxiliar": "I",
     "valor": "VALOR:",
-    "valorComBdi": "VALOR COM BDI"
+    "valorComBdi": "VALOR TOTAL",
+    "valorBdi": "VALOR BDI",
+    "valorTotal": "VALOR TOTAL:"
   },
   {
     "nome": "Totais - Composicao - G - Auxiliar - E",
@@ -109,6 +113,10 @@
     "colunaTotais": "E",
     "valorTotais": "G",
     "colunaTotaisAuxiliar": "E",
-    "valorTotaisAuxiliar": "G"
+    "valorTotaisAuxiliar": "G",
+    "valor": "VALOR:",
+    "valorComBdi": "VALOR TOTAL",
+    "valorBdi": "VALOR BDI",
+    "valorTotal": "VALOR TOTAL:"
   }
 ]

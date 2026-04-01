@@ -2,6 +2,25 @@ import re
 import unicodedata
 
 
+class CampoNaoEncontradoError(Exception):
+    """Exceção levantada quando um campo não é encontrado na planilha."""
+
+    def __init__(self, campo, valor_buscado="", contexto=""):
+        self.campo = campo
+        self.valor_buscado = valor_buscado
+        self.contexto = contexto
+        mensagem = f"❌ Campo não encontrado: '{campo}'"
+        if valor_buscado:
+            mensagem += f"\n   Valor que está sendo buscado: '{valor_buscado}'"
+            mensagem += f"\n   ➡️ Vá na aba 'COMPOSICOES' e procure este texto na coluna de totais."
+            mensagem += (
+                f"\n   ➡️ Depois vá em 'Salvar dados' e altere o campo correspondente."
+            )
+        if contexto:
+            mensagem += f"\n   {contexto}"
+        super().__init__(mensagem)
+
+
 def normalizar_texto(texto):
     if texto is None:
         return ""
@@ -112,13 +131,15 @@ def buscar_palavra_com_linha_iniciando(
 def buscar_palavra_contem(sheet, coluna, texto, lin_ini, lin_fim):
     numero_coluna = ord(coluna.upper()) - ord("A") + 1
     lin_fim = lin_fim or sheet.max_row
+    print(">>> linha final:", lin_fim)
     texto_normalizado = normalizar_texto(texto)
+    print(">>> Texto normalizado:", texto_normalizado)
 
     for linha in range(lin_ini, lin_fim + 1):
         valor_celula = sheet.cell(row=linha, column=numero_coluna).value
 
         if valor_celula:
-            celula_normalizada = re.sub(r"\s+", " ", str(valor_celula).strip().lower())
+            celula_normalizada = normalizar_texto(valor_celula)
             if texto_normalizado in celula_normalizada:
                 return linha
     return -1

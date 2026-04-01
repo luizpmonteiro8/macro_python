@@ -80,6 +80,7 @@ def fator_nos_item_totais_aux(
 # no topo do módulo
 cache_encontrados = {}
 cache_nao_encontrados = {}
+itens_nao_encontrados = []  # Lista para coletar itens não encontrados
 
 
 def buscar_auxiliar_no_aux(workbook, dados, itemChave, lin, lin_total, nivel=1):
@@ -137,8 +138,9 @@ def buscar_auxiliar_no_aux(workbook, dados, itemChave, lin, lin_total, nivel=1):
             # atualiza cache
             if linha_ini == -1:
                 cache_nao_encontrados[chave_busca] = True
+                itens_nao_encontrados.append(chave_busca)
                 print(f"⚠️ Item não encontrado na auxiliar: {chave_busca}")
-                continue
+                continue  # Continua em vez de parar
             else:
                 ultima_busca = linha_ini
                 cache_encontrados[chave_busca] = linha_ini
@@ -151,8 +153,9 @@ def buscar_auxiliar_no_aux(workbook, dados, itemChave, lin, lin_total, nivel=1):
         )
         if linha_fim <= 0:
             cache_nao_encontrados[chave_busca] = True
-            print(f"⚠️ Item não encontrado na auxiliar (valor final): {chave_busca}")
-            continue
+            itens_nao_encontrados.append(f"{chave_busca} (valor final: {val_str})")
+            print(f"⚠️ Valor final não encontrado na auxiliar para: {chave_busca}")
+            continue  # Continua em vez de parar
 
         if not (linha_ini <= x <= linha_fim):
             sheet_aux[f"{col_preco}{x}"].value = (

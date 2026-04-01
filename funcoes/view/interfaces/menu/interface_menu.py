@@ -2,9 +2,11 @@ import json
 import tkinter as tk
 from tkinter import messagebox
 
-from funcoes.config.open_config import open_valores_colunas
+from config.open_config import open_valores_colunas
 from funcoes.view.interfaces.menu.funcoes.editar_coluna_nome import (
-    atualizar_dropdown, local_abrir_janela_editar)
+    atualizar_dropdown,
+    local_abrir_janela_editar,
+)
 
 new_item = {
     "nome": "Novo",
@@ -41,51 +43,58 @@ new_item = {
     "colunaTotaisAuxiliar": "E",
     "valorTotaisAuxiliar": "G",
     "valor": "VALOR:",
-    "valorComBdi": "VALOR COM BDI"
+    "valorComBdi": "VALOR COM BDI",
+    "valorBdi": "VALOR COM BDI",
+    "valorTotal": "VALOR COM BDI:",
 }
 
 
 def atualizar_valores_json(
-        nome,
-        # planilha orcamentaria
-        planilhaOrcamentaria,
-        colunaInicial,
-        colunaFinal,
-        valorInicial,
-        valorFinal,
-        planilhaCodigo,
-        planilhaDescricao,
-        planilhaQuantidade,
-        planilhaPrecoUnitario,
-        planilhaPrecoTotal,
-        planilhaPrecoUnitarioCopiar,
-        # fator
-        planilhaFator,
-        colunaFator,
-        linhaFator,
-        bdi,
-        # composicao
-        planilhaComposicao,
-        descricaoComposicao,
-        itemDescricaoComposicao,
-        coeficienteComposicao,
-        precoUnitarioComposicao,
-        copiarCoeficienteComposicao,
-        copiarPrecoUnitarioComp,
-        colunaTotaisComposicao,
-        valorTotaisComposicao,
-        # aux
-        planilhaAuxiliar,
-        descricaoAuxiliar,
-        coeficienteAuxiliar,
-        precoUnitarioAuxiliar,
-        copiarCoeficienteAuxiliar,
-        copiarPrecoUnitarioAuxiliar,
-        colunaTotaisAuxiliar,
-        valorTotaisAuxiliar
+    nome,
+    # planilha orcamentaria
+    planilhaOrcamentaria,
+    colunaInicial,
+    colunaFinal,
+    valorInicial,
+    valorFinal,
+    planilhaCodigo,
+    planilhaDescricao,
+    planilhaQuantidade,
+    planilhaPrecoUnitario,
+    planilhaPrecoTotal,
+    planilhaPrecoUnitarioCopiar,
+    # fator
+    planilhaFator,
+    colunaFator,
+    linhaFator,
+    bdi,
+    # composicao
+    planilhaComposicao,
+    descricaoComposicao,
+    itemDescricaoComposicao,
+    coeficienteComposicao,
+    precoUnitarioComposicao,
+    copiarCoeficienteComposicao,
+    copiarPrecoUnitarioComp,
+    colunaTotaisComposicao,
+    valorTotaisComposicao,
+    # valor composicao
+    valor,
+    valorComBdi,
+    valorBdi,
+    valorTotal,
+    # aux
+    planilhaAuxiliar,
+    descricaoAuxiliar,
+    coeficienteAuxiliar,
+    precoUnitarioAuxiliar,
+    copiarCoeficienteAuxiliar,
+    copiarPrecoUnitarioAuxiliar,
+    colunaTotaisAuxiliar,
+    valorTotaisAuxiliar,
 ):
     # Carregar o JSON do arquivo
-    with open('config/valores_colunas.json', 'r') as arquivo_json:
+    with open("config/valores_colunas.json", "r") as arquivo_json:
         dados_json = json.load(arquivo_json)
 
     valor_encontrado = False
@@ -122,6 +131,10 @@ def atualizar_valores_json(
             item["composicaoPrecoUnitarioCopiar"] = copiarPrecoUnitarioComp
             item["colunaTotaisComposicao"] = colunaTotaisComposicao
             item["valorTotaisComposicao"] = valorTotaisComposicao
+            item["valor"] = valor
+            item["valorComBdi"] = valorComBdi
+            item["valorBdi"] = valorBdi
+            item["valorTotal"] = valorTotal
             # aux
             item["planilhaAuxiliar"] = planilhaAuxiliar
             item["auxiliarDescricao"] = descricaoAuxiliar
@@ -163,6 +176,10 @@ def atualizar_valores_json(
             "composicaoPrecoUnitarioCopiar": copiarPrecoUnitarioComp,
             "colunaTotaisComposicao": colunaTotaisComposicao,
             "valorTotaisComposicao": valorTotaisComposicao,
+            "valor": valor,
+            "valorComBdi": valorComBdi,
+            "valorBdi": valorBdi,
+            "valorTotal": valorTotal,
             # aux
             "planilhaAuxiliar": planilhaAuxiliar,
             "auxiliarDescricao": descricaoAuxiliar,
@@ -176,28 +193,27 @@ def atualizar_valores_json(
         dados_json.append(item)
 
     # Escrever os dados de volta no arquivo
-    with open('config/valores_colunas.json', 'w') as arquivo_json:
+    with open("config/valores_colunas.json", "w") as arquivo_json:
         json.dump(dados_json, arquivo_json, indent=2)
 
-    messagebox.showinfo('Sucesso', 'Item salvo com sucesso!')
+    messagebox.showinfo("Sucesso", "Item salvo com sucesso!")
 
 
 def adicionar_item(self, dropdown_valor, menu_dropdown, frame_menu):
     self.todos_dados.append(new_item)
-    dropdown_valor.set('Novo')
+    dropdown_valor.set("Novo")
     salvar_valores_colunas(self, dropdown_valor)
     atualizar_dropdown(menu_dropdown, frame_menu, dropdown_valor)
-    dropdown_valor.set('Novo')
+    dropdown_valor.set("Novo")
 
 
 def excluir_item(self, dropdown_valor, menu_dropdown, frame_menu):
     # filtar self.todos_dados onde nome seja diferente de dropdown_valor
     self.todos_dados = [
-        item for item in self.todos_dados if item["nome"]
-        != dropdown_valor.get()]
+        item for item in self.todos_dados if item["nome"] != dropdown_valor.get()
+    ]
 
-    with open('config/valores_colunas.json', 'w',
-              encoding='utf-8') as arquivo_json:
+    with open("config/valores_colunas.json", "w", encoding="utf-8") as arquivo_json:
         json.dump(self.todos_dados, arquivo_json, ensure_ascii=False, indent=2)
 
     dropdown_valor.set(self.todos_dados[0]["nome"])
@@ -236,6 +252,10 @@ def salvar_valores_colunas(self, dropdown_valor):
     var_preco_unit_copiar_composicao = self.entry_preco_unit_copiar_comp.get()
     var_coluna_totais_composicao = self.entry_coluna_totais_comp.get()
     var_valor_totais_composicao = self.entry_valor_totais_comp.get()
+    var_valor = self.entry_valor_comp.get()
+    var_valor_com_bdi = self.entry_valor_com_bdi_comp.get()
+    var_valor_bdi = self.entry_valor_bdi_comp.get()
+    var_valor_total = self.entry_valor_total_comp.get()
 
     # aux
     var_planilha_auxiliar = self.entry_planilha_aux.get()
@@ -274,6 +294,10 @@ def salvar_valores_colunas(self, dropdown_valor):
         var_preco_unit_copiar_composicao,
         var_coluna_totais_composicao,
         var_valor_totais_composicao,
+        var_valor,
+        var_valor_com_bdi,
+        var_valor_bdi,
+        var_valor_total,
         var_planilha_auxiliar,
         var_descricao_aux,
         var_coefiente_aux,
@@ -281,18 +305,25 @@ def salvar_valores_colunas(self, dropdown_valor):
         var_coefiente_copiar_aux,
         var_preco_unit_copiar_aux,
         var_coluna_totais_aux,
-        var_valor_totais_aux
+        var_valor_totais_aux,
     )
 
     self.todos_dados = open_valores_colunas()
+
+    # Atualizar self.dados com o valor selecionado atual
+    nome_selecionado = dropdown_valor.get()
+    self.dados = next(
+        (dado for dado in self.todos_dados if dado.get("nome") == nome_selecionado),
+        self.todos_dados[0] if self.todos_dados else {},
+    )
 
 
 def interface_menu(self, frame_menu, dropdown_valor):
     frame_menu.pack(pady=10)
 
     menu_dropdown = tk.OptionMenu(
-        frame_menu, dropdown_valor,
-        *[d["nome"] for d in self.todos_dados])
+        frame_menu, dropdown_valor, *[d["nome"] for d in self.todos_dados]
+    )
     # Configurar a largura do OptionMenu (ajuste conforme necessário)
     menu_dropdown.config(font=(None, 18), width=40)
 
@@ -302,8 +333,9 @@ def interface_menu(self, frame_menu, dropdown_valor):
     # Adicione as opções ao novo menu
     for opcao in self.todos_dados:
         novo_menu.add_command(
-            label=opcao.get("nome"), command=lambda opcao=opcao:
-                dropdown_valor.set(opcao.get("nome")))
+            label=opcao.get("nome"),
+            command=lambda opcao=opcao: dropdown_valor.set(opcao.get("nome")),
+        )
 
     # Configure o novo menu como o menu do OptionMenu
     menu_dropdown["menu"] = novo_menu
@@ -311,38 +343,35 @@ def interface_menu(self, frame_menu, dropdown_valor):
     menu_dropdown.grid(row=0, column=0, padx=10)
 
     botao_editar = tk.Button(
-        frame_menu, text="Editar nome",
+        frame_menu,
+        text="Editar nome",
         font=(None, 18),
         command=lambda: local_abrir_janela_editar(
-            self,
-            menu_dropdown,
-            frame_menu,
-            dropdown_valor
-        ))
+            self, menu_dropdown, frame_menu, dropdown_valor
+        ),
+    )
     botao_editar.grid(row=0, column=1, padx=10)
 
     botao_adicionar = tk.Button(
-        frame_menu, text="Adicionar",
+        frame_menu,
+        text="Adicionar",
         font=(None, 18),
-        command=lambda: adicionar_item(
-            self, dropdown_valor, menu_dropdown, frame_menu
-        )
+        command=lambda: adicionar_item(self, dropdown_valor, menu_dropdown, frame_menu),
     )
     botao_adicionar.grid(row=0, column=2, padx=10)
 
     botao_salvar = tk.Button(
-        frame_menu, text="Salvar dados",
+        frame_menu,
+        text="Salvar dados",
         font=(None, 18),
-        command=lambda: salvar_valores_colunas(
-            self, dropdown_valor
-        ))
+        command=lambda: salvar_valores_colunas(self, dropdown_valor),
+    )
     botao_salvar.grid(row=0, column=3, padx=10)
 
     botao_excluir = tk.Button(
-        frame_menu, text="Excluir",
+        frame_menu,
+        text="Excluir",
         font=(None, 18),
-        command=lambda: excluir_item(
-            self, dropdown_valor, menu_dropdown, frame_menu
-        )
+        command=lambda: excluir_item(self, dropdown_valor, menu_dropdown, frame_menu),
     )
     botao_excluir.grid(row=0, column=4, padx=10)

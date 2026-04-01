@@ -32,7 +32,11 @@
   "planilhaComposicao": {
     "tituloPlanilhaComposicao": "PLANILHA COMPOSICAO",
     "planilhaComposicao": "Composicoes",
-    "colunaItem": "Coluna descrição itens"
+    "colunaItem": "Coluna descrição itens",
+    "valor": "Valor",
+    "valorBdi": "Valor BDI",
+    "valorTotal": "Valor Total",
+    "valorComBdi": "Valor Com BDI"
   },
   "planilhaComposicaoAuxiliar": {
     "coeficienteCopiar": "Coluna copiar coeficiente",

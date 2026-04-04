@@ -45,9 +45,8 @@ new_item = {
     "valorTotaisAuxiliar": "G",
     "valor": "VALOR:",
     "valorComBdi": "VALOR COM BDI",
-    "valorBdi": "VALOR COM BDI",
-    "valorTotal": "VALOR COM BDI:",
-    "valorTotalResumo": "Valor total resumo",
+    "valorBdi": "VALOR BDI",
+    "valorTotalResumo": "VALOR TOTAL RESUMO",
 }
 
 
@@ -85,7 +84,6 @@ def atualizar_valores_json(
     valor,
     valorComBdi,
     valorBdi,
-    valorTotal,
     valorTotalResumo,
     # aux
     planilhaAuxiliar,
@@ -139,7 +137,6 @@ def atualizar_valores_json(
             item["valor"] = valor
             item["valorComBdi"] = valorComBdi
             item["valorBdi"] = valorBdi
-            item["valorTotal"] = valorTotal
             item["valorTotalResumo"] = valorTotalResumo
             # aux
             item["planilhaAuxiliar"] = planilhaAuxiliar
@@ -186,7 +183,6 @@ def atualizar_valores_json(
             "valor": valor,
             "valorComBdi": valorComBdi,
             "valorBdi": valorBdi,
-            "valorTotal": valorTotal,
             "valorTotalResumo": valorTotalResumo,
             # aux
             "planilhaAuxiliar": planilhaAuxiliar,

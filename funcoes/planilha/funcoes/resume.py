@@ -6,7 +6,6 @@ from funcoes.get.get_linhas_json import (
     get_coluna_total_resumo,
     get_planilha_orcamentaria,
     get_planilha_preco_total,
-    get_valor_total_string,
     get_valor_total_resumo_string,
 )
 
@@ -39,7 +38,7 @@ def resumo_totais(workbook: Workbook, dados):
     linha_orcamento_total = buscar_palavra_com_linha(
         wsOrcamento,
         get_coluna_final(dados),
-        get_valor_total_string(dados),
+        get_valor_total_resumo_string(dados),
         1,
         orcamentoLinhaFinal,
     )

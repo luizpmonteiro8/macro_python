@@ -15,7 +15,6 @@ from funcoes.get.get_linhas_json import (
     get_valor_bdi_comp,
     get_valor_com_bdi_comp,
     get_valor_totais_comp,
-    get_valor_total_comp,
 )
 from funcoes.get.get_valores_label import (
     get_label_coeficiente,
@@ -30,7 +29,6 @@ from funcoes.get.get_valores_label import (
     get_label_valor_bdi_comp,
     get_label_valor_com_bdi_comp,
     get_label_valor_comp,
-    get_label_valor_total_comp,
     get_title_planilha_composicao,
 )
 
@@ -68,7 +66,6 @@ def interface_plan_composicao(self, frame_aux):
     var_valor_totais_composicao = tk.StringVar(value=get_valor_totais_comp(self.dados))
     var_valor_comp = tk.StringVar(value=get_valor_comp(self.dados))
     var_valor_bdi_comp = tk.StringVar(value=get_valor_bdi_comp(self.dados))
-    var_valor_total_comp = tk.StringVar(value=get_valor_total_comp(self.dados))
     var_valor_com_bdi_comp = tk.StringVar(value=get_valor_com_bdi_comp(self.dados))
 
     # planilha composicao
@@ -159,18 +156,10 @@ def interface_plan_composicao(self, frame_aux):
         row=11,
     )
 
-    # valor total
-    self.entry_valor_total_comp = custom_input(
-        frame_aux,
-        get_label_valor_total_comp(valores_label),
-        var_valor_total_comp.get(),
-        row=12,
-    )
-
     # valor com BDI
     self.entry_valor_com_bdi_comp = custom_input(
         frame_aux,
         get_label_valor_com_bdi_comp(valores_label),
         var_valor_com_bdi_comp.get(),
-        row=13,
+        row=12,
     )

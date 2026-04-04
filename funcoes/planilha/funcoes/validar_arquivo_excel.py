@@ -35,11 +35,13 @@ def janela_corrigir_valor(titulo, mensagem, instrucao, valor_atual, valor_defaul
     def on_cancelar():
         janela.destroy()
     
-    janela = tk.Tk()
+    janela = tk.Toplevel()
     janela.title(titulo)
     janela.geometry("600x400")
     janela.resizable(False, False)
     janela.grab_set()
+    janela.focus_force()
+    janela.transient()
     
     mainframe = tk.Frame(janela, padx=20, pady=20)
     mainframe.pack(fill=tk.BOTH, expand=True)
@@ -668,7 +670,6 @@ def validar_planilha_composicoes(workbook, dados, erros, indice_config=0):
         valores_a_verificar = {
             "valor_com_bdi": (get_valor_com_bdi_string(dados[indice_config]), "valorComBdi"),
             "valor_bdi": (get_valor_bdi_comp(dados[indice_config]), "valorBdi"),
-            "valor_total": (get_valor_total_string(dados[indice_config]), "valorTotal"),
             "valor_string": (get_valor_string(dados[indice_config]), "valor"),
         }
 
@@ -738,7 +739,6 @@ def validar_planilha_composicoes_auxiliares(workbook, dados, erros, indice_confi
         valores_a_verificar = {
             "valor_com_bdi": (get_valor_com_bdi_string(dados[indice_config]), "valorComBdi"),
             "valor_bdi": (get_valor_bdi_comp(dados[indice_config]), "valorBdi"),
-            "valor_total": (get_valor_total_string(dados[indice_config]), "valorTotal"),
             "valor_string": (get_valor_string(dados[indice_config]), "valor"),
         }
 

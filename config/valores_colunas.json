@@ -34,10 +34,9 @@
     "colunaTotaisAuxiliar": "E",
     "valorTotaisAuxiliar": "G",
     "valor": "VALOR:",
-    "valorComBdi": "VALOR COM BDI:",
-    "valorBdi": "VALOR BDI:",
-    "valorTotal": "VALOR COM BDI:",
-    "valorTotalResumo": "VALOR TOTAL:",
+    "valorComBdi": "VALOR COM BDI",
+    "valorBdi": "VALOR BDI",
+    "valorTotalResumo": "VALOR TOTAL",
     "colunaTotalResumo": "C"
   }
 ]

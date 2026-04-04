@@ -115,15 +115,11 @@ def get_valor_comp(dados):
 
 
 def get_valor_bdi_comp(dados):
-    return dados.get("valorBdi", "VALOR BDI")
-
-
-def get_valor_total_comp(dados):
-    return dados.get("valorTotal", "VALOR TOTAL:")
+    return dados.get("valorBdi", "VALOR BDI:")
 
 
 def get_valor_com_bdi_comp(dados):
-    return dados.get("valorComBdi", "VALOR COM BDI")
+    return dados.get("valorComBdi", "VALOR COM BDI:")
 
 
 # AUXILIAR
@@ -166,15 +162,11 @@ def get_valor_string(dados):
 
 
 def get_valor_com_bdi_string(dados):
-    return dados.get("valorComBdi", "VALOR TOTAL")
-
-
-def get_valor_total_string(dados):
-    return dados.get("valorTotal", "VALOR TOTAL:")
+    return dados.get("valorComBdi", "VALOR COM BDI:")
 
 
 def get_valor_total_resumo_string(dados):
-    return dados.get("valorTotalResumo", "Valor total resumo")
+    return dados.get("valorTotalResumo", "VALOR TOTAL RESUMO:")
 
 
 def get_coluna_total_resumo(dados):

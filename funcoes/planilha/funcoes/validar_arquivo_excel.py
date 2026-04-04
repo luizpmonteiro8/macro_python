@@ -196,7 +196,7 @@ def validar_nome_planilha(workbook, nome_planilha, nome_exibicao, erros, dados, 
                 elif "Auxili" in nome_exibicao:
                     dados[indice_config]["planilhaAuxiliar"] = novo_valor
                 salvar_json_corrigido(dados, indice_config)
-                return True, workbook[novo_valor], True
+                return True, None, True
             else:
                 messagebox.showerror("Erro", f"A aba '{novo_valor}' também não existe no arquivo!")
                 return False, None, False
@@ -796,12 +796,21 @@ def validar_arquivo_excel(filepath, dados):
     while True:
         erros = []
         workbook = openpyxl.load_workbook(filepath)
+        
         dados_atualizados = json.load(open(CAMINHO_JSON, "r", encoding="utf-8"))
+        json_antes = json.dumps(dados_atualizados, sort_keys=True)
 
         print("\n>>> [FASE 1] Validando estrutura base...")
         if not validar_estrutura_base(workbook, dados_atualizados[indice_config], erros):
             mensagem = "ERROS NA VALIDAÇÃO:\n" + "\n".join(erros)
             return False, None, None
+
+        json_depois = json.dumps(json.load(open(CAMINHO_JSON, "r", encoding="utf-8")), sort_keys=True)
+        if json_antes != json_depois:
+            print(">>> [INFO] Configurações atualizadas. Recarregando...")
+            workbook.close()
+            continue
+        json_antes = json_depois
 
         print(">>> [OK] Estrutura base válida")
 
@@ -815,10 +824,17 @@ def validar_arquivo_excel(filepath, dados):
             print(">>> Encerrando validação.")
             workbook.close()
             return False, None, None
-        else:
-            print(
-                f">>> [OK] Planilha orçamentária válida (cabeçalhos na linha {linha_cabecalhos + 1 if linha_cabecalhos else '?'})"
-            )
+
+        json_depois = json.dumps(json.load(open(CAMINHO_JSON, "r", encoding="utf-8")), sort_keys=True)
+        if json_antes != json_depois:
+            print(">>> [INFO] Nome da planilha orçamentária corrigido. Recarregando...")
+            workbook.close()
+            continue
+        json_antes = json_depois
+
+        print(
+            f">>> [OK] Planilha orçamentária válida (cabeçalhos na linha {linha_cabecalhos + 1 if linha_cabecalhos else '?'})"
+        )
 
         print("\n>>> [FASE 3] Validando planilha RESUMO...")
         valido, sheet_resumo = validar_planilha_resumo(workbook, dados_atualizados, erros, indice_config)
@@ -828,6 +844,13 @@ def validar_arquivo_excel(filepath, dados):
             print(">>> Encerrando validação.")
             workbook.close()
             return False, None, None
+        
+        json_depois = json.dumps(json.load(open(CAMINHO_JSON, "r", encoding="utf-8")), sort_keys=True)
+        if json_antes != json_depois:
+            print(">>> [INFO] Nome da planilha RESUMO corrigido. Recarregando...")
+            workbook.close()
+            continue
+        json_antes = json_depois
 
         print("\n>>> [FASE 4] Validando planilha COMPOSIÇÕES...")
         valido, sheet_composicao = validar_planilha_composicoes(workbook, dados_atualizados, erros, indice_config)
@@ -837,6 +860,13 @@ def validar_arquivo_excel(filepath, dados):
             print(">>> Encerrando validação.")
             workbook.close()
             return False, None, None
+        
+        json_depois = json.dumps(json.load(open(CAMINHO_JSON, "r", encoding="utf-8")), sort_keys=True)
+        if json_antes != json_depois:
+            print(">>> [INFO] Nome da planilha COMPOSIÇÕES corrigido. Recarregando...")
+            workbook.close()
+            continue
+        json_antes = json_depois
 
         print("\n>>> [FASE 5] Validando planilha COMPOSIÇÕES AUXILIARES...")
         valido, sheet_auxiliar = validar_planilha_composicoes_auxiliares(
@@ -848,6 +878,12 @@ def validar_arquivo_excel(filepath, dados):
             print(">>> Encerrando validação.")
             workbook.close()
             return False, None, None
+        
+        json_depois = json.dumps(json.load(open(CAMINHO_JSON, "r", encoding="utf-8")), sort_keys=True)
+        if json_antes != json_depois:
+            print(">>> [INFO] Nome da planilha AUXILIARES corrigido. Recarregando...")
+            workbook.close()
+            continue
 
         print("\n" + "=" * 60)
         print(">>> [OK] VALIDAÇÃO CONCLUÍDA COM SUCESSO!")

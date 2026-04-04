@@ -260,7 +260,7 @@ def salvar_valores_colunas(self, dropdown_valor):
     var_valor = self.entry_valor_comp.get()
     var_valor_com_bdi = self.entry_valor_com_bdi_comp.get()
     var_valor_bdi = self.entry_valor_bdi_comp.get()
-    var_valor_total = self.entry_valor_total_comp.get()
+    var_valor_total = self.entry_valor_total_resumo.get()
     var_valor_total_resumo = self.entry_valor_total_resumo.get()
 
     # aux
@@ -304,7 +304,6 @@ def salvar_valores_colunas(self, dropdown_valor):
         var_valor,
         var_valor_com_bdi,
         var_valor_bdi,
-        var_valor_total,
         var_valor_total_resumo,
         var_planilha_auxiliar,
         var_descricao_aux,

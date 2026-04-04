@@ -430,18 +430,31 @@ def validar_valor_existe_na_coluna(sheet, coluna, valor_buscado, nome_valor, nom
             f"3. Procure na coluna '{coluna}' pelo texto relacionado a '{nome_valor}'\n"
             f"4. Digite o texto exatamente como aparece na célula"
         )
-        confirmado, novo_valor = janela_corrigir_valor(
-            titulo="Texto não encontrado",
-            mensagem=f"O texto '{valor_buscado}' não foi encontrado na coluna '{coluna}' da aba '{nome_planilha}'.",
-            instrucao=instrucao,
-            valor_atual=valor_buscado,
-            valor_default=valor_buscado
-        )
-        if confirmado and novo_valor:
+        while True:
+            confirmado, novo_valor = janela_corrigir_valor(
+                titulo="Texto não encontrado",
+                mensagem=f"O texto '{valor_buscado}' não foi encontrado na coluna '{coluna}' da aba '{nome_planilha}'.",
+                instrucao=instrucao,
+                valor_atual=valor_buscado,
+                valor_default=valor_buscado
+            )
+            if not confirmado:
+                return False
+            if not novo_valor or novo_valor.strip() == "":
+                messagebox.showerror("Erro", "O valor não pode ser vazio. Digite um valor válido.")
+                continue
+            linha_validada = buscar_palavra(sheet, coluna, novo_valor)
+            if linha_validada == -1:
+                messagebox.showerror(
+                    "Erro",
+                    f"O texto '{novo_valor}' não foi encontrado na coluna '{coluna}'.\n"
+                    f"Verifique se o texto está correto e tente novamente."
+                )
+                valor_buscado = novo_valor
+                continue
             dados[indice_config][campo_json] = novo_valor
             salvar_json_corrigido(dados, indice_config)
             return True
-        return False
 
     return True
 
@@ -668,7 +681,7 @@ def validar_planilha_composicoes(workbook, dados, erros, indice_config=0):
             return False, sheet
 
         valores_a_verificar = {
-            "valor_com_bdi": (get_valor_com_bdi_string(dados[indice_config]), "valorComBdi"),
+            "total_com_bdi": (get_valor_com_bdi_string(dados[indice_config]), "valorComBdi"),
             "valor_bdi": (get_valor_bdi_comp(dados[indice_config]), "valorBdi"),
             "valor_string": (get_valor_string(dados[indice_config]), "valor"),
         }
@@ -737,7 +750,7 @@ def validar_planilha_composicoes_auxiliares(workbook, dados, erros, indice_confi
             return False, sheet
 
         valores_a_verificar = {
-            "valor_com_bdi": (get_valor_com_bdi_string(dados[indice_config]), "valorComBdi"),
+            "total_com_bdi": (get_valor_com_bdi_string(dados[indice_config]), "valorComBdi"),
             "valor_bdi": (get_valor_bdi_comp(dados[indice_config]), "valorBdi"),
             "valor_string": (get_valor_string(dados[indice_config]), "valor"),
         }

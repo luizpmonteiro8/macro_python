@@ -817,8 +817,9 @@ def validar_planilha_resumo(workbook, dados, erros, indice_config=0):
         indice_config: Índice da configuração no JSON
 
     Returns:
-        tuple: (válido: bool, sheet: Worksheet ou None)
+        tuple: (válido: bool, sheet: Worksheet ou None, houve_correcao: bool)
     """
+    houve_correcao = False
     nome_planilha = dados[indice_config].get("planilhaFator", "RESUMO")
 
     valido, sheet, _ = validar_nome_planilha(
@@ -831,13 +832,13 @@ def validar_planilha_resumo(workbook, dados, erros, indice_config=0):
         workbook.sheetnames if hasattr(workbook, "sheetnames") else [],
     )
     if not valido:
-        return False, None
+        return False, None, False
 
     if sheet and sheet.max_row < 2:
         erros.append(
             f"ERRO: A aba '{nome_planilha}' está vazia ou não tem dados suficientes."
         )
-        return False, sheet
+        return False, sheet, False
 
     coluna_fator = dados[indice_config].get("colunaFator", "G")
     linha_fator = dados[indice_config].get("linhaFator", "4")
@@ -853,34 +854,109 @@ def validar_planilha_resumo(workbook, dados, erros, indice_config=0):
             nome_planilha,
             "colunaFator",
         ):
-            return False, sheet
+            return False, sheet, False
 
         bdi_valido, _, _ = validar_celula_bdi(
             sheet, coluna_fator, linha_fator, erros, dados, indice_config, nome_planilha
         )
         if not bdi_valido:
-            return False, sheet
+            return False, sheet, False
 
         valor_total_resumo = dados[indice_config].get(
             "valorTotalResumo", "VALOR TOTAL RESUMO:"
         )
         coluna_total_resumo = dados[indice_config].get("colunaTotalResumo", "C")
 
-        if valor_total_resumo:
-            if not validar_valor_existe_na_coluna(
-                sheet,
-                coluna_total_resumo,
-                valor_total_resumo,
-                "Valor Total do Resumo",
-                nome_planilha,
-                erros,
-                dados,
-                indice_config,
-                "valorTotalResumo",
-            ):
-                return False, sheet
+        print(
+            f"\n>>> [DEBUG] Buscando valorTotalResumo: '{valor_total_resumo}' na coluna: '{coluna_total_resumo}'"
+        )
 
-    return True, sheet
+        if valor_total_resumo:
+            # Primeiro verificar se o valor existe na coluna
+            linha_valor_resumo = buscar_palavra(
+                sheet, coluna_total_resumo, valor_total_resumo
+            )
+            print(
+                f">>> [DEBUG] Resultado busca valorTotalResumo: linha={linha_valor_resumo}"
+            )
+
+            if linha_valor_resumo == -1:
+                # Valor não encontrado, perguntar COLUNA primeiro
+                instrucao_coluna_resumo = (
+                    f"1. Abra o arquivo Excel\n"
+                    f"2. Vá até a aba '{nome_planilha}'\n"
+                    f"3. Observe as letras no topo das colunas (A, B, C, D...)\n"
+                    f"4. Identifique em qual coluna está o 'VALOR TOTAL' ou similar\n"
+                    f"5. Digite a LETRA dessa coluna (ex: C, D, E...)"
+                )
+                confirmado_coluna_resumo, nova_coluna_resumo = janela_corrigir_valor(
+                    titulo="Coluna do valor total do resumo",
+                    mensagem=f"O 'VALOR TOTAL RESUMO' não foi encontrado na coluna '{coluna_total_resumo}'.\n"
+                    f"Verifique se a COLUNA está correta!",
+                    instrucao=instrucao_coluna_resumo,
+                    valor_atual=coluna_total_resumo,
+                    valor_default="C",
+                )
+
+                # Se usuário cancelar, parar validação
+                if not confirmado_coluna_resumo:
+                    return False, sheet, False
+
+                if nova_coluna_resumo:
+                    try:
+                        column_index_from_string(nova_coluna_resumo.upper())
+                        dados[indice_config][
+                            "colunaTotalResumo"
+                        ] = nova_coluna_resumo.upper()
+                        salvar_json_corrigido(dados, indice_config)
+                        coluna_total_resumo = nova_coluna_resumo.upper()
+                        print(
+                            f">>> [DEBUG] Coluna total resumo corrigida para: '{coluna_total_resumo}'"
+                        )
+                        houve_correcao = True
+                    except Exception:
+                        messagebox.showerror(
+                            "Erro", f"Coluna '{nova_coluna_resumo}' inválida!"
+                        )
+                        return False, sheet, False
+
+                # Agora perguntar pelo valor correto
+                instrucao_valor_resumo = (
+                    f"1. Abra o arquivo Excel\n"
+                    f"2. Vá até a aba '{nome_planilha}'\n"
+                    f"3. Vá até a coluna '{coluna_total_resumo}' e procure pelo texto 'VALOR TOTAL'\n"
+                    f"4. Digite o texto EXATAMENTE como aparece na célula"
+                )
+                confirmado_valor_resumo, novo_valor_resumo = janela_corrigir_valor(
+                    titulo="Texto do valor total não encontrado",
+                    mensagem=f"O texto '{valor_total_resumo}' não foi encontrado na coluna '{coluna_total_resumo}'.\n"
+                    f"Digite o texto correto que aparece no Excel.",
+                    instrucao=instrucao_valor_resumo,
+                    valor_atual=valor_total_resumo,
+                    valor_default="VALOR TOTAL RESUMO:",
+                )
+
+                if confirmado_valor_resumo and novo_valor_resumo:
+                    dados[indice_config]["valorTotalResumo"] = novo_valor_resumo
+                    salvar_json_corrigido(dados, indice_config)
+                    print(
+                        f">>> [DEBUG] Valor total resumo corrigido para: '{novo_valor_resumo}'"
+                    )
+                    houve_correcao = True
+
+                    # Verificar se o novo valor foi encontrado
+                    linha_nova = buscar_palavra(
+                        sheet, coluna_total_resumo, novo_valor_resumo
+                    )
+                    if linha_nova == -1:
+                        erros.append(
+                            f"ERRO: O texto '{novo_valor_resumo}' ainda não foi encontrado na coluna '{coluna_total_resumo}'."
+                        )
+                        return False, sheet, False
+                else:
+                    return False, sheet, False
+
+    return True, sheet, houve_correcao
 
 
 def validar_planilha_composicoes(workbook, dados, erros, indice_config=0):
@@ -977,19 +1053,69 @@ def validar_planilha_composicoes(workbook, dados, erros, indice_config=0):
             "valor_string": (get_valor_string(dados[indice_config]), "valor"),
         }
 
+        # Para cada valor, perguntar COLUNA primeiro e depois o VALOR
         for nome_valor, (valor_buscado, campo_json) in valores_a_verificar.items():
-            if not validar_valor_existe_na_coluna(
-                sheet,
-                col_totais,
-                valor_buscado,
-                nome_valor,
-                nome_planilha,
-                erros,
-                dados,
-                indice_config,
-                campo_json,
-            ):
+            # Primeiro, perguntar se a COLUNA está correta
+            instrucao_coluna = (
+                f"1. Abra o arquivo Excel\n"
+                f"2. Vá até a aba '{nome_planilha}'\n"
+                f"3. Observe as letras no topo das colunas (A, B, C, D...)\n"
+                f"4. Identifique em qual coluna está o texto relacionado a '{nome_valor}'\n"
+                f"5. Digite a LETRA dessa coluna (ex: E, F, G...)"
+            )
+            confirmado_coluna, nova_coluna = janela_corrigir_valor(
+                titulo=f"Coluna para '{nome_valor}'",
+                mensagem=f"O texto '{valor_buscado}' não foi encontrado na coluna '{col_totais}'.\n"
+                f"Verifique se a COLUNA está correta!",
+                instrucao=instrucao_coluna,
+                valor_atual=col_totais,
+                valor_default="E",
+            )
+
+            # Se usuário cancelar, parar validação
+            if not confirmado_coluna:
                 return False, sheet
+
+            if nova_coluna:
+                try:
+                    column_index_from_string(nova_coluna.upper())
+                    # Atualizar a coluna correta baseada no tipo de valor
+                    if nome_valor == "total_com_bdi":
+                        dados[indice_config][
+                            "colunaTotaisComposicao"
+                        ] = nova_coluna.upper()
+                    # Salvar JSON e atualizar variável local
+                    salvar_json_corrigido(dados, indice_config)
+                    col_totais = nova_coluna.upper()
+                    print(
+                        f">>> [DEBUG] Coluna para '{nome_valor}' corrigida para: '{col_totais}'"
+                    )
+                except Exception:
+                    messagebox.showerror("Erro", f"Coluna '{nova_coluna}' inválida!")
+                    return False, sheet
+
+            # Agora perguntar pelo valor correto
+            instrucao_valor = (
+                f"1. Abra o arquivo Excel\n"
+                f"2. Vá até a aba '{nome_planilha}'\n"
+                f"3. Vá até a coluna '{col_totais}' e procure pelo texto relacionado a '{nome_valor}'\n"
+                f"4. Digite o texto EXATAMENTE como aparece na célula"
+            )
+            confirmado_valor, novo_valor = janela_corrigir_valor(
+                titulo=f"Texto para '{nome_valor}' não encontrado",
+                mensagem=f"O texto '{valor_buscado}' não foi encontrado na coluna '{col_totais}'.\n"
+                f"Digite o texto correto que aparece no Excel.",
+                instrucao=instrucao_valor,
+                valor_atual=valor_buscado,
+                valor_default=valor_buscado,
+            )
+
+            if confirmado_valor and novo_valor:
+                dados[indice_config][campo_json] = novo_valor
+                salvar_json_corrigido(dados, indice_config)
+                print(
+                    f">>> [DEBUG] Valor '{nome_valor}' corrigido para: '{novo_valor}'"
+                )
 
     return True, sheet
 
@@ -1089,19 +1215,71 @@ def validar_planilha_composicoes_auxiliares(workbook, dados, erros, indice_confi
             "valor_string": (get_valor_string(dados[indice_config]), "valor"),
         }
 
+        # Para cada valor, perguntar COLUNA primeiro e depois o VALOR
         for nome_valor, (valor_buscado, campo_json) in valores_a_verificar.items():
-            if not validar_valor_existe_na_coluna(
-                sheet,
-                col_totais,
-                valor_buscado,
-                nome_valor,
-                nome_planilha,
-                erros,
-                dados,
-                indice_config,
-                campo_json,
-            ):
+            # Primeiro, perguntar se a COLUNA está correta
+            instrucao_coluna_aux = (
+                f"1. Abra o arquivo Excel\n"
+                f"2. Vá até a aba '{nome_planilha}'\n"
+                f"3. Observe as letras no topo das colunas (A, B, C, D...)\n"
+                f"4. Identifique em qual coluna está o texto relacionado a '{nome_valor}'\n"
+                f"5. Digite a LETRA dessa coluna (ex: E, F, G...)"
+            )
+            confirmado_coluna_aux, nova_coluna_aux = janela_corrigir_valor(
+                titulo=f"Coluna para '{nome_valor}' (Auxiliar)",
+                mensagem=f"O texto '{valor_buscado}' não foi encontrado na coluna '{col_totais}'.\n"
+                f"Verifique se a COLUNA está correta!",
+                instrucao=instrucao_coluna_aux,
+                valor_atual=col_totais,
+                valor_default="E",
+            )
+
+            # Se usuário cancelar, parar validação
+            if not confirmado_coluna_aux:
                 return False, sheet
+
+            if nova_coluna_aux:
+                try:
+                    column_index_from_string(nova_coluna_aux.upper())
+                    # Atualizar a coluna correta baseada no tipo de valor
+                    if nome_valor == "total_com_bdi":
+                        dados[indice_config][
+                            "colunaTotaisAuxiliar"
+                        ] = nova_coluna_aux.upper()
+                    # Salvar JSON e atualizar variável local
+                    salvar_json_corrigido(dados, indice_config)
+                    col_totais = nova_coluna_aux.upper()
+                    print(
+                        f">>> [DEBUG] Coluna para '{nome_valor}' (Auxiliar) corrigida para: '{col_totais}'"
+                    )
+                except Exception:
+                    messagebox.showerror(
+                        "Erro", f"Coluna '{nova_coluna_aux}' inválida!"
+                    )
+                    return False, sheet
+
+            # Agora perguntar pelo valor correto
+            instrucao_valor_aux = (
+                f"1. Abra o arquivo Excel\n"
+                f"2. Vá até a aba '{nome_planilha}'\n"
+                f"3. Vá até a coluna '{col_totais}' e procure pelo texto relacionado a '{nome_valor}'\n"
+                f"4. Digite o texto EXATAMENTE como aparece na célula"
+            )
+            confirmado_valor_aux, novo_valor_aux = janela_corrigir_valor(
+                titulo=f"Texto para '{nome_valor}' não encontrado (Auxiliar)",
+                mensagem=f"O texto '{valor_buscado}' não foi encontrado na coluna '{col_totais}'.\n"
+                f"Digite o texto correto que aparece no Excel.",
+                instrucao=instrucao_valor_aux,
+                valor_atual=valor_buscado,
+                valor_default=valor_buscado,
+            )
+
+            if confirmado_valor_aux and novo_valor_aux:
+                dados[indice_config][campo_json] = novo_valor_aux
+                salvar_json_corrigido(dados, indice_config)
+                print(
+                    f">>> [DEBUG] Valor '{nome_valor}' (Auxiliar) corrigido para: '{novo_valor_aux}'"
+                )
 
     return True, sheet
 
@@ -1191,7 +1369,7 @@ def validar_arquivo_excel(filepath, dados):
         )
 
         print("\n>>> [FASE 3] Validando planilha RESUMO...")
-        valido, sheet_resumo = validar_planilha_resumo(
+        valido, sheet_resumo, houve_correcao_resumo = validar_planilha_resumo(
             workbook, dados_atualizados, erros, indice_config
         )
 
@@ -1204,8 +1382,8 @@ def validar_arquivo_excel(filepath, dados):
         json_depois = json.dumps(
             json.load(open(CAMINHO_JSON, "r", encoding="utf-8")), sort_keys=True
         )
-        if json_antes != json_depois:
-            print(">>> [INFO] Nome da planilha RESUMO corrigido. Recarregando...")
+        if json_antes != json_depois or houve_correcao_resumo:
+            print(">>> [INFO] Planilha RESUMO corrigida. Recarregando...")
             workbook.close()
             continue
         json_antes = json_depois

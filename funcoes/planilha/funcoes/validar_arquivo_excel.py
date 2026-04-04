@@ -23,19 +23,19 @@ def validar_estrutura_base(workbook, dados, erros):
         bool: True se válido, False se inválido
     """
     if workbook is None:
-        erros.append("ERRO: Workbook é None - arquivo Excel não pôde ser aberto.")
+        erros.append("ERRO: O arquivo Excel não pôde ser aberto. Verifique se o arquivo existe e não está corrompido.")
         return False
 
     if not hasattr(workbook, "sheetnames"):
-        erros.append("ERRO: Objeto workbook inválido - não possui sheetnames.")
+        erros.append("ERRO: O arquivo Excel está em um formato inválido ou corrompido.")
         return False
 
     if dados is None:
-        erros.append("ERRO: Dados JSON é None - configuração não pôde ser carregada.")
+        erros.append("ERRO: As configurações do sistema não foram carregadas. Entre em contato com o suporte.")
         return False
 
     if not isinstance(dados, dict):
-        erros.append("ERRO: Dados JSON não é um dicionário válido.")
+        erros.append("ERRO: As configurações do sistema estão em um formato inesperado. Entre em contato com o suporte.")
         return False
 
     return True
@@ -54,7 +54,7 @@ def validar_nome_planilha(nome_planilha, nome_exibicao, erros):
         bool: True se válido, False se inválido
     """
     if nome_planilha is None or nome_planilha.strip() == "":
-        erros.append(f"ERRO: Nome da planilha {nome_exibicao} está vazio ou é None.")
+        erros.append(f"ERRO: O nome da aba '{nome_exibicao}' não foi definido nas configurações.")
         return False
     return True
 
@@ -74,8 +74,8 @@ def validar_planilha_existe(workbook, nome_planilha, nome_exibicao, erros):
     """
     if nome_planilha not in workbook.sheetnames:
         erros.append(
-            f"ERRO: Planilha '{nome_planilha}' ({nome_exibicao}) não encontrada!\n"
-            f"Planilhas disponíveis: {', '.join(workbook.sheetnames)}"
+            f"ERRO: A aba '{nome_exibicao}' não foi encontrada no arquivo Excel.\n"
+            f"Abas disponíveis no arquivo: {', '.join(workbook.sheetnames)}"
         )
         return False, None
     return True, workbook[nome_planilha]
@@ -95,14 +95,14 @@ def validar_coluna_existe(sheet, nome_coluna, nome_exibicao, erros):
         bool: True se válido, False se inválido
     """
     if not nome_coluna or nome_coluna.strip() == "":
-        erros.append(f"ERRO: Coluna {nome_exibicao} está vazia ou é None.")
+        erros.append(f"ERRO: A coluna '{nome_exibicao}' não foi definida nas configurações.")
         return False
 
     try:
         column_index_from_string(nome_coluna)
     except Exception:
         erros.append(
-            f"ERRO: Coluna {nome_exibicao} ('{nome_coluna}') não é uma coluna válida."
+            f"ERRO: A coluna '{nome_coluna}' ({nome_exibicao}) não existe na planilha."
         )
         return False
 
@@ -123,23 +123,23 @@ def validar_celula_bdi(sheet, coluna_fator, linha_fator, erros):
         tuple: (válido: bool, valor_bdi: float ou None)
     """
     if not coluna_fator or not linha_fator:
-        erros.append("ERRO: Coluna ou linha do BDI não configuradas.")
+        erros.append("ERRO: A localização do BDI (taxa de benefícios) não foi configurada corretamente.")
         return False, None
 
     try:
         linha = int(linha_fator)
         if linha <= 0:
             erros.append(
-                f"ERRO: Linha do BDI ({linha_fator}) deve ser um número positivo."
+                f"ERRO: O número da linha do BDI deve ser maior que zero."
             )
             return False, None
     except (ValueError, TypeError):
-        erros.append(f"ERRO: Linha do BDI ({linha_fator}) não é um número válido.")
+        erros.append(f"ERRO: O valor '{linha_fator}' não é um número válido para a linha do BDI.")
         return False, None
 
     cell = sheet[f"{coluna_fator}{linha}"]
     if cell.value is None:
-        erros.append(f"ERRO: Célula BDI ({coluna_fator}{linha}) está vazia.")
+        erros.append(f"ERRO: A célula de BDI (coluna {coluna_fator}, linha {linha}) está vazia.")
         return False, None
 
     try:
@@ -147,7 +147,7 @@ def validar_celula_bdi(sheet, coluna_fator, linha_fator, erros):
         return True, valor_bdi
     except (ValueError, TypeError):
         erros.append(
-            f"ERRO: Valor do BDI na célula ({coluna_fator}{linha}) não é numérico: '{cell.value}'"
+            f"ERRO: O valor do BDI '{cell.value}' não é um número válido. O BDI deve ser um número (exemplo: 28,55)."
         )
         return False, None
 
@@ -170,14 +170,13 @@ def validar_valor_existe_na_coluna(
         bool: True se encontrado, False se não encontrado
     """
     if not valor_buscado or valor_buscado.strip() == "":
-        return True  # Valores vazios são opcionais
+        return True
 
     linha_encontrada = buscar_palavra(sheet, coluna, valor_buscado)
 
     if linha_encontrada == -1:
         erros.append(
-            f"ERRO: Valor '{valor_buscado}' ({nome_valor}) não encontrado "
-            f"na coluna '{coluna}' da planilha '{nome_planilha}'"
+            f"ERRO: O texto '{valor_buscado}' ({nome_valor}) não foi encontrado na coluna '{coluna}' da aba '{nome_planilha}'."
         )
         return False
 
@@ -221,6 +220,15 @@ def validar_planilha_orcamentaria(workbook, dados, erros):
     """
     Valida a planilha orçamentária.
 
+    Valida:
+    - Nome da planilha existe
+    - Planilha não está vazia
+    - Coluna inicial existe
+    - Coluna final existe (para busca de valor total)
+    - Valor inicial (ITEM) existe na coluna inicial
+    - Cabeçalhos esperados existem
+    - Valor final existe na coluna inicial
+
     Args:
         workbook: Objeto workbook do openpyxl
         dados: Dicionário com configurações do arquivo JSON
@@ -229,47 +237,43 @@ def validar_planilha_orcamentaria(workbook, dados, erros):
     Returns:
         tuple: (válido: bool, sheet: Worksheet ou None, linha_cabecalhos: int ou None)
     """
-    # Obter nomes e valores configurados
     nome_planilha = dados.get("planilhaOrcamentaria", "PLANILHA ORCAMENTARIA")
 
-    # Validar nome da planilha
     if not validar_nome_planilha(nome_planilha, "Orçamentária", erros):
         return False, None, None
 
-    # Validar existência da planilha
     existe, sheet = validar_planilha_existe(
         workbook, nome_planilha, "Orçamentária", erros
     )
     if not existe:
         return False, None, None
 
-    # Validar planilha vazia
     if sheet.max_row < 2:
         erros.append(
-            f"ERRO: Planilha '{nome_planilha}' está vazia ou tem menos de 2 linhas."
+            f"ERRO: A aba '{nome_planilha}' está vazia ou não tem dados suficientes."
         )
         return False, sheet, None
 
-    # Obter colunas configuradas
     coluna_inicial = dados.get("colunaInicial", "A")
     valor_inicial = dados.get("valorInicial", "ITEM")
     valor_final = dados.get("valorFinal", "VALOR BDI TOTAL")
 
-    # Validar coluna inicial
     if not validar_coluna_existe(sheet, coluna_inicial, "Inicial", erros):
         return False, sheet, None
 
-    # Buscar linha de cabeçalhos
+    coluna_final = dados.get("colunaFinal", "F")
+    if not validar_coluna_existe(sheet, coluna_final, "Coluna Final", erros):
+        return False, sheet, None
+
     linha_cabecalhos = buscar_palavra(sheet, coluna_inicial, valor_inicial)
 
     if linha_cabecalhos == -1:
         erros.append(
-            f"ERRO: Valor '{valor_inicial}' não encontrado na coluna '{coluna_inicial}'!\n"
-            f"Não foi possível encontrar a linha de cabeçalhos na planilha '{nome_planilha}'."
+            f"ERRO: O texto '{valor_inicial}' não foi encontrado na coluna '{coluna_inicial}'.\n"
+            f"Isso pode significar que a estrutura da aba '{nome_planilha}' está diferente do esperado."
         )
         return False, sheet, None
 
-    # Obter valores da linha de cabeçalhos
     valores_linha = []
     for cell in sheet[linha_cabecalhos + 1]:
         if cell.value is not None:
@@ -277,10 +281,8 @@ def validar_planilha_orcamentaria(workbook, dados, erros):
         else:
             valores_linha.append("")
 
-    # Cabeçalhos esperados
     cabecalhos_esperados = ["ITEM", "CÓDIGO", "DESCRIÇÃO", "UND", "QUANTIDADE"]
 
-    # Verificar cabeçalhos obrigatórios
     cabecalhos_faltantes = []
     for cabecalho in cabecalhos_esperados:
         encontrado = False
@@ -293,15 +295,13 @@ def validar_planilha_orcamentaria(workbook, dados, erros):
 
     if cabecalhos_faltantes:
         erros.append(
-            f"ERRO: Cabeçalhos não encontrados na linha {linha_cabecalhos + 1} "
-            f"da planilha '{nome_planilha}'!\n"
-            f"Cabeçalhos esperados: {', '.join(cabecalhos_esperados)}\n"
-            f"Cabeçalhos encontrados: {', '.join(valores_linha)}\n"
+            f"ERRO: Algumas colunas obrigatórias não foram encontradas na linha {linha_cabecalhos + 1} da aba '{nome_planilha}'.\n"
+            f"Colunas esperadas: {', '.join(cabecalhos_esperados)}\n"
+            f"Colunas encontradas: {', '.join(valores_linha)}\n"
             f"Faltando: {', '.join(cabeçalhos_faltantes)}"
         )
         return False, sheet, linha_cabecalhos
 
-    # Validar colunas configuradas no JSON (não críticos, apenas informativa)
     colunas_opcionais = [
         ("planilhaCodigo", "Código"),
         ("planilhaDescricao", "Descrição"),
@@ -316,7 +316,6 @@ def validar_planilha_orcamentaria(workbook, dados, erros):
         if col:
             validar_coluna_existe(sheet, col, nome, erros)
 
-    # Verificar valor final na planilha
     if valor_final:
         validar_valor_existe_na_coluna(
             sheet, coluna_inicial, valor_final, "Valor Final", nome_planilha, erros
@@ -343,34 +342,27 @@ def validar_planilha_resumo(workbook, dados, erros):
     """
     nome_planilha = dados.get("planilhaFator", "RESUMO")
 
-    # Validar nome da planilha
-    if not validar_nome_planilha(nome_planilha, "RESUMO", erros):
+    if not validar_nome_planilha(nome_planilha, "Resumo", erros):
         return False, None
 
-    # Validar existência da planilha
-    existe, sheet = validar_planilha_existe(workbook, nome_planilha, "RESUMO", erros)
+    existe, sheet = validar_planilha_existe(workbook, nome_planilha, "Resumo", erros)
     if not existe:
         return False, None
 
-    # Validar planilha vazia
     if sheet.max_row < 2:
         erros.append(
-            f"ERRO: Planilha '{nome_planilha}' está vazia ou tem menos de 2 linhas."
+            f"ERRO: A aba '{nome_planilha}' está vazia ou não tem dados suficientes."
         )
         return False, sheet
 
-    # Validar célula BDI
     coluna_fator = dados.get("colunaFator", "G")
     linha_fator = dados.get("linhaFator", "4")
 
-    # Validar coluna fator
-    if not validar_coluna_existe(sheet, coluna_fator, "Fator BDI", erros):
+    if not validar_coluna_existe(sheet, coluna_fator, "Fator", erros):
         return False, sheet
 
-    # Validar célula BDI (não é crítica se não existir, mas deve ser numérico se existir)
     bdi_valido, _ = validar_celula_bdi(sheet, coluna_fator, linha_fator, erros)
 
-    # Validar valor total resumo
     valor_total_resumo = dados.get("valorTotalResumo", "VALOR TOTAL RESUMO:")
 
     if valor_total_resumo:
@@ -378,7 +370,7 @@ def validar_planilha_resumo(workbook, dados, erros):
             sheet,
             coluna_fator,
             valor_total_resumo,
-            "Valor Total Resumo",
+            "Valor Total do Resumo",
             nome_planilha,
             erros,
         )
@@ -390,6 +382,14 @@ def validar_planilha_composicoes(workbook, dados, erros):
     """
     Valida a planilha COMPOSIÇÕES.
 
+    Valida:
+    - Nome da planilha existe
+    - Planilha não está vazia
+    - Todas as colunas configuradas existem
+    - Coluna de totais (colunaTotaisComposicao) existe
+    - Coluna de valor totais (valorTotaisComposicao) existe
+    - Valores de busca (valorComBdi, valorBdi, valorTotal, valor) existem na coluna de totais
+
     Args:
         workbook: Objeto workbook do openpyxl
         dados: Dicionário com configurações do arquivo JSON
@@ -400,33 +400,29 @@ def validar_planilha_composicoes(workbook, dados, erros):
     """
     nome_planilha = dados.get("planilhaComposicao", "COMPOSICOES")
 
-    # Validar nome da planilha
-    if not validar_nome_planilha(nome_planilha, "COMPOSIÇÕES", erros):
+    if not validar_nome_planilha(nome_planilha, "Composições", erros):
         return False, None
 
-    # Validar existência da planilha
     existe, sheet = validar_planilha_existe(
-        workbook, nome_planilha, "COMPOSIÇÕES", erros
+        workbook, nome_planilha, "Composições", erros
     )
     if not existe:
         return False, None
 
-    # Validar planilha vazia
     if sheet.max_row < 2:
         erros.append(
-            f"ERRO: Planilha '{nome_planilha}' está vazia ou tem menos de 2 linhas."
+            f"ERRO: A aba '{nome_planilha}' está vazia ou não tem dados suficientes."
         )
         return False, sheet
 
-    # Validar colunas configuradas
     colunas_comp = [
-        ("composicaoDescricao", "Descrição Composição"),
-        ("colunaItemDescricaoComposicao", "Item Descrição Composição"),
-        ("composicaoCoeficiente", "Coeficiente Composição"),
-        ("composicaoPrecoUnitario", "Preço Unitário Composição"),
-        ("composicaoCoeficienteCopiar", "Coeficiente Copiar Composição"),
-        ("composicaoPrecoUnitarioCopiar", "Preço Unitário Copiar Composição"),
-        ("colunaTotaisComposicao", "Coluna Totais Composição"),
+        ("composicaoDescricao", "Descrição"),
+        ("colunaItemDescricaoComposicao", "Código do Item"),
+        ("composicaoCoeficiente", "Coeficiente"),
+        ("composicaoPrecoUnitario", "Preço Unitário"),
+        ("composicaoCoeficienteCopiar", "Coeficiente (copiar)"),
+        ("composicaoPrecoUnitarioCopiar", "Preço Unitário (copiar)"),
+        ("colunaTotaisComposicao", "Coluna de Totais"),
     ]
 
     for key, nome in colunas_comp:
@@ -434,19 +430,21 @@ def validar_planilha_composicoes(workbook, dados, erros):
         if col:
             if not validar_coluna_existe(sheet, col, nome, erros):
                 erros.append(
-                    f"ERRO: Coluna '{key}' = '{col}' (nome: {nome}) não é válida na planilha '{nome_planilha}'"
+                    f"ERRO: A coluna '{col}' ({nome}) não foi encontrada na aba '{nome_planilha}'."
                 )
 
-    # Obter coluna de totais e valores a verificar
     col_totais = get_coluna_totais_comp(dados)
     if not col_totais:
-        erros.append(f"ERRO: Coluna de totais não configurada para COMPOSIÇÕES.")
+        erros.append(f"ERRO: A coluna de totais da aba Composições não foi configurada.")
         return False, sheet
 
-    if not validar_coluna_existe(sheet, col_totais, "Coluna Totais", erros):
+    if not validar_coluna_existe(sheet, col_totais, "Coluna de Totais", erros):
         return False, sheet
 
-    # Valores a verificar na coluna de totais
+    col_valor_totais = get_valor_totais_comp(dados)
+    if not validar_coluna_existe(sheet, col_valor_totais, "Coluna de Valores Totais", erros):
+        return False, sheet
+
     valores_a_verificar = {
         "valor_com_bdi": get_valor_com_bdi_string(dados),
         "valor_bdi": get_valor_bdi_comp(dados),
@@ -466,6 +464,14 @@ def validar_planilha_composicoes_auxiliares(workbook, dados, erros):
     """
     Valida a planilha COMPOSIÇÕES AUXILIARES.
 
+    Valida:
+    - Nome da planilha existe
+    - Planilha não está vazia
+    - Todas as colunas configuradas existem
+    - Coluna de totais (colunaTotaisAuxiliar) existe
+    - Coluna de valor totais (valorTotaisAuxiliar) existe
+    - Valores de busca (valorComBdi, valorBdi, valorTotal, valor) existem na coluna de totais
+
     Args:
         workbook: Objeto workbook do openpyxl
         dados: Dicionário com configurações do arquivo JSON
@@ -476,32 +482,28 @@ def validar_planilha_composicoes_auxiliares(workbook, dados, erros):
     """
     nome_planilha = dados.get("planilhaAuxiliar", "COMPOSICOES AUXILIARES")
 
-    # Validar nome da planilha
-    if not validar_nome_planilha(nome_planilha, "AUXILIARES", erros):
+    if not validar_nome_planilha(nome_planilha, "Auxiliares", erros):
         return False, None
 
-    # Validar existência da planilha
     existe, sheet = validar_planilha_existe(
-        workbook, nome_planilha, "AUXILIARES", erros
+        workbook, nome_planilha, "Auxiliares", erros
     )
     if not existe:
         return False, None
 
-    # Validar planilha vazia
     if sheet.max_row < 2:
         erros.append(
-            f"ERRO: Planilha '{nome_planilha}' está vazia ou tem menos de 2 linhas."
+            f"ERRO: A aba '{nome_planilha}' está vazia ou não tem dados suficientes."
         )
         return False, sheet
 
-    # Validar colunas configuradas
     colunas_aux = [
-        ("auxiliarDescricao", "Descrição Auxiliar"),
-        ("auxiliarCoeficiente", "Coeficiente Auxiliar"),
-        ("auxiliarPrecoUnitario", "Preço Unitário Auxiliar"),
-        ("auxiliarCoeficienteCopiar", "Coeficiente Copiar Auxiliar"),
-        ("auxiliarPrecoUnitarioCopiar", "Preço Unitário Copiar Auxiliar"),
-        ("colunaTotaisAuxiliar", "Coluna Totais Auxiliar"),
+        ("auxiliarDescricao", "Descrição"),
+        ("auxiliarCoeficiente", "Coeficiente"),
+        ("auxiliarPrecoUnitario", "Preço Unitário"),
+        ("auxiliarCoeficienteCopiar", "Coeficiente (copiar)"),
+        ("auxiliarPrecoUnitarioCopiar", "Preço Unitário (copiar)"),
+        ("colunaTotaisAuxiliar", "Coluna de Totais"),
     ]
 
     for key, nome in colunas_aux:
@@ -509,19 +511,21 @@ def validar_planilha_composicoes_auxiliares(workbook, dados, erros):
         if col:
             if not validar_coluna_existe(sheet, col, nome, erros):
                 erros.append(
-                    f"ERRO: Coluna '{key}' = '{col}' (nome: {nome}) não é válida na planilha '{nome_planilha}'"
+                    f"ERRO: A coluna '{col}' ({nome}) não foi encontrada na aba '{nome_planilha}'."
                 )
 
-    # Obter coluna de totais e valores a verificar
     col_totais = get_coluna_totais_aux(dados)
     if not col_totais:
-        erros.append(f"ERRO: Coluna de totais não configurada para AUXILIARES.")
+        erros.append(f"ERRO: A coluna de totais da aba Auxiliares não foi configurada.")
         return False, sheet
 
-    if not validar_coluna_existe(sheet, col_totais, "Coluna Totais Auxiliar", erros):
+    if not validar_coluna_existe(sheet, col_totais, "Coluna de Totais", erros):
         return False, sheet
 
-    # Valores a verificar na coluna de totais (mesmos do COMPOSIÇÕES)
+    col_valor_totais_aux = get_valor_totais_aux(dados)
+    if not validar_coluna_existe(sheet, col_valor_totais_aux, "Coluna de Valores Totais", erros):
+        return False, sheet
+
     valores_a_verificar = {
         "valor_com_bdi": get_valor_com_bdi_string(dados),
         "valor_bdi": get_valor_bdi_comp(dados),
@@ -549,11 +553,19 @@ def validar_arquivo_excel(workbook, dados):
     Verifica:
     1. Estrutura base (workbook e dados JSON)
     2. Planilha orçamentária existe e tem os cabeçalhos corretos
+       - Coluna inicial e final existem
+       - Valor inicial (ITEM) e valor final existem
     3. Planilha RESUMO existe e tem valores correspondentes
+       - Célula BDI configurada corretamente
+       - Valor total resumo existe
     4. Planilha COMPOSIÇÕES existe e tem valores correspondentes
+       - Todas as colunas configuradas existem
+       - Coluna de totais e coluna de valor totais existem
+       - Valores de busca existem na coluna de totais
     5. Planilha COMPOSIÇÕES AUXILIARES existe e tem valores correspondentes
-    6. Célula BDI configurada corretamente
-    7. Colunas configuradas no JSON são válidas
+       - Todas as colunas configuradas existem
+       - Coluna de totais e coluna de valor totais existem
+       - Valores de busca existem na coluna de totais
 
     Args:
         workbook: Objeto workbook do openpyxl
@@ -658,5 +670,4 @@ def validar_arquivo_excel_legacy(workbook, dados):
     Versão original da função de validação (mantida para compatibilidade).
     Use validar_arquivo_excel() para nova implementação.
     """
-    # Implementação original aqui (código não duplicado)
     pass

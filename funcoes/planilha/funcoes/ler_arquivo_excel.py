@@ -6,6 +6,7 @@ from tkinter import filedialog
 import openpyxl
 
 from funcoes.common.buscar_palavras import buscar_palavra
+from funcoes.planilha.funcoes.validar_arquivo_excel import validar_arquivo_excel
 from funcoes.planilha.funcoes.adicionar_fator_aux import itens_nao_encontrados
 from funcoes.common.custo_unitario import custo_unitario_execucao
 from funcoes.get.get_linhas_json import (
@@ -25,7 +26,6 @@ from funcoes.planilha.funcoes.formula_planilha import (
 )
 from funcoes.planilha.funcoes.resume import resumo_totais
 from funcoes.planilha.salvar.salvar_arquivo import salvar_arquivo
-from funcoes.validar import validar_arquivo_excel
 from funcoes.view.interfaces.menu.interface_menu import recarregar_entries
 
 

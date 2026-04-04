@@ -546,6 +546,73 @@ def validar_valor_existe_na_coluna(
     return True
 
 
+def validar_valor_na_coluna(
+    sheet,
+    coluna_atual,
+    valor_atual,
+    nome_valor_exibicao,
+    nome_planilha,
+    dados,
+    indice_config,
+    campo_json_coluna,
+    campo_json_valor,
+):
+    while True:
+        instrucao_coluna = (
+            f"1. Abra o arquivo Excel\n"
+            f"2. Vá até a aba '{nome_planilha}'\n"
+            f"3. Observe as letras no topo das colunas (A, B, C, D...)\n"
+            f"4. Digite a letra da coluna que contém o {nome_valor_exibicao}"
+        )
+        confirmado_coluna, nova_coluna = janela_corrigir_valor(
+            titulo=f"Coluna do {nome_valor_exibicao}",
+            mensagem=f"O texto do {nome_valor_exibicao} não foi encontrado na coluna '{coluna_atual}'.\n"
+                    f"Verifique se a COLUNA está correta!",
+            instrucao=instrucao_coluna,
+            valor_atual=coluna_atual,
+            valor_default=coluna_atual,
+        )
+        if not confirmado_coluna:
+            return False
+
+        try:
+            column_index_from_string(nova_coluna.upper())
+        except Exception:
+            messagebox.showerror("Erro", f"Coluna '{nova_coluna}' inválida!")
+            continue
+
+        instrucao_valor = (
+            f"1. Abra o arquivo Excel\n"
+            f"2. Vá até a aba '{nome_planilha}'\n"
+            f"3. Vá até a coluna '{nova_coluna.upper()}' e procure pelo {nome_valor_exibicao}\n"
+            f"4. Digite o texto EXATAMENTE como aparece na célula"
+        )
+        confirmado_valor, novo_valor = janela_corrigir_valor(
+            titulo="Texto não encontrado",
+            mensagem=f"O texto '{valor_atual}' não foi encontrado na coluna '{nova_coluna}'.\n"
+                    f"Digite o texto correto que aparece no Excel.",
+            instrucao=instrucao_valor,
+            valor_atual=valor_atual,
+            valor_default=valor_atual,
+        )
+        if not confirmado_valor:
+            return False
+
+        linha_encontrada = buscar_palavra(sheet, nova_coluna.upper(), novo_valor)
+
+        if linha_encontrada != -1:
+            dados[indice_config][campo_json_coluna] = nova_coluna.upper()
+            dados[indice_config][campo_json_valor] = novo_valor
+            salvar_json_corrigido(dados, indice_config)
+            return True
+
+        messagebox.showerror(
+            "Erro",
+            f"O texto '{novo_valor}' não foi encontrado na coluna '{nova_coluna}'.\n"
+            f"Tente novamente com valores corretos.",
+        )
+
+
 # ============================================
 # FUNÇÕES DE VALIDAÇÃO POR PLANILHA
 # ============================================
@@ -709,15 +776,15 @@ def validar_planilha_orcamentaria(workbook, dados, erros, indice_config=0):
             return False, sheet, linha_cabecalhos
 
         if valor_final:
-            if not validar_valor_existe_na_coluna(
+            if not validar_valor_na_coluna(
                 sheet,
                 coluna_final,
                 valor_final,
-                "valor_total",
+                "VALOR TOTAL",
                 nome_planilha,
-                erros,
                 dados,
                 indice_config,
+                "colunaFinal",
                 "valorFinal",
             ):
                 return False, sheet, linha_cabecalhos
@@ -788,15 +855,15 @@ def validar_planilha_resumo(workbook, dados, erros, indice_config=0):
         coluna_total_resumo = dados[indice_config].get("colunaTotalResumo", "C")
 
         if valor_total_resumo:
-            if not validar_valor_existe_na_coluna(
+            if not validar_valor_na_coluna(
                 sheet,
                 coluna_total_resumo,
                 valor_total_resumo,
-                "Valor Total do Resumo",
+                "VALOR TOTAL DO RESUMO",
                 nome_planilha,
-                erros,
                 dados,
                 indice_config,
+                "colunaTotalResumo",
                 "valorTotalResumo",
             ):
                 return False, sheet

@@ -365,29 +365,8 @@ def validar_celula_bdi(sheet, coluna_fator, linha_fator, erros, dados, indice_co
 
     cell = sheet[f"{coluna_fator}{linha}"]
     if cell.value is None:
-        instrucao = (
-            f"1. Abra o arquivo Excel\n"
-            f"2. Vá até a aba '{nome_planilha}'\n"
-            f"3. Procure pela célula que contém o valor do BDI (exemplo: 28,55)\n"
-            f"4. Digite o valor do BDI na linha correta"
-        )
-        confirmado, novo_valor = janela_corrigir_valor(
-            titulo="Célula do BDI vazia",
-            mensagem=f"A célula de BDI (coluna {coluna_fator}, linha {linha}) está vazia.",
-            instrucao=instrucao,
-            valor_atual="",
-            valor_default="28,55"
-        )
-        if confirmado and novo_valor:
-            try:
-                valor_bdi = float(str(novo_valor).replace(",", "."))
-                dados[indice_config]["BDI"] = str(valor_bdi).replace(".", ",")
-                salvar_json_corrigido(dados, indice_config)
-                return True, valor_bdi, True
-            except ValueError:
-                messagebox.showerror("Erro", f"O valor '{novo_valor}' não é um número válido!")
-                return False, None, False
-        return False, None, False
+        print(f">>> [AVISO] Célula BDI (coluna {coluna_fator}, linha {linha}) está vazia. Será preenchida automaticamente.")
+        return True, None, False
 
     try:
         valor_bdi = float(str(cell.value).replace(",", "."))
@@ -563,12 +542,12 @@ def validar_planilha_orcamentaria(workbook, dados, erros, indice_config=0):
                 f"ERRO: Algumas colunas obrigatórias não foram encontradas na linha {linha_cabecalhos + 1} da aba '{nome_planilha}'.\n"
                 f"Colunas esperadas: {', '.join(cabecalhos_esperados)}\n"
                 f"Colunas encontradas: {', '.join(valores_linha)}\n"
-                f"Faltando: {', '.join(cabeçalhos_faltantes)}"
+                f"Faltando: {', '.join(cabecalhos_faltantes)}"
             )
             return False, sheet, linha_cabecalhos
 
         if valor_final:
-            if not validar_valor_existe_na_coluna(sheet, coluna_inicial, valor_final, "Valor Final",
+            if not validar_valor_existe_na_coluna(sheet, coluna_final, valor_final, "Valor Final",
                                                   nome_planilha, erros, dados, indice_config, "valorFinal"):
                 return False, sheet, linha_cabecalhos
 
@@ -814,6 +793,9 @@ def validar_arquivo_excel(workbook, dados):
 
     if not valido:
         print(">>> [ERRO] Problemas encontrados na planilha orçamentária")
+        if erros:
+            return False, "ERROS NA VALIDAÇÃO:\n" + "\n".join(erros)
+        return False, "Validação cancelada pelo usuário"
     else:
         print(
             f">>> [OK] Planilha orçamentária válida (cabeçalhos na linha {linha_cabecalhos + 1 if linha_cabecalhos else '?'})"
@@ -824,16 +806,18 @@ def validar_arquivo_excel(workbook, dados):
 
     if not valido:
         print(">>> [ERRO] Problemas encontrados na planilha RESUMO")
-    else:
-        print(">>> [OK] Planilha RESUMO válida")
+        if erros:
+            return False, "ERROS NA VALIDAÇÃO:\n" + "\n".join(erros)
+        return False, "Validação cancelada pelo usuário"
 
     print("\n>>> [FASE 4] Validando planilha COMPOSIÇÕES...")
     valido, sheet_composicao = validar_planilha_composicoes(workbook, dados, erros, indice_config)
 
     if not valido:
         print(">>> [ERRO] Problemas encontrados na planilha COMPOSIÇÕES")
-    else:
-        print(">>> [OK] Planilha COMPOSIÇÕES válida")
+        if erros:
+            return False, "ERROS NA VALIDAÇÃO:\n" + "\n".join(erros)
+        return False, "Validação cancelada pelo usuário"
 
     print("\n>>> [FASE 5] Validando planilha COMPOSIÇÕES AUXILIARES...")
     valido, sheet_auxiliar = validar_planilha_composicoes_auxiliares(
@@ -842,8 +826,9 @@ def validar_arquivo_excel(workbook, dados):
 
     if not valido:
         print(">>> [ERRO] Problemas encontrados na planilha AUXILIARES")
-    else:
-        print(">>> [OK] Planilha AUXILIARES válida")
+        if erros:
+            return False, "ERROS NA VALIDAÇÃO:\n" + "\n".join(erros)
+        return False, "Validação cancelada pelo usuário"
 
     print("\n" + "=" * 60)
 

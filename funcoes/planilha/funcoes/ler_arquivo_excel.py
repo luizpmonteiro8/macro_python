@@ -26,6 +26,7 @@ from funcoes.planilha.funcoes.formula_planilha import (
 from funcoes.planilha.funcoes.resume import resumo_totais
 from funcoes.planilha.salvar.salvar_arquivo import salvar_arquivo
 from funcoes.planilha.funcoes.validar_arquivo_excel import validar_arquivo_excel
+from funcoes.view.interfaces.menu.interface_menu import recarregar_entries
 
 
 def selecionar_arquivo_excel(self):
@@ -67,7 +68,9 @@ def selecionar_arquivo_excel(self):
                 self.lbl_processando.config(text="Validação falhou!")
                 return  # PARA o processamento
             
-            self.dados = dados_validados
+            self.dados = dados_validados[0] if isinstance(dados_validados, list) else dados_validados
+            self.todos_dados = dados_validados
+            recarregar_entries(self)
 
             # Ler nome da planilha
             print(">>> Obtendo nome da planilha orçamentária...")

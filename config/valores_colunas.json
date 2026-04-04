@@ -1,7 +1,7 @@
 [
   {
     "nome": "Totais - Composicao - E - Auxiliar - E",
-    "planilhaOrcamentaria": "PLANILHA",
+    "planilhaOrcamentaria": "PLANILHA ORCAMENTARIA",
     "colunaInicial": "A",
     "colunaFinal": "F",
     "valorInicial": "ITEM",
@@ -36,7 +36,7 @@
     "valor": "VALOR:",
     "valorComBdi": "VALOR COM BDI:",
     "valorBdi": "VALOR BDI:",
-    "valorTotalResumo": "VALOR TOTAL RESUMO:",
+    "valorTotalResumo": "VALOR TOTAL",
     "colunaTotalResumo": "C"
   }
 ]

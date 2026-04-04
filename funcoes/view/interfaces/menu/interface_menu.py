@@ -8,6 +8,55 @@ from funcoes.view.interfaces.menu.funcoes.editar_coluna_nome import (
     local_abrir_janela_editar,
 )
 
+
+def recarregar_entries(self):
+    dados = self.dados
+    if not dados:
+        return
+
+    def update_entry(entry, value):
+        if entry and hasattr(entry, 'delete') and hasattr(entry, 'insert'):
+            entry.delete(0, tk.END)
+            entry.insert(0, value if value else "")
+
+    update_entry(getattr(self, 'entry_planilha_orcamentaria', None), dados.get("planilhaOrcamentaria", ""))
+    update_entry(getattr(self, 'entry_coluna_inicial', None), dados.get("colunaInicial", ""))
+    update_entry(getattr(self, 'entry_coluna_final', None), dados.get("colunaFinal", ""))
+    update_entry(getattr(self, 'entry_valor_inicial', None), dados.get("valorInicial", ""))
+    update_entry(getattr(self, 'entry_valor_final', None), dados.get("valorFinal", ""))
+    update_entry(getattr(self, 'entry_planilha_codigo', None), dados.get("planilhaCodigo", ""))
+    update_entry(getattr(self, 'entry_planilha_descricao', None), dados.get("planilhaDescricao", ""))
+    update_entry(getattr(self, 'entry_planilha_quantidade', None), dados.get("planilhaQuantidade", ""))
+    update_entry(getattr(self, 'entry_planilha_preco_unitario', None), dados.get("planilhaPrecoUnitario", ""))
+    update_entry(getattr(self, 'entry_planilha_preco_total', None), dados.get("planilhaPrecoTotal", ""))
+    update_entry(getattr(self, 'entry_plan_preco_unit_copiar', None), dados.get("planilhaPrecoUnitarioCopiar", ""))
+    update_entry(getattr(self, 'entry_planilha_fator', None), dados.get("planilhaFator", ""))
+    update_entry(getattr(self, 'entry_coluna_fator', None), dados.get("colunaFator", ""))
+    update_entry(getattr(self, 'entry_linha_fator', None), dados.get("linhaFator", ""))
+    update_entry(getattr(self, 'entry_bdi', None), dados.get("BDI", ""))
+    update_entry(getattr(self, 'entry_coluna_total_resumo', None), dados.get("colunaTotalResumo", ""))
+    update_entry(getattr(self, 'entry_planilha_comp', None), dados.get("planilhaComposicao", ""))
+    update_entry(getattr(self, 'entry_descricao_comp', None), dados.get("composicaoDescricao", ""))
+    update_entry(getattr(self, 'entry_item_descricao_comp', None), dados.get("colunaItemDescricaoComposicao", ""))
+    update_entry(getattr(self, 'entry_coeficiente_comp', None), dados.get("composicaoCoeficiente", ""))
+    update_entry(getattr(self, 'entry_preco_unitario_comp', None), dados.get("composicaoPrecoUnitario", ""))
+    update_entry(getattr(self, 'entry_coeficiente_copiar_comp', None), dados.get("composicaoCoeficienteCopiar", ""))
+    update_entry(getattr(self, 'entry_preco_unit_copiar_comp', None), dados.get("composicaoPrecoUnitarioCopiar", ""))
+    update_entry(getattr(self, 'entry_coluna_totais_comp', None), dados.get("colunaTotaisComposicao", ""))
+    update_entry(getattr(self, 'entry_valor_totais_comp', None), dados.get("valorTotaisComposicao", ""))
+    update_entry(getattr(self, 'entry_valor_comp', None), dados.get("valor", ""))
+    update_entry(getattr(self, 'entry_valor_com_bdi_comp', None), dados.get("valorComBdi", ""))
+    update_entry(getattr(self, 'entry_valor_bdi_comp', None), dados.get("valorBdi", ""))
+    update_entry(getattr(self, 'entry_valor_total_resumo', None), dados.get("valorTotalResumo", ""))
+    update_entry(getattr(self, 'entry_planilha_aux', None), dados.get("planilhaAuxiliar", ""))
+    update_entry(getattr(self, 'entry_descricao_aux', None), dados.get("auxiliarDescricao", ""))
+    update_entry(getattr(self, 'entry_coeficiente_aux', None), dados.get("auxiliarCoeficiente", ""))
+    update_entry(getattr(self, 'entry_preco_unitario_aux', None), dados.get("auxiliarPrecoUnitario", ""))
+    update_entry(getattr(self, 'entry_coeficiente_copiar_aux', None), dados.get("auxiliarCoeficienteCopiar", ""))
+    update_entry(getattr(self, 'entry_preco_unit_copiar_aux', None), dados.get("auxiliarPrecoUnitarioCopiar", ""))
+    update_entry(getattr(self, 'entry_coluna_totais_aux', None), dados.get("colunaTotaisAuxiliar", ""))
+    update_entry(getattr(self, 'entry_valor_totais_aux', None), dados.get("valorTotaisAuxiliar", ""))
+
 new_item = {
     "nome": "Novo",
     "planilhaOrcamentaria": "PLANILHA ORCAMENTARIA",

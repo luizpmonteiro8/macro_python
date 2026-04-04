@@ -768,97 +768,91 @@ def validar_planilha_composicoes_auxiliares(workbook, dados, erros, indice_confi
 # ============================================
 
 
-def validar_arquivo_excel(workbook, dados):
+def validar_arquivo_excel(filepath, dados):
     """
     Valida a estrutura completa do arquivo Excel antes do processamento.
     
     Se encontrar erros que podem ser corrigidos, exibe janela para correção
-    e salva automaticamente no arquivo JSON.
+    e salva automaticamente no arquivo JSON. Recarrega o workbook e os dados
+    após cada correção para garantir que as mudanças sejam refletidas.
 
     Args:
-        workbook: Objeto workbook do openpyxl
+        filepath: Caminho do arquivo Excel
         dados: Lista de configurações do arquivo JSON
 
     Returns:
-        tuple: (True, None) se válido, ou (False, mensagem_erro) se inválido
+        tuple: (True, workbook, dados_atualizados) se válido, 
+               ou (False, None, None) se inválido/cancelado
     """
-    erros = []
-    
     if not isinstance(dados, list):
         dados = [dados]
-    
+
     indice_config = 0
 
     print("=" * 60)
     print(">>> INICIANDO VALIDAÇÃO DO ARQUIVO EXCEL")
     print("=" * 60)
 
-    print("\n>>> [FASE 1] Validando estrutura base...")
-    if not validar_estrutura_base(workbook, dados[ indice_config], erros):
-        mensagem = "ERROS NA VALIDAÇÃO:\n" + "\n".join(erros)
-        return False, mensagem
+    while True:
+        erros = []
+        workbook = openpyxl.load_workbook(filepath)
+        dados_atualizados = json.load(open(CAMINHO_JSON, "r", encoding="utf-8"))
 
-    print(">>> [OK] Estrutura base válida")
+        print("\n>>> [FASE 1] Validando estrutura base...")
+        if not validar_estrutura_base(workbook, dados_atualizados[indice_config], erros):
+            mensagem = "ERROS NA VALIDAÇÃO:\n" + "\n".join(erros)
+            return False, None, None
 
-    print("\n>>> [FASE 2] Validando planilha orçamentária...")
-    valido, sheet_orcamentaria, linha_cabecalhos = validar_planilha_orcamentaria(
-        workbook, dados, erros, indice_config
-    )
+        print(">>> [OK] Estrutura base válida")
 
-    if not valido:
-        print(">>> [ERRO] Problemas encontrados na planilha orçamentária")
-        if erros:
-            return False, "ERROS NA VALIDAÇÃO:\n" + "\n".join(erros)
-        return False, "Validação cancelada pelo usuário"
-    else:
-        print(
-            f">>> [OK] Planilha orçamentária válida (cabeçalhos na linha {linha_cabecalhos + 1 if linha_cabecalhos else '?'})"
+        print("\n>>> [FASE 2] Validando planilha orçamentária...")
+        valido, sheet_orcamentaria, linha_cabecalhos = validar_planilha_orcamentaria(
+            workbook, dados_atualizados, erros, indice_config
         )
 
-    print("\n>>> [FASE 3] Validando planilha RESUMO...")
-    valido, sheet_resumo = validar_planilha_resumo(workbook, dados, erros, indice_config)
+        if not valido:
+            print(">>> [ERRO] Validação da planilha orçamentária falhou ou foi cancelada.")
+            print(">>> Encerrando validação.")
+            workbook.close()
+            return False, None, None
+        else:
+            print(
+                f">>> [OK] Planilha orçamentária válida (cabeçalhos na linha {linha_cabecalhos + 1 if linha_cabecalhos else '?'})"
+            )
 
-    if not valido:
-        print(">>> [ERRO] Problemas encontrados na planilha RESUMO")
-        if erros:
-            return False, "ERROS NA VALIDAÇÃO:\n" + "\n".join(erros)
-        return False, "Validação cancelada pelo usuário"
+        print("\n>>> [FASE 3] Validando planilha RESUMO...")
+        valido, sheet_resumo = validar_planilha_resumo(workbook, dados_atualizados, erros, indice_config)
 
-    print("\n>>> [FASE 4] Validando planilha COMPOSIÇÕES...")
-    valido, sheet_composicao = validar_planilha_composicoes(workbook, dados, erros, indice_config)
+        if not valido:
+            print(">>> [ERRO] Validação da planilha RESUMO falhou ou foi cancelada.")
+            print(">>> Encerrando validação.")
+            workbook.close()
+            return False, None, None
 
-    if not valido:
-        print(">>> [ERRO] Problemas encontrados na planilha COMPOSIÇÕES")
-        if erros:
-            return False, "ERROS NA VALIDAÇÃO:\n" + "\n".join(erros)
-        return False, "Validação cancelada pelo usuário"
+        print("\n>>> [FASE 4] Validando planilha COMPOSIÇÕES...")
+        valido, sheet_composicao = validar_planilha_composicoes(workbook, dados_atualizados, erros, indice_config)
 
-    print("\n>>> [FASE 5] Validando planilha COMPOSIÇÕES AUXILIARES...")
-    valido, sheet_auxiliar = validar_planilha_composicoes_auxiliares(
-        workbook, dados, erros, indice_config
-    )
+        if not valido:
+            print(">>> [ERRO] Validação da planilha COMPOSIÇÕES falhou ou foi cancelada.")
+            print(">>> Encerrando validação.")
+            workbook.close()
+            return False, None, None
 
-    if not valido:
-        print(">>> [ERRO] Problemas encontrados na planilha AUXILIARES")
-        if erros:
-            return False, "ERROS NA VALIDAÇÃO:\n" + "\n".join(erros)
-        return False, "Validação cancelada pelo usuário"
-
-    print("\n" + "=" * 60)
-
-    if erros:
-        print(f">>> [ERRO] Validação encontrou {len(erros)} problema(s):")
-        for i, erro in enumerate(erros, 1):
-            print(f"    {i}. {erro}")
-
-        mensagem = "ERROS NA VALIDAÇÃO:\n" + "\n".join(
-            [f"{i+1}. {e}" for i, e in enumerate(erros)]
+        print("\n>>> [FASE 5] Validando planilha COMPOSIÇÕES AUXILIARES...")
+        valido, sheet_auxiliar = validar_planilha_composicoes_auxiliares(
+            workbook, dados_atualizados, erros, indice_config
         )
-        return False, mensagem
 
-    print(">>> [OK] VALIDAÇÃO CONCLUÍDA COM SUCESSO!")
-    print("=" * 60)
-    return True, None
+        if not valido:
+            print(">>> [ERRO] Validação da planilha AUXILIARES falhou ou foi cancelada.")
+            print(">>> Encerrando validação.")
+            workbook.close()
+            return False, None, None
+
+        print("\n" + "=" * 60)
+        print(">>> [OK] VALIDAÇÃO CONCLUÍDA COM SUCESSO!")
+        print("=" * 60)
+        return True, workbook, dados_atualizados
 
 
 def validar_arquivo_excel_legacy(workbook, dados):

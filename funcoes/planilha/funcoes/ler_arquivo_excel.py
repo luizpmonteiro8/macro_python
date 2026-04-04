@@ -51,22 +51,19 @@ def selecionar_arquivo_excel(self):
             self.lbl_processando.config(text="Processando...")
             self.update_idletasks()
 
-            # Carregar o arquivo Excel
-            print(">>> Carregando arquivo Excel...")
-            print(
-                ">>> Este processo demora de acordo com o tamanho do arquivo. Por favor, aguarde..."
-            )
-            workbook = openpyxl.load_workbook(filepath)
-
             # ============================================
             # VALIDAÇÃO DO ARQUIVO ANTES DO PROCESSAMENTO
             # ============================================
+            print(">>> Carregando arquivo Excel e validando...")
+            print(
+                ">>> Este processo demora de acordo com o tamanho do arquivo. Por favor, aguarde..."
+            )
             print(">>> Validando estrutura do arquivo Excel...")
-            valido, mensagem_erro = validar_arquivo_excel(workbook, self.dados)
+            valido, workbook, self.dados = validar_arquivo_excel(filepath, self.dados)
 
             if not valido:
-                tk.messagebox.showerror("Erro de Validação", mensagem_erro)
-                print(f">>> ERRO: {mensagem_erro}")
+                tk.messagebox.showerror("Erro de Validação", "Validação falhou ou cancelada pelo usuário.")
+                print(">>> ERRO: Validação falhou ou cancelada.")
                 self.lbl_processando.config(text="Validação falhou!")
                 return  # PARA o processamento
 

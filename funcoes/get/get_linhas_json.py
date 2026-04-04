@@ -175,3 +175,7 @@ def get_valor_total_string(dados):
 
 def get_valor_total_resumo_string(dados):
     return dados.get("valorTotalResumo", "Valor total resumo")
+
+
+def get_coluna_total_resumo(dados):
+    return dados.get("colunaTotalResumo", "C")

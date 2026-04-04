@@ -25,6 +25,7 @@ new_item = {
     "BDI": "28.55",
     "colunaFator": "G",
     "linhaFator": "4",
+    "colunaTotalResumo": "C",
     "planilhaComposicao": "COMPOSICOES",
     "composicaoDescricao": "A",
     "colunaItemDescricaoComposicao": "B",
@@ -69,6 +70,7 @@ def atualizar_valores_json(
     colunaFator,
     linhaFator,
     bdi,
+    colunaTotalResumo,
     # composicao
     planilhaComposicao,
     descricaoComposicao,
@@ -111,6 +113,7 @@ def atualizar_valores_json(
             item["colunaFator"] = colunaFator
             item["linhaFator"] = linhaFator
             item["BDI"] = bdi
+            item["colunaTotalResumo"] = colunaTotalResumo
             # planilha orcamentaria
             item["planilhaOrcamentaria"] = planilhaOrcamentaria
             item["colunaInicial"] = colunaInicial
@@ -157,6 +160,7 @@ def atualizar_valores_json(
             "colunaFator": colunaFator,
             "linhaFator": linhaFator,
             "BDI": bdi,
+            "colunaTotalResumo": colunaTotalResumo,
             # planilha orcamentaria
             "planilhaOrcamentaria": planilhaOrcamentaria,
             "colunaInicial": colunaInicial,
@@ -245,6 +249,7 @@ def salvar_valores_colunas(self, dropdown_valor):
     var_coluna_fator = self.entry_coluna_fator.get()
     var_linha_fator = self.entry_linha_fator.get()
     var_bdi = self.entry_bdi.get()
+    var_coluna_total_resumo = self.entry_coluna_total_resumo.get()
 
     # composicao
     var_planilha_composicao = self.entry_planilha_comp.get()
@@ -290,6 +295,7 @@ def salvar_valores_colunas(self, dropdown_valor):
         var_coluna_fator,
         var_linha_fator,
         var_bdi,
+        var_coluna_total_resumo,
         var_planilha_composicao,
         var_descricao_composicao,
         var_item_descricao_composicao,

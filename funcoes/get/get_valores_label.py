@@ -56,6 +56,10 @@ def get_label_linha_fator(valores):
     return valores["planilhaFator"].get("linhaFator", "Linha fator")
 
 
+def get_label_coluna_total_resumo(valores):
+    return valores["planilhaFator"].get("colunaTotalResumo", "Coluna total resumo")
+
+
 # aux
 
 

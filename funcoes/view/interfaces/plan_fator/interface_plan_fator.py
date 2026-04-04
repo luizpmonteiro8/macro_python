@@ -4,6 +4,7 @@ from funcoes.common.custom_input import custom_input
 from config.open_config import open_valores_label
 from funcoes.get.get_linhas_json import (
     get_coluna_fator,
+    get_coluna_total_resumo,
     get_linha_fator,
     get_planilha_fator,
     get_valor_bdi,
@@ -11,6 +12,7 @@ from funcoes.get.get_linhas_json import (
 )
 from funcoes.get.get_valores_label import (
     get_label_coluna_fator,
+    get_label_coluna_total_resumo,
     get_label_linha_fator,
     get_label_planilha_fator,
     get_label_valor_total_resumo_comp,
@@ -73,4 +75,15 @@ def interface_planilha_fator(self, frame_fator):
         get_label_valor_total_resumo_comp(valores_label),
         var_valor_total_resumo.get(),
         row=5,
+    )
+
+    # coluna total resumo
+    var_coluna_total_resumo = tk.StringVar(
+        value=get_coluna_total_resumo(self.dados)
+    )
+    self.entry_coluna_total_resumo = custom_input(
+        frame_fator,
+        get_label_coluna_total_resumo(valores_label),
+        var_coluna_total_resumo.get(),
+        row=6,
     )

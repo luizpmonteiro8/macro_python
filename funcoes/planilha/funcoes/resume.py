@@ -3,6 +3,7 @@ from openpyxl import Workbook
 from funcoes.common.buscar_palavras import buscar_palavra_com_linha
 from funcoes.get.get_linhas_json import (
     get_coluna_final,
+    get_coluna_total_resumo,
     get_planilha_orcamentaria,
     get_planilha_preco_total,
     get_valor_total_string,
@@ -21,7 +22,7 @@ def resumo_totais(workbook: Workbook, dados):
     resumoLinhaFinal = ws.max_row + 1
 
     linha_resumo_total = buscar_palavra_com_linha(
-        ws, "C", get_valor_total_resumo_string(dados), 1, resumoLinhaFinal
+        ws, get_coluna_total_resumo(dados), get_valor_total_resumo_string(dados), 1, resumoLinhaFinal
     )
 
     for x in range(1, ws.max_row + 1):

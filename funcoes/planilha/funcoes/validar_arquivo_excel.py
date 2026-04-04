@@ -598,9 +598,10 @@ def validar_planilha_resumo(workbook, dados, erros, indice_config=0):
             return False, sheet
 
         valor_total_resumo = dados[indice_config].get("valorTotalResumo", "VALOR TOTAL RESUMO:")
+        coluna_total_resumo = dados[indice_config].get("colunaTotalResumo", "C")
 
         if valor_total_resumo:
-            if not validar_valor_existe_na_coluna(sheet, coluna_fator, valor_total_resumo,
+            if not validar_valor_existe_na_coluna(sheet, coluna_total_resumo, valor_total_resumo,
                                                    "Valor Total do Resumo", nome_planilha,
                                                    erros, dados, indice_config, "valorTotalResumo"):
                 return False, sheet

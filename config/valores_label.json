@@ -23,7 +23,8 @@
     "BDI": "BDI",
     "planilhaFator": "Planilha fator",
     "colunaFator": "Coluna fator",
-    "linhaFator": "Linha fator"
+    "linhaFator": "Linha fator",
+    "colunaTotalResumo": "Coluna total resumo"
   },
   "planilhaAuxiliar": {
     "tituloPlanilhaAuxiliar": "PLANILHA AUXILIAR",

@@ -162,15 +162,6 @@
       "buscarAuxiliar": "Não",
       "iniciaPor": "09",
       "naoIniciaPor": ""
-    },
-    "item19": {
-      "nome": "Serviço",
-      "total": "TOTAL Serviço:",
-      "adicionarFator": "Sim",
-      "fatorCoeficiente": "Não",
-      "buscarAuxiliar": "Não",
-      "iniciaPor": "I",
-      "naoIniciaPor": ""
     }
   }
 ]

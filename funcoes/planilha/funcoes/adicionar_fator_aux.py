@@ -3,6 +3,7 @@ from funcoes.common.buscar_palavras import (
     buscar_palavra_com_linha,
     buscar_palavra_com_linha_exato,
     buscar_palavra_com_linha_iniciando,
+    buscar_palavra_contem,
 )
 from funcoes.common.copiar_coluna import copiar_coluna_com_numeros
 from funcoes.common.valor_bdi_final import valor_bdi_final
@@ -98,14 +99,18 @@ def buscar_auxiliar_no_aux(workbook, dados, itemChave, lin, lin_total, nivel=1):
     col_totais = get_coluna_totais_aux(dados)
     val_str = get_valor_string(dados)
 
+    print(
+        f"buscar_auxiliar_no_aux: col_item={col_item}, col_desc={col_desc}, val_str='{val_str}'"
+    )
+
     itens_array = [v for k, v in itemChave.items() if k.startswith("item")]
 
     ultima_busca = 1
 
     for x in range(lin, lin_total):
-        cod = sheet_aux[f"{col_desc}{x}"].value
-        item = sheet_aux[f"{col_item}{x}"].value
-        if item is None:
+        cod = sheet_aux[f"{col_item}{x}"].value
+        item = sheet_aux[f"{col_desc}{x}"].value
+        if cod is None:
             continue
 
         chave_busca = f"{cod} {item}"
@@ -119,33 +124,82 @@ def buscar_auxiliar_no_aux(workbook, dados, itemChave, lin, lin_total, nivel=1):
             linha_ini = cache_encontrados[chave_busca]
         else:
             print(f"busca item na auxiliar: {chave_busca} na linha {x}")
+            # 1 - busca completa com espaco
+            print(f"  >> busca 1: '{chave_busca}' na coluna {col_desc}")
             linha_ini = buscar_palavra_com_linha(
                 sheet_aux, col_desc, chave_busca, ultima_busca, ultima_linha
             )
+            print(f"  >> resultado busca 1: {linha_ini}")
+            # 2 - busca pelo codigo com espaco
             if linha_ini == -1:
+                print(f"  >> busca 2: '{cod} ' na coluna {col_desc}")
                 linha_ini = buscar_palavra_com_linha(
                     sheet_aux, col_desc, f"{cod} ", ultima_busca, ultima_linha
                 )
-            if linha_ini == -1:
-                linha_ini = buscar_palavra_com_linha_iniciando(
-                    sheet_aux, col_desc, chave_busca, ultima_busca, ultima_linha
+                print(f"  >> resultado busca 2: {linha_ini}")
+            # 3 - busca pela descricao so (sem codigo)
+            if linha_ini == -1 and item:
+                print(f"  >> busca 3 (descricao): '{item}' na coluna {col_desc}")
+                linha_ini = buscar_palavra_com_linha(
+                    sheet_aux, col_desc, item, 1, ultima_linha
                 )
+                print(f"  >> resultado busca 3: {linha_ini}")
+            # 4 - busca pelo codigo no inicio
             if linha_ini == -1:
+                print(f"  >> busca 4 (iniciando codigo): '{cod}' na coluna {col_desc}")
                 linha_ini = buscar_palavra_com_linha_iniciando(
-                    sheet_aux, col_desc, chave_busca, 1, ultima_linha
+                    sheet_aux, col_desc, cod, 1, ultima_linha
                 )
+                print(f"  >> resultado busca 4: {linha_ini}")
+            # 5 - busca contem codigo
+            if linha_ini == -1:
+                print(f"  >> busca 5 (contem codigo): '{cod}' na coluna {col_desc}")
+                linha_ini = buscar_palavra_contem(
+                    sheet_aux, col_desc, cod, 1, ultima_linha
+                )
+                print(f"  >> resultado busca 5: {linha_ini}")
+            # 6 - busca pelos primeiros 5 digitos do codigo
+            if linha_ini == -1 and len(cod) >= 5:
+                cod_prefix = cod[:5]
+                print(f"  >> busca 6 (prefixo 5): '{cod_prefix}' na coluna {col_desc}")
+                linha_ini = buscar_palavra_contem(
+                    sheet_aux, col_desc, cod_prefix, 1, ultima_linha
+                )
+                print(f"  >> resultado busca 6: {linha_ini}")
+            # 7 - busca pelos primeiros 4 digitos do codigo
+            if linha_ini == -1 and len(cod) >= 4:
+                cod_prefix = cod[:4]
+                print(f"  >> busca 7 (prefixo 4): '{cod_prefix}' na coluna {col_desc}")
+                linha_ini = buscar_palavra_contem(
+                    sheet_aux, col_desc, cod_prefix, 1, ultima_linha
+                )
+                print(f"  >> resultado busca 7: {linha_ini}")
+            # 8 - busca por parte da descricao (palavras-chave)
+            if linha_ini == -1 and item:
+                palavras = item.split()
+                for palavra in palavras:
+                    if len(palavra) > 5 and not palavra.isdigit():
+                        print(
+                            f"  >> busca 8 (palavra-chave): '{palavra}' na coluna {col_desc}"
+                        )
+                        linha_ini = buscar_palavra_contem(
+                            sheet_aux, col_desc, palavra, 1, ultima_linha
+                        )
+                        if linha_ini > -1:
+                            print(f"  >> resultado busca 8: {linha_ini}")
+                            break
 
             # atualiza cache
             if linha_ini == -1:
                 cache_nao_encontrados[chave_busca] = True
                 itens_nao_encontrados.append(chave_busca)
-                print(f"⚠️ Item não encontrado na auxiliar: {chave_busca}")
-                continue  # Continua em vez de parar
+                print(f"[ERRO] NAO ENCONTRADO: {chave_busca}")
+                continue
             else:
-                ultima_busca = linha_ini
+                ultima_busca = 1
                 cache_encontrados[chave_busca] = linha_ini
                 print(
-                    f"✅ Item encontrado na auxiliar: {chave_busca} — linha {linha_ini}"
+                    f"[ENCONTRADO] Item na auxiliar: {chave_busca} - linha {linha_ini}"
                 )
 
         linha_fim = buscar_palavra_com_linha_exato(

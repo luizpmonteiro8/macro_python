@@ -60,25 +60,28 @@ def selecionar_arquivo_excel(self):
                 ">>> Este processo demora de acordo com o tamanho do arquivo. Por favor, aguarde..."
             )
             print(">>> Validando estrutura do arquivo Excel...")
-            valido, workbook, dados_validados = validar_arquivo_excel(
-                filepath, self.dados
-            )
+            # valido, workbook, dados_validados = validar_arquivo_excel(
+            #     filepath, self.dados
+            # )
 
-            if not valido:
-                tk.messagebox.showerror(
-                    "Erro de Validação", "Validação falhou ou cancelada pelo usuário."
-                )
-                print(">>> ERRO: Validação falhou ou cancelada.")
-                self.lbl_processando.config(text="Validação falhou!")
-                return  # PARA o processamento
+            # if not valido:
+            #     tk.messagebox.showerror(
+            #         "Erro de Validação", "Validação falhou ou cancelada pelo usuário."
+            #     )
+            #     print(">>> ERRO: Validação falhou ou cancelada.")
+            #     self.lbl_processando.config(text="Validação falhou!")
+            #     return  # PARA o processamento
 
-            self.dados = (
-                dados_validados[0]
-                if isinstance(dados_validados, list)
-                else dados_validados
-            )
-            self.todos_dados = dados_validados
-            recarregar_entries(self)
+            # self.dados = (
+            #     dados_validados[0]
+            #     if isinstance(dados_validados, list)
+            #     else dados_validados
+            # )
+            # self.todos_dados = dados_validados
+            # recarregar_entries(self)
+
+            workbook = openpyxl.load_workbook(filepath)
+            # recarregar_entries(self)
 
             # Ler nome da planilha
             print(">>> Obtendo nome da planilha orçamentária...")

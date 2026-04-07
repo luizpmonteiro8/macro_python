@@ -4,6 +4,7 @@ from openpyxl.utils import column_index_from_string
 from funcoes.common.buscar_palavras import (
     buscar_palavra_com_linha,
     buscar_palavra_com_linha_exato,
+    buscar_palavra_com_linha_iniciando,
     buscar_palavra_contem,
 )
 from funcoes.common.copiar_coluna import copiar_coluna_com_numeros
@@ -74,6 +75,12 @@ def fator_nos_item_totais(
         sheet, col_totais, totalNome, lin_ini, lin_fim
     )
 
+    print(
+        f"fator_nos_item_totais: nome='{nome}', totalNome='{totalNome}', lin_ini={lin_ini}, lin_fim={lin_fim}"
+    )
+    print(f"  >> col_desc={col_desc}, col_totais={col_totais}")
+    print(f"  >> inicial={inicial}, final={final}")
+
     if -1 < inicial < final:
         # soma final
         sheet[f"{col_valor}{final}"].value = (
@@ -98,6 +105,7 @@ def fator_nos_item_totais(
 
 
 def buscar_comp_auxiliar(workbook, dados, itemChave, lin, lin_total):
+    print(f">>> entrar buscar_comp_auxiliar: lin={lin}, lin_total={lin_total}")
     sheet_comp = workbook[get_planilha_comp(dados)]
     sheet_aux = workbook[get_planilha_aux(dados)]
 
@@ -108,48 +116,88 @@ def buscar_comp_auxiliar(workbook, dados, itemChave, lin, lin_total):
     col_preco_comp = get_preco_unitario_comp(dados)
     valor_string = get_valor_string(dados)
 
+    print(
+        f">>> buscar_comp_auxiliar: col_item={col_item}, col_desc_aux={col_desc_aux}, valor_string='{valor_string}'"
+    )
+
     ultima_busca = 1
     ultima_linha_aux = sheet_aux.max_row
 
     for x in range(lin, lin_total):
-        cod = sheet_comp[f"{col_desc_aux}{x}"].value
-        nome = sheet_comp[f"{col_item}{x}"].value
-        if nome is None:
+        cod = sheet_comp[f"{col_item}{x}"].value
+        nome = sheet_comp[f"{col_desc_aux}{x}"].value
+        if cod is None:
             continue
 
-        # primeira tentativa busca completa
-        linha_ini = buscar_palavra_com_linha(
-            sheet_aux, col_desc_aux, f"{cod} {nome}", ultima_busca, ultima_linha_aux
-        )
-        if linha_ini == -1:
-            linha_ini = buscar_palavra_com_linha(
-                sheet_aux, col_desc_aux, cod, ultima_busca, ultima_linha_aux
-            )
+        cod = str(cod).strip()
 
+        # 1 - busca pelo codigo no inicio
+        linha_ini = buscar_palavra_com_linha_iniciando(
+            sheet_aux, col_desc_aux, cod, ultima_busca, ultima_linha_aux
+        )
+        # 2 - busca pelo codigo no inicio a partir da linha 1
         if linha_ini == -1:
-            linha_ini = buscar_palavra_com_linha(
+            linha_ini = buscar_palavra_com_linha_iniciando(
                 sheet_aux, col_desc_aux, cod, 1, ultima_linha_aux
             )
-
-        if cod in ("I0690", "I0769"):
-            print(
-                f"{cod} {nome} -> linha_ini: {linha_ini}, ultima_linha_aux: {ultima_linha_aux}"
+        # 3 - busca pelo codigo contendo em qualquer parte
+        if linha_ini == -1:
+            linha_ini = buscar_palavra_contem(
+                sheet_aux, col_desc_aux, cod, 1, ultima_linha_aux
             )
+        # 4 - busca contem codigo
+        if linha_ini == -1:
+            linha_ini = buscar_palavra_contem(
+                sheet_aux, col_desc_aux, cod, 1, ultima_linha_aux
+            )
+        # 5 - busca pelos primeiros 5 digitos do codigo
+        if linha_ini == -1 and len(cod) >= 5:
+            cod_prefix = cod[:5]
+            linha_ini = buscar_palavra_contem(
+                sheet_aux, col_desc_aux, cod_prefix, 1, ultima_linha_aux
+            )
+        # 6 - busca pelos primeiros 4 digitos do codigo
+        if linha_ini == -1 and len(cod) >= 4:
+            cod_prefix = cod[:4]
+            linha_ini = buscar_palavra_contem(
+                sheet_aux, col_desc_aux, cod_prefix, 1, ultima_linha_aux
+            )
+        # 7 - busca pela descricao usando contem (mais flexivel)
+        if linha_ini == -1 and nome:
+            # Extrai parte relevante da descricao (sem o codigo no inicio)
+            nome_sem_codigo = nome
+            linha_ini = buscar_palavra_contem(
+                sheet_aux, col_desc_aux, nome_sem_codigo, 1, ultima_linha_aux
+            )
+        # 8 - busca por parte da descricao (palavras-chave)
+        if linha_ini == -1 and nome:
+            # Tenta buscar por palavras-chave da descricao
+            palavras = nome.split()
+            for palavra in palavras:
+                if len(palavra) > 5 and not palavra.isdigit():
+                    linha_ini = buscar_palavra_contem(
+                        sheet_aux, col_desc_aux, palavra, 1, ultima_linha_aux
+                    )
+                    if linha_ini > -1:
+                        break
 
         if linha_ini > -1:
-            ultima_busca = linha_ini
+            print(f"buscar_comp_auxiliar: encontrado {cod} {nome} na linha {linha_ini}")
+            ultima_busca = 1
             linha_fim = buscar_palavra_com_linha(
                 sheet_aux, col_totais_aux, valor_string, linha_ini, ultima_linha_aux
             )
-            if cod in ("I0690", "I0769"):
-                print(
-                    f"final: {linha_fim}, valor_string: {valor_string}, linha_inicial: {linha_ini}"
-                )
+            print(
+                f"buscar_comp_auxiliar: linha_fim={linha_fim}, valor_string={valor_string}"
+            )
 
             adicionar_fator_totais_aux(workbook, dados, itemChave, linha_ini, linha_fim)
             sheet_comp[f"{col_preco_comp}{x}"].value = (
                 f"='{get_planilha_aux(dados)}'!{col_valor_aux}{linha_fim}"
             )
+        else:
+            print(f"[ERRO] buscar_comp_auxiliar: NAO encontrado {cod} {nome}")
+            continue
 
 
 def adicionar_fator_totais(workbook, dados, itemChave, lin_ini, lin_fim):
@@ -261,6 +309,9 @@ def adicionar_fator_totais(workbook, dados, itemChave, lin_ini, lin_fim):
                 final_total_linha_array.add(linha_total)
 
                 if item.get("buscarAuxiliar") == "Sim":
+                    print(
+                        f">>> Chamando buscar_comp_auxiliar para item '{item['nome']}' com linha_desc={linha_desc}, linha_total={linha_total}"
+                    )
                     buscar_comp_auxiliar(
                         workbook, dados, itemChave, linha_desc, linha_total
                     )

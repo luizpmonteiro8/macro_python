@@ -567,7 +567,7 @@ def validar_valor_na_coluna(
         confirmado_coluna, nova_coluna = janela_corrigir_valor(
             titulo=f"Coluna do {nome_valor_exibicao}",
             mensagem=f"O texto do {nome_valor_exibicao} não foi encontrado na coluna '{coluna_atual}'.\n"
-                    f"Verifique se a COLUNA está correta!",
+            f"Verifique se a COLUNA está correta!",
             instrucao=instrucao_coluna,
             valor_atual=coluna_atual,
             valor_default=coluna_atual,
@@ -590,7 +590,7 @@ def validar_valor_na_coluna(
         confirmado_valor, novo_valor = janela_corrigir_valor(
             titulo="Texto não encontrado",
             mensagem=f"O texto '{valor_atual}' não foi encontrado na coluna '{nova_coluna}'.\n"
-                    f"Digite o texto correto que aparece no Excel.",
+            f"Digite o texto correto que aparece no Excel.",
             instrucao=instrucao_valor,
             valor_atual=valor_atual,
             valor_default=valor_atual,
@@ -1242,11 +1242,3 @@ def validar_arquivo_excel(filepath, dados):
         print(">>> [OK] VALIDAÇÃO CONCLUÍDA COM SUCESSO!")
         print("=" * 60)
         return True, workbook, dados_atualizados
-
-
-def validar_arquivo_excel_legacy(workbook, dados):
-    """
-    Versão original da função de validação (mantida para compatibilidade).
-    Use validar_arquivo_excel() para nova implementação.
-    """
-    pass

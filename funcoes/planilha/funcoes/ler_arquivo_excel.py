@@ -8,6 +8,9 @@ import openpyxl
 from funcoes.common.buscar_palavras import buscar_palavra
 from funcoes.planilha.funcoes.validar_arquivo_excel import validar_arquivo_excel
 from funcoes.planilha.funcoes.adicionar_fator_aux import itens_nao_encontrados
+from funcoes.planilha.funcoes.verificar_formulas_itens import (
+    verificar_e_adicionar_formulas,
+)
 from funcoes.common.custo_unitario import custo_unitario_execucao
 from funcoes.get.get_linhas_json import (
     get_coluna_final,
@@ -124,6 +127,10 @@ def selecionar_arquivo_excel(self):
 
             print(">>> Adicionando Fator Auxiliar...")
             adicionar_fator_aux(workbook, self.dados)
+
+            print(">>> Verificando fórmulas dos itens auxiliares...")
+            adicionadas = verificar_e_adicionar_formulas(workbook, self.dados)
+            print(f">>> {adicionadas} fórmulas adicionadas")
 
             print(">>> Adicionando Fator de Composição...")
             sucesso, erro = adicionar_fator_comp(

@@ -20,25 +20,6 @@ def verificar_e_adicionar_formulas(workbook, dados):
     max_row = sheet.max_row
     linhas_modificadas = []
 
-    # Construir lista de labels para pular dinamicamente do JSON
-    # Coleta todos os nomes dos itens com buscarAuxiliar: "Sim"
-    labels_pular = []
-    totals_pular = []  # Lista de strings "TOTAL xxx:"
-    if dados and isinstance(dados, list) and len(dados) > 0:
-        primeiro_item = dados[0]
-        for key, item in primeiro_item.items():
-            if key.startswith("item") and isinstance(item, dict):
-                if item.get("buscarAuxiliar") == "Sim":
-                    nome = item.get("nome", "")
-                    if nome:
-                        labels_pular.append(nome.upper())
-                    total_str = item.get("total", "")
-                    if total_str:
-                        totals_pular.append(total_str.upper())
-
-    print(f">> Labels para pular (buscarAuxiliar: Sim): {labels_pular}")
-    print(f">> Totals para pular: {totals_pular}")
-
     # Primeiro: construir mapa de códigos -> linha de célula mesclada + próxima linha com "VALOR:"
     mapa_codigos_valor = {}
 
@@ -87,12 +68,20 @@ def verificar_e_adicionar_formulas(workbook, dados):
         if not cell_item or isinstance(cell_item, MergedCell):
             continue
 
-        # Pular cabeçalhos usando labels dinâmicos do JSON
+        # Pular cabeçalhos
         codigo = str(cell_item).strip()
-        codigo_upper = codigo.upper()
-        if any(x in codigo_upper for x in labels_pular):
-            continue
-        if any(x in codigo_upper for x in totals_pular):
+        if any(
+            x in codigo.upper()
+            for x in [
+                "MATERIAL",
+                "MÃO DE OBRA",
+                "SERVIÇO",
+                "EQUIPAMENTO",
+                "TOTAL",
+                "PREÇO",
+                "ENCARGOS",
+            ]
+        ):
             continue
 
         cell_f = sheet.cell(row=i, column=col_preco_idx).value

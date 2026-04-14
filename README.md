@@ -10,6 +10,7 @@
 3.8 - buscar na composicao inicia na linha 1 e adiciona link
 3.9 - ler linha final usando max_row
 3.9.1 - busca auxiliares e composição apartir da ultima linha encontrada
+4 - adicionado verificar e adicionar fórmulas para itens com 'buscarAuxiliar': 'Sim' 
 
 virtualenv .venv
 

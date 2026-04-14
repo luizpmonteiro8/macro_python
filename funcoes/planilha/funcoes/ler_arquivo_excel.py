@@ -11,6 +11,9 @@ from funcoes.planilha.funcoes.adicionar_fator_aux import itens_nao_encontrados
 from funcoes.planilha.funcoes.verificar_formulas_itens import (
     verificar_e_adicionar_formulas,
 )
+from funcoes.planilha.funcoes.verificar_adicionar_fator import (
+    verificar_e_adicionar_fator,
+)
 from funcoes.common.custo_unitario import custo_unitario_execucao
 from funcoes.get.get_linhas_json import (
     get_coluna_final,
@@ -131,6 +134,10 @@ def selecionar_arquivo_excel(self):
             print(">>> Verificando fórmulas dos itens auxiliares...")
             adicionadas = verificar_e_adicionar_formulas(workbook, self.dados)
             print(f">>> {adicionadas} fórmulas adicionadas")
+
+            print(">>> Verificando e adicionando fatores dos itens...")
+            fatores_adicionados = verificar_e_adicionar_fator(workbook, self.dados)
+            print(f">>> {fatores_adicionados} fatores adicionados")
 
             print(">>> Adicionando Fator de Composição...")
             sucesso, erro = adicionar_fator_comp(

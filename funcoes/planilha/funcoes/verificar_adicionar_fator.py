@@ -175,10 +175,11 @@ def verificar_e_adicionar_planilha(
     linhas_adicionadas = []
     max_row = sheet.max_row
 
-    # Primeiro, encontrar TODAS as seções para cada nome único
+    # Encontrar TODAS as seções para cada nome único
+    # NÃO usar mais nomes_processados para permitir múltiplos itens com mesmo nome
     secoes_encontradas = {}  # nome_upper -> [(inicio, fim), ...]
 
-    nomes_processados = set()
+    # Primeiro pass: encontrar todas as seções únicas
     for item_info in itens_fator:
         nome = item_info["nome"]
         total_str = item_info["total"]
@@ -186,10 +187,8 @@ def verificar_e_adicionar_planilha(
         total_upper = total_str.upper() if total_str else ""
 
         # Se já buscamos essa seção, não buscar de novo
-        if nome_upper in nomes_processados:
+        if nome_upper in secoes_encontradas:
             continue
-
-        nomes_processados.add(nome_upper)
 
         # Buscar todas as seções com esse nome
         secoes = encontrar_todas_secoes(sheet, col_desc_idx, nome_upper, total_upper)
@@ -248,9 +247,14 @@ def verificar_e_adicionar_planilha(
                 if "COEFICIENTE" in desc_upper or "PREÇO UNITÁRIO" in desc_upper:
                     continue
 
-                # Pular labels de títulos
-                if any(x in desc_upper for x in labels_pular):
-                    continue
+                # NÃO pular linhas só porque a seção tem um nome em labels_pular
+                # O labels_pular serve para outros contextos, não para pular a seção inteira
+                # Apenas pular linhas que são especificamente o label (título da seção)
+                # e linhas de TOTAL
+                # ✅ CORREÇÃO: labels_pular NÃO deve pular linhas INTERNAS da seção
+                # Removida verificação que pulava TODAS as linhas de itens com buscarAuxiliar: "Não"
+
+                # Apenas pular linhas de TOTAL
                 if any(x in desc_upper for x in totals_pular):
                     continue
 
@@ -259,15 +263,11 @@ def verificar_e_adicionar_planilha(
                     # Adicionar na coluna E (coeficiente)
                     cell_coef = sheet.cell(row=y, column=col_coef_idx)
                     if not isinstance(cell_coef, MergedCell):
-                        if cell_coef.value is None or (
-                            not isinstance(cell_coef.value, str)
-                            or not cell_coef.value.startswith("=")
-                        ):
-                            formula = (
-                                f"={get_column_letter(col_coef_antigo_idx)}{y}*FATOR"
-                            )
-                            cell_coef.value = formula
-                            linhas_adicionadas.append(f"L{y}: {desc[:30]} -> {formula}")
+                        # SOBRESCREVER SEMPRE quando fatorCoeficiente=True
+                        # Isso garante que valores numéricos sejam substituídos
+                        formula = f"={get_column_letter(col_coef_antigo_idx)}{y}*FATOR"
+                        cell_coef.value = formula
+                        linhas_adicionadas.append(f"L{y}: {desc[:30]} -> {formula}")
                 else:
                     # Adicionar na coluna F (preço unitário)
                     cell_preco = sheet.cell(row=y, column=col_preco_idx)

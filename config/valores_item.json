@@ -162,6 +162,15 @@
       "buscarAuxiliar": "Não",
       "iniciaPor": "09",
       "naoIniciaPor": ""
+    },
+    "item19": {
+      "nome": "Mão de Obra",
+      "total": "TOTAL Mão de Obra:",
+      "adicionarFator": "Sim",
+      "fatorCoeficiente": "Sim",
+      "buscarAuxiliar": "Não",
+      "iniciaPor": "",
+      "naoIniciaPor": ""
     }
   }
 ]

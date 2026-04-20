@@ -288,11 +288,18 @@ def verificar_e_adicionar_planilha(
                 if any(x in desc_upper for x in totals_pular):
                     continue
 
+                # Pular linhas que contêm TOTAL, VALOR, VALOR BDI, VALOR COM BDI em qualquer checking
+                if any(x in desc_upper for x in ["TOTAL", "VALOR", "VALOR BDI", "VALOR COM BDI"]):
+                    continue
+
                 # Verificar também a coluna E (col_coef_idx) onde os totais aparecem
                 cell_coef_check = sheet.cell(row=y, column=col_coef_idx).value
                 if cell_coef_check:
                     coef_upper = str(cell_coef_check).upper()
                     if any(x in coef_upper for x in totals_pular):
+                        continue
+                    # Pular linhas que contêm TOTAL, VALOR, VALOR BDI, VALOR COM BDI
+                    if any(x in coef_upper for x in ["TOTAL", "VALOR", "VALOR BDI", "VALOR COM BDI"]):
                         continue
                     # Verificar se é uma linha de label/título que deve ser pulada
                     if any(x in coef_upper for x in labels_pular):
@@ -309,6 +316,9 @@ def verificar_e_adicionar_planilha(
                         # NÃO sobrescrever se já tiver uma fórmula
                         if cell_coef.value and isinstance(cell_coef.value, str) and cell_coef.value.startswith("="):
                             pass  # já tem fórmula, não sobrescrever
+                        # NÃO sobrescrever se a descrição indica que não é um item (não começa com dígito ou código)
+                        elif desc_upper and desc_upper[0] and not desc_upper[0].isdigit():
+                            pass  # texto descritivo, não item, não sobrescrever
                         else:
                             formula = f"={get_column_letter(col_coef_antigo_idx)}{y}*FATOR"
                             cell_coef.value = formula

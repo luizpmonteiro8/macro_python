@@ -7,7 +7,7 @@ import openpyxl
 
 from funcoes.common.buscar_palavras import buscar_palavra
 from funcoes.planilha.funcoes.validar_arquivo_excel import validar_arquivo_excel
-from funcoes.planilha.funcoes.adicionar_fator_aux import itens_nao_encontrados
+
 from funcoes.planilha.funcoes.verificar_formulas_itens import (
     verificar_e_adicionar_formulas,
 )
@@ -132,12 +132,7 @@ def selecionar_arquivo_excel(self):
             adicionar_fator_aux(workbook, self.dados)
 
             print(">>> Adicionando Fator de Composição...")
-            sucesso, erro = adicionar_fator_comp(
-                workbook, self.dados, self.item, linhaIni, linhafinal
-            )
-            if not sucesso:
-                tk.messagebox.showerror("Erro", erro)
-                return
+            adicionar_fator_comp(workbook, self.dados)
 
             print(">>> Calculando custo unitário de execução...")
             custo_unitario_execucao(workbook, self.dados)
@@ -186,14 +181,5 @@ def selecionar_arquivo_excel(self):
             self.lbl_processando.config(text="Ocorreu um erro!")
 
         finally:
-            # Mostrar itens não encontrados ao final (tanto em sucesso quanto em erro)
-            if itens_nao_encontrados:
-                lista_formatada = "\n".join(
-                    f"  - {item}" for item in itens_nao_encontrados
-                )
-                tk.messagebox.showwarning(
-                    "Itens não encontrados",
-                    f"Os seguintes itens não foram encontrados:\n\n{lista_formatada}\n\nVerifique se existem na planilha.",
-                )
-                # Limpa a lista para próxima execução
-                itens_nao_encontrados.clear()
+            pass
+

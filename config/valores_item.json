@@ -25,8 +25,8 @@
       "adicionarFator": "Sim",
       "fatorCoeficiente": "Sim",
       "buscarAuxiliar": "Não",
-      "iniciaPor": "",
-      "naoIniciaPor": "I"
+      "iniciaPor": "Mão de Obra",
+      "naoIniciaPor": "Mão de Obra Com"
     },
     "item4": {
       "nome": "Mão de Obra",
@@ -169,8 +169,8 @@
       "adicionarFator": "Sim",
       "fatorCoeficiente": "Sim",
       "buscarAuxiliar": "Não",
-      "iniciaPor": "",
-      "naoIniciaPor": ""
+      "iniciaPor": "Mão de Obra",
+      "naoIniciaPor": "Mão de Obra Com"
     }
   }
 ]

@@ -26,6 +26,7 @@ from funcoes.planilha.funcoes.adicionar_bdi import adicionar_bdi
 from funcoes.planilha.funcoes.adicionar_fator import adicionar_fator
 from funcoes.planilha.funcoes.adicionar_fator_aux import adicionar_fator_aux
 from funcoes.planilha.funcoes.adicionar_fator_comp import adicionar_fator_comp
+from funcoes.planilha.funcoes.criar_hiperlinks_composicao import criar_hiperlinks_composicao
 from funcoes.planilha.funcoes.formula_planilha import (
     copiar_coluna_planilha,
     formula_planilha,
@@ -133,6 +134,9 @@ def selecionar_arquivo_excel(self):
 
             print(">>> Adicionando Fator de Composição...")
             adicionar_fator_comp(workbook, self.dados)
+
+            print(">>> Criando hyperlinks com COMPOSICOES...")
+            criar_hiperlinks_composicao(workbook, self.dados, linhaIni, linhafinal)
 
             print(">>> Calculando custo unitário de execução...")
             custo_unitario_execucao(workbook, self.dados)

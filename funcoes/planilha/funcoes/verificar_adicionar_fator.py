@@ -155,14 +155,28 @@ def encontrar_todas_secoes(sheet, col_desc_idx, nome_upper, total_upper, inicia_
             if cell and isinstance(cell, MergedCell):
                 continue
             cell_str = str(cell).strip()
-            if cell and nome_upper in cell_str.upper():
+            cell_upper = cell_str.upper()
+            if cell and nome_upper in cell_upper:
                 # Verificar que não é um TOTAL
-                if "TOTAL" not in cell_str.upper():
+                if "TOTAL" not in cell_upper:
                     # Se inicia_por fornecido, verificar que o título começa com ele
-                    if inicia_por and not cell_str.startswith(inicia_por):
-                        continue
+                    # Se inicia_por vazio mas nome_upper foi fornecido, usar startswith(nome_upper)
+                    if inicia_por:
+                        if not cell_str.startswith(inicia_por):
+                            continue
+                    else:
+                        # Quando inicia_por é vazio, usar startswith EXATO para evitar substring matches
+                        # A seção deve começar exatamente com nome_upper (possivelmente seguido de ":")
+                        if not (
+                            cell_upper.startswith(nome_upper)
+                            and (
+                                len(cell_upper) == len(nome_upper)
+                                or cell_upper[len(nome_upper)] in [" ", ":"]
+                            )
+                        ):
+                            continue
                     # Se nao_inicia_por fornecido, verificar que o título NÃO começa com ele
-                    if nao_inicia_por and cell_str.startswith(nao_inicia_por):
+                    if nao_inicia_por and cell_upper.startswith(nao_inicia_por.upper()):
                         continue
                     inicios.append((i, col_busca))
                     break

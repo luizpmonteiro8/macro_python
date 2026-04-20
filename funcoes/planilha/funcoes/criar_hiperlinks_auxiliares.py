@@ -10,6 +10,7 @@ from funcoes.get.get_linhas_json import (
     get_descricao_comp,
     get_planilha_aux,
     get_descricao_aux,
+    get_item_descricao_comp_aux,
     get_preco_unitario_comp,
     get_coluna_totais_aux,
     get_valor_totais_aux,
@@ -34,6 +35,7 @@ def criar_hiperlinks_auxiliares(workbook, dados, todos_item):
     planilha_comp = get_planilha_comp(dados)
     planilha_aux = get_planilha_aux(dados)
     col_item = get_descricao_comp(dados)
+    col_desc_link = get_item_descricao_comp_aux(dados)
     col_desc_aux = get_descricao_aux(dados)
     col_preco_comp = get_preco_unitario_comp(dados)
     col_valor_aux = get_valor_totais_aux(dados)
@@ -46,6 +48,7 @@ def criar_hiperlinks_auxiliares(workbook, dados, todos_item):
     sheet_aux_max = sheet_aux.max_row + 1
 
     col_item_idx = ord(col_item.upper()) - ord("A") + 1
+    col_desc_link_idx = ord(col_desc_link.upper()) - ord("A") + 1
     col_preco_idx = ord(col_preco_comp.upper()) - ord("A") + 1
     col_desc_aux_idx = ord(col_desc_aux.upper()) - ord("A") + 1
     col_valor_aux_idx = ord(col_valor_aux.upper()) - ord("A") + 1
@@ -66,7 +69,17 @@ def criar_hiperlinks_auxiliares(workbook, dados, todos_item):
         desc_str = str(desc).strip() if desc else ""
 
         desc_upper = desc_str.upper()
-        if any(x in desc_upper for x in ["COEFICIENTE", "PREÇO UNITÁRIO", "FONTE", "UNID", "TOTAL", "VALOR"]):
+        if any(
+            x in desc_upper
+            for x in [
+                "COEFICIENTE",
+                "PREÇO UNITÁRIO",
+                "FONTE",
+                "UNID",
+                "TOTAL",
+                "VALOR",
+            ]
+        ):
             continue
 
         if not cod:
@@ -134,21 +147,25 @@ def criar_hiperlinks_auxiliares(workbook, dados, todos_item):
             continue
 
         # Hyperlink em COMPOSICOES col descrição -> AUXILIARES item
-        sheet_comp.cell(row=x, column=col_item_idx).hyperlink = (
-            f"#{planilha_aux}!{col_desc_aux}{linha_ini}"
-        )
-        hyperlinks_criados += 1
+        cell_link = sheet_comp.cell(row=x, column=col_desc_link_idx)
+        if not isinstance(cell_link, MergedCell):
+            cell_link.hyperlink = f"#'{planilha_aux}'!{col_desc_aux}{linha_ini}"
+            hyperlinks_criados += 1
 
-        # Hyperlink interno em AUXILIARES -> VALOR: da seção
-        sheet_aux.cell(row=int(linha_ini), column=int(col_desc_aux_idx)).hyperlink = (
-            f"#{planilha_aux}!{col_valor_aux}{int(linha_fim)}"
-        )
+        # Hyperlink interno em AUXILIARES -> linha do item encontrado (descrição)
+        cell_aux_link = sheet_aux.cell(row=int(linha_ini), column=int(col_desc_aux_idx))
+        if not isinstance(cell_aux_link, MergedCell):
+            cell_aux_link.hyperlink = f"#'{planilha_aux}'!{col_desc_aux}{linha_ini}"
 
         # Fórmula em PREÇO UNITÁRIO
         cell_preco = sheet_comp.cell(row=x, column=col_preco_idx)
         if isinstance(cell_preco, MergedCell):
             continue
-        if not (cell_preco.value and isinstance(cell_preco.value, str) and cell_preco.value.startswith("=")):
+        if not (
+            cell_preco.value
+            and isinstance(cell_preco.value, str)
+            and cell_preco.value.startswith("=")
+        ):
             cell_preco.value = f"='{planilha_aux}'!{col_valor_aux}{linha_fim}"
             formulas_criadas += 1
 

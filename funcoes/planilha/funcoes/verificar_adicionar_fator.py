@@ -136,7 +136,9 @@ def verificar_e_adicionar_fator(workbook, dados):
     return total
 
 
-def encontrar_todas_secoes(sheet, col_desc_idx, nome_upper, total_upper, inicia_por="", nao_inicia_por=""):
+def encontrar_todas_secoes(
+    sheet, col_desc_idx, nome_upper, total_upper, inicia_por="", nao_inicia_por=""
+):
     """
     Encontra TODAS as seções com o nome dado na planilha.
     Retorna lista de tuplas (inicio, fim) para cada seção.
@@ -219,7 +221,9 @@ def verificar_e_adicionar_planilha(
 
     # Encontrar TODAS as seções para cada nome único
     # NÃO usar mais nomes_processados para permitir múltiplos itens com mesmo nome
-    secoes_encontradas = {}  # cache_key (nome_upper, iniciaPor, naoIniciaPor) -> [(inicio, fim), ...]
+    secoes_encontradas = (
+        {}
+    )  # cache_key (nome_upper, iniciaPor, naoIniciaPor) -> [(inicio, fim), ...]
 
     # Primeiro pass: encontrar todas as seções únicas
     for item_info in itens_fator:
@@ -238,10 +242,14 @@ def verificar_e_adicionar_planilha(
             continue
 
         # Buscar todas as seções com esse nome (passando inicia_por e nao_inicia_por para filtrar na busca)
-        secoes = encontrar_todas_secoes(sheet, col_desc_idx, nome_upper, total_upper, inicia_por, nao_inicia_por)
+        secoes = encontrar_todas_secoes(
+            sheet, col_desc_idx, nome_upper, total_upper, inicia_por, nao_inicia_por
+        )
         if secoes:
             secoes_encontradas[cache_key] = secoes
-            print(f"   Encontradas {len(secoes)} seções de '{nome_upper}' (iniciaPor='{inicia_por}', naoIniciaPor='{nao_inicia_por}')")
+            print(
+                f"   Encontradas {len(secoes)} seções de '{nome_upper}' (iniciaPor='{inicia_por}', naoIniciaPor='{nao_inicia_por}')"
+            )
 
     # Processar cada item em TODAS as seções correspondentes
     for item_info in itens_fator:
@@ -256,7 +264,9 @@ def verificar_e_adicionar_planilha(
 
         # Obter lista de seções para este nome
         if cache_key not in secoes_encontradas:
-            print(f"   !! Não encontrou nenhuma seção para: {nome_upper} (iniciaPor='{inicia_por}', naoIniciaPor='{nao_inicia_por}')")
+            print(
+                f"   !! Não encontrou nenhuma seção para: {nome_upper} (iniciaPor='{inicia_por}', naoIniciaPor='{nao_inicia_por}')"
+            )
             continue
 
         secoes = secoes_encontradas[cache_key]
@@ -303,7 +313,10 @@ def verificar_e_adicionar_planilha(
                     continue
 
                 # Pular linhas que contêm TOTAL, VALOR, VALOR BDI, VALOR COM BDI em qualquer checking
-                if any(x in desc_upper for x in ["TOTAL", "VALOR", "VALOR BDI", "VALOR COM BDI"]):
+                if any(
+                    x in desc_upper
+                    for x in ["TOTAL", "VALOR", "VALOR BDI", "VALOR COM BDI"]
+                ):
                     continue
 
                 # Verificar também a coluna E (col_coef_idx) onde os totais aparecem
@@ -313,10 +326,10 @@ def verificar_e_adicionar_planilha(
                     if any(x in coef_upper for x in totals_pular):
                         continue
                     # Pular linhas que contêm TOTAL, VALOR, VALOR BDI, VALOR COM BDI
-                    if any(x in coef_upper for x in ["TOTAL", "VALOR", "VALOR BDI", "VALOR COM BDI"]):
-                        continue
-                    # Verificar se é uma linha de label/título que deve ser pulada
-                    if any(x in coef_upper for x in labels_pular):
+                    if any(
+                        x in coef_upper
+                        for x in ["TOTAL", "VALOR", "VALOR BDI", "VALOR COM BDI"]
+                    ):
                         continue
                     # Pular linhas que contêm VALOR, VALOR BDI ou VALOR COM BDI usando valores do JSON
                     if any(x in coef_upper for x in valores_pular):
@@ -328,13 +341,21 @@ def verificar_e_adicionar_planilha(
                     cell_coef = sheet.cell(row=y, column=col_coef_idx)
                     if not isinstance(cell_coef, MergedCell):
                         # NÃO sobrescrever se já tiver uma fórmula
-                        if cell_coef.value and isinstance(cell_coef.value, str) and cell_coef.value.startswith("="):
+                        if (
+                            cell_coef.value
+                            and isinstance(cell_coef.value, str)
+                            and cell_coef.value.startswith("=")
+                        ):
                             pass  # já tem fórmula, não sobrescrever
                         # NÃO sobrescrever se a descrição indica que não é um item (não começa com dígito ou código)
-                        elif desc_upper and desc_upper[0] and not desc_upper[0].isdigit():
+                        elif (
+                            desc_upper and desc_upper[0] and not desc_upper[0].isdigit()
+                        ):
                             pass  # texto descritivo, não item, não sobrescrever
                         else:
-                            formula = f"={get_column_letter(col_coef_antigo_idx)}{y}*FATOR"
+                            formula = (
+                                f"={get_column_letter(col_coef_antigo_idx)}{y}*FATOR"
+                            )
                             cell_coef.value = formula
                             linhas_adicionadas.append(f"L{y}: {desc[:30]} -> {formula}")
                 else:

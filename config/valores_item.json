@@ -49,7 +49,7 @@
     "item6": {
       "nome": "Encargos Complementares",
       "total": "TOTAL Encargos Complementares:",
-      "adicionarFator": "Não",
+      "adicionarFator": "Sim",
       "fatorCoeficiente": "Não",
       "buscarAuxiliar": "Não",
       "iniciaPor": "",

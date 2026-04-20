@@ -153,7 +153,7 @@ def selecionar_arquivo_excel(self):
             print(f">>> {adicionadas} fórmulas adicionadas")
 
             print(">>> Verificando e adicionando fatores dos itens...")
-            fatores_adicionados = verificar_e_adicionar_fator(workbook, self.dados)
+            fatores_adicionados = verificar_e_adicionar_fator(workbook, self.todos_item)
             print(f">>> {fatores_adicionados} fatores adicionados")
 
             # ============================================

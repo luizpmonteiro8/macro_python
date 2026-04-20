@@ -14,31 +14,31 @@ def verificar_e_adicionar_fator(workbook, dados):
     """
     print(">>> Verificando e adicionando fatores dos itens...")
 
-    # Obter nomes das planilhas do JSON
-    planilha_comp = dados.get("planilhaComposicao", "COMPOSIÇÕES")
-    planilha_aux = dados.get("planilhaAuxiliar", "COMPOSICOES AUXILIARES")
-
-    # Obter colunas do JSON
-    col_coef_comp = dados.get("composicaoCoeficiente", "E")
-    col_preco_comp = dados.get("composicaoPrecoUnitario", "F")
-    col_coef_comp_antigo = dados.get("composicaoCoeficienteCopiar", "L")
-    col_preco_comp_antigo = dados.get("composicaoPrecoUnitarioCopiar", "M")
-    col_desc_comp = dados.get("composicaoDescricao", "A")
-
-    col_coef_aux = dados.get("auxiliarCoeficiente", "E")
-    col_preco_aux = dados.get("auxiliarPrecoUnitario", "F")
-    col_coef_aux_antigo = dados.get("auxiliarCoeficienteCopiar", "L")
-    col_preco_aux_antigo = dados.get("auxiliarPrecoUnitarioCopiar", "M")
-    col_desc_aux = dados.get("auxiliarDescricao", "A")
-
-    # Construir lista de itens que precisam de fator (MANTER INDIVIDUAL)
-    # Cada item é processado separadamente com seus próprios filtros
-    itens_fator = []
-
     # O dados pode ser uma lista [{}] ou um dicionário {}
     dados_itens = dados
     if isinstance(dados, list) and len(dados) > 0:
         dados_itens = dados[0]
+
+    # Obter nomes das planilhas do JSON
+    planilha_comp = dados_itens.get("planilhaComposicao", "COMPOSICOES")
+    planilha_aux = dados_itens.get("planilhaAuxiliar", "COMPOSICOES AUXILIARES")
+
+    # Obter colunas do JSON
+    col_coef_comp = dados_itens.get("composicaoCoeficiente", "E")
+    col_preco_comp = dados_itens.get("composicaoPrecoUnitario", "F")
+    col_coef_comp_antigo = dados_itens.get("composicaoCoeficienteCopiar", "L")
+    col_preco_comp_antigo = dados_itens.get("composicaoPrecoUnitarioCopiar", "M")
+    col_desc_comp = dados_itens.get("composicaoDescricao", "A")
+
+    col_coef_aux = dados_itens.get("auxiliarCoeficiente", "E")
+    col_preco_aux = dados_itens.get("auxiliarPrecoUnitario", "F")
+    col_coef_aux_antigo = dados_itens.get("auxiliarCoeficienteCopiar", "L")
+    col_preco_aux_antigo = dados_itens.get("auxiliarPrecoUnitarioCopiar", "M")
+    col_desc_aux = dados_itens.get("auxiliarDescricao", "A")
+
+    # Construir lista de itens que precisam de fator (MANTER INDIVIDUAL)
+    # Cada item é processado separadamente com seus próprios filtros
+    itens_fator = []
 
     for key, item in dados_itens.items():
         if key.startswith("item") and isinstance(item, dict):
@@ -81,6 +81,7 @@ def verificar_e_adicionar_fator(workbook, dados):
 
     # Verificar composições
     print(f"\n>> Verificando planilha: {planilha_comp}")
+    # ✅ NA PLANILHA PRINCIPAL COMPOSIÇÕES: PROCESSAR TODOS OS ITENS, INCLUSIVE OS COM buscarAuxiliar: Não
     adicionados = verificar_e_adicionar_planilha(
         workbook[planilha_comp],
         column_index_from_string(col_desc_comp),
@@ -89,7 +90,7 @@ def verificar_e_adicionar_fator(workbook, dados):
         column_index_from_string(col_coef_comp_antigo),
         column_index_from_string(col_preco_comp_antigo),
         itens_fator,
-        labels_pular,
+        [],  # NAO PULAR NADA NA PLANILHA PRINCIPAL
         totals_pular,
     )
     total_adicionados_comp = adicionados
@@ -97,6 +98,9 @@ def verificar_e_adicionar_fator(workbook, dados):
 
     # Verificar composições auxiliares
     print(f"\n>> Verificando planilha: {planilha_aux}")
+    # ✅ PROCESSAR TODOS OS ITENS com adicionarFator: "Sim" NA PLANILHA AUXILIAR
+    # O filtro buscarAuxiliar: "Não" é irrelevante para a aplicação de fórmulas de fator
+    itens_fator_aux = itens_fator
     adicionados = verificar_e_adicionar_planilha(
         workbook[planilha_aux],
         column_index_from_string(col_desc_aux),
@@ -104,8 +108,8 @@ def verificar_e_adicionar_fator(workbook, dados):
         column_index_from_string(col_preco_aux),
         column_index_from_string(col_coef_aux_antigo),
         column_index_from_string(col_preco_aux_antigo),
-        itens_fator,
-        labels_pular,
+        itens_fator_aux,
+        [],
         totals_pular,
     )
     total_adicionados_aux = adicionados
@@ -118,25 +122,34 @@ def verificar_e_adicionar_fator(workbook, dados):
     return total
 
 
-def encontrar_todas_secoes(sheet, col_desc_idx, nome_upper, total_upper):
+def encontrar_todas_secoes(sheet, col_desc_idx, nome_upper, total_upper, inicia_por="", nao_inicia_por=""):
     """
     Encontra TODAS as seções com o nome dado na planilha.
     Retorna lista de tuplas (inicio, fim) para cada seção.
+    ONLY retorna seções onde o título começa com inicia_por (se fornecido)
+    e NÃO começa com nao_inicia_por (se fornecido).
     """
     secoes = []
     colunas_busca = list(range(col_desc_idx, col_desc_idx + 10))
     max_row = sheet.max_row
 
-    # Primeiro, encontrar todos os inícios
+    # Primeiro, encontrar todos os inícios que passam nos filtros
     inicios = []
     for i in range(1, max_row + 1):
         for col_busca in colunas_busca:
             cell = sheet.cell(row=i, column=col_busca).value
             if cell and isinstance(cell, MergedCell):
                 continue
-            if cell and nome_upper in str(cell).strip().upper():
+            cell_str = str(cell).strip()
+            if cell and nome_upper in cell_str.upper():
                 # Verificar que não é um TOTAL
-                if "TOTAL" not in str(cell).upper():
+                if "TOTAL" not in cell_str.upper():
+                    # Se inicia_por fornecido, verificar que o título começa com ele
+                    if inicia_por and not cell_str.startswith(inicia_por):
+                        continue
+                    # Se nao_inicia_por fornecido, verificar que o título NÃO começa com ele
+                    if nao_inicia_por and cell_str.startswith(nao_inicia_por):
+                        continue
                     inicios.append((i, col_busca))
                     break
 
@@ -177,7 +190,7 @@ def verificar_e_adicionar_planilha(
 
     # Encontrar TODAS as seções para cada nome único
     # NÃO usar mais nomes_processados para permitir múltiplos itens com mesmo nome
-    secoes_encontradas = {}  # nome_upper -> [(inicio, fim), ...]
+    secoes_encontradas = {}  # cache_key (nome_upper, iniciaPor, naoIniciaPor) -> [(inicio, fim), ...]
 
     # Primeiro pass: encontrar todas as seções únicas
     for item_info in itens_fator:
@@ -185,16 +198,21 @@ def verificar_e_adicionar_planilha(
         total_str = item_info["total"]
         nome_upper = nome.upper()
         total_upper = total_str.upper() if total_str else ""
+        inicia_por = item_info["iniciaPor"]
+        nao_inicia_por = item_info["naoIniciaPor"]
 
-        # Se já buscamos essa seção, não buscar de novo
-        if nome_upper in secoes_encontradas:
+        # Criar chave única que inclui os filtros iniciaPor e naoIniciaPor
+        cache_key = (nome_upper, inicia_por, nao_inicia_por)
+
+        # Se já buscamos essa seção com os mesmos filtros, não buscar de novo
+        if cache_key in secoes_encontradas:
             continue
 
-        # Buscar todas as seções com esse nome
-        secoes = encontrar_todas_secoes(sheet, col_desc_idx, nome_upper, total_upper)
+        # Buscar todas as seções com esse nome (passando inicia_por e nao_inicia_por para filtrar na busca)
+        secoes = encontrar_todas_secoes(sheet, col_desc_idx, nome_upper, total_upper, inicia_por, nao_inicia_por)
         if secoes:
-            secoes_encontradas[nome_upper] = secoes
-            print(f"   Encontradas {len(secoes)} seções de '{nome_upper}'")
+            secoes_encontradas[cache_key] = secoes
+            print(f"   Encontradas {len(secoes)} seções de '{nome_upper}' (iniciaPor='{inicia_por}', naoIniciaPor='{nao_inicia_por}')")
 
     # Processar cada item em TODAS as seções correspondentes
     for item_info in itens_fator:
@@ -205,29 +223,18 @@ def verificar_e_adicionar_planilha(
         nao_inicia_por = item_info["naoIniciaPor"]
 
         nome_upper = nome.upper()
+        cache_key = (nome_upper, inicia_por, nao_inicia_por)
 
         # Obter lista de seções para este nome
-        if nome_upper not in secoes_encontradas:
-            print(f"   !! Não encontrou nenhuma seção para: {nome_upper}")
+        if cache_key not in secoes_encontradas:
+            print(f"   !! Não encontrou nenhuma seção para: {nome_upper} (iniciaPor='{inicia_por}', naoIniciaPor='{nao_inicia_por}')")
             continue
 
-        secoes = secoes_encontradas[nome_upper]
+        secoes = secoes_encontradas[cache_key]
         count_processadas = 0
 
         # Processar TODAS as seções que correspondem ao filtro
         for idx, (inicio, fim) in enumerate(secoes):
-            # Verificar se o título da seção corresponde ao filtro
-            titulo_cell = sheet.cell(row=inicio, column=col_desc_idx).value
-            titulo = str(titulo_cell) if titulo_cell else ""
-
-            # Se tem iniciaPor, a seção deve começar com esse texto
-            if inicia_por and not titulo.startswith(inicia_por):
-                continue
-
-            # Se tem naoIniciaPor, a seção NÃO deve começar com esse texto
-            if nao_inicia_por and titulo.startswith(nao_inicia_por):
-                continue
-
             count_processadas += 1
             print(
                 f"   Processando [{count_processadas}]: {nome_upper} (L{inicio} a L{fim}), "
@@ -242,9 +249,17 @@ def verificar_e_adicionar_planilha(
 
                 desc = str(cell_desc) if cell_desc else ""
 
-                # Pular linhas de títulos
+                # Pular linhas de títulos de seção (que contêm palavras como FONTE, UNID, COEFICIENTE)
                 desc_upper = desc.upper()
                 if "COEFICIENTE" in desc_upper or "PREÇO UNITÁRIO" in desc_upper:
+                    continue
+
+                # Verificar se é uma linha de título de seção (contém FONTE ou UNID ou TOTAL)
+                cell_fonte = sheet.cell(row=y, column=col_desc_idx + 2).value
+                cell_unid = sheet.cell(row=y, column=col_desc_idx + 3).value
+                if cell_fonte and "FONTE" in str(cell_fonte).upper():
+                    continue
+                if cell_unid and "UNID" in str(cell_unid).upper():
                     continue
 
                 # NÃO pular linhas só porque a seção tem um nome em labels_pular

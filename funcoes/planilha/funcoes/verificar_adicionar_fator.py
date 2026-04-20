@@ -36,6 +36,18 @@ def verificar_e_adicionar_fator(workbook, dados):
     col_preco_aux_antigo = dados_itens.get("auxiliarPrecoUnitarioCopiar", "M")
     col_desc_aux = dados_itens.get("auxiliarDescricao", "A")
 
+    # Obter valores de linha a pular (VALOR, VALOR BDI, VALOR COM BDI)
+    valor_label = dados_itens.get("valor", "VALOR:")
+    valor_bdi_label = dados_itens.get("valorBdi", "VALOR BDI")
+    valor_com_bdi_label = dados_itens.get("valorComBdi", "VALOR COM BDI")
+
+    # Construir lista de valores a pular (texto que indica linhas de totals/valores)
+    valores_pular = [
+        valor_label.upper(),
+        valor_bdi_label.upper(),
+        valor_com_bdi_label.upper(),
+    ]
+
     # Construir lista de itens que precisam de fator (MANTER INDIVIDUAL)
     # Cada item é processado separadamente com seus próprios filtros
     itens_fator = []
@@ -92,6 +104,7 @@ def verificar_e_adicionar_fator(workbook, dados):
         itens_fator,
         [],  # NAO PULAR NADA NA PLANILHA PRINCIPAL
         totals_pular,
+        [],  # NAO PULAR VALORES NA PLANILHA PRINCIPAL
     )
     total_adicionados_comp = adicionados
     print(f">> Fórmulas adicionadas em Composições: {adicionados}")
@@ -111,6 +124,7 @@ def verificar_e_adicionar_fator(workbook, dados):
         itens_fator_aux,
         [],
         totals_pular,
+        valores_pular,
     )
     total_adicionados_aux = adicionados
     print(f">> Fórmulas adicionadas em Composições Auxiliares: {adicionados}")
@@ -180,6 +194,7 @@ def verificar_e_adicionar_planilha(
     itens_fator,
     labels_pular,
     totals_pular,
+    valores_pular,
 ):
     """
     Verifica uma planilha específica e adiciona fórmulas de fator onde necessário.
@@ -269,20 +284,35 @@ def verificar_e_adicionar_planilha(
                 # ✅ CORREÇÃO: labels_pular NÃO deve pular linhas INTERNAS da seção
                 # Removida verificação que pulava TODAS as linhas de itens com buscarAuxiliar: "Não"
 
-                # Apenas pular linhas de TOTAL
+                # Apenas pular linhas de TOTAL (verificar coluna A E coluna E onde os totais aparecem)
                 if any(x in desc_upper for x in totals_pular):
                     continue
+
+                # Verificar também a coluna E (col_coef_idx) onde os totais aparecem
+                cell_coef_check = sheet.cell(row=y, column=col_coef_idx).value
+                if cell_coef_check:
+                    coef_upper = str(cell_coef_check).upper()
+                    if any(x in coef_upper for x in totals_pular):
+                        continue
+                    # Verificar se é uma linha de label/título que deve ser pulada
+                    if any(x in coef_upper for x in labels_pular):
+                        continue
+                    # Pular linhas que contêm VALOR, VALOR BDI ou VALOR COM BDI usando valores do JSON
+                    if any(x in coef_upper for x in valores_pular):
+                        continue
 
                 # Adicionar fórmula
                 if fator_coef:
                     # Adicionar na coluna E (coeficiente)
                     cell_coef = sheet.cell(row=y, column=col_coef_idx)
                     if not isinstance(cell_coef, MergedCell):
-                        # SOBRESCREVER SEMPRE quando fatorCoeficiente=True
-                        # Isso garante que valores numéricos sejam substituídos
-                        formula = f"={get_column_letter(col_coef_antigo_idx)}{y}*FATOR"
-                        cell_coef.value = formula
-                        linhas_adicionadas.append(f"L{y}: {desc[:30]} -> {formula}")
+                        # NÃO sobrescrever se já tiver uma fórmula
+                        if cell_coef.value and isinstance(cell_coef.value, str) and cell_coef.value.startswith("="):
+                            pass  # já tem fórmula, não sobrescrever
+                        else:
+                            formula = f"={get_column_letter(col_coef_antigo_idx)}{y}*FATOR"
+                            cell_coef.value = formula
+                            linhas_adicionadas.append(f"L{y}: {desc[:30]} -> {formula}")
                 else:
                     # Adicionar na coluna F (preço unitário)
                     cell_preco = sheet.cell(row=y, column=col_preco_idx)

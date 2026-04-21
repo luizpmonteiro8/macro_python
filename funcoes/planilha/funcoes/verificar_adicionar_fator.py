@@ -184,12 +184,15 @@ def encontrar_todas_secoes(
                     break
 
     # Para cada início, encontrar o fim mais próximo
+    # ✅ CORRIGIDO: Usar endswith em vez de 'in' para evitar confusão entre seções com nomes similares
+    # Ex: "Mão de Obra" não deve ser cortado pelo TOTAL de "Mão de Obra com Encargos Complementares"
     for inicio, col_inicio in inicios:
         fim = -1
         for j in range(inicio + 1, max_row + 1):
             for col_busca in colunas_busca:
                 cell = sheet.cell(row=j, column=col_busca).value
-                if cell and total_upper in str(cell).upper():
+                cell_upper = str(cell).upper() if cell else ""
+                if cell and cell_upper.endswith(total_upper):
                     fim = j
                     break
             if fim != -1:

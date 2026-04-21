@@ -49,6 +49,8 @@ def verificar_e_adicionar_formulas(workbook, dados):
 
     # ============================================
     # Primeiro: construir mapa de códigos -> linha do título (célula mesclada)
+    # ✅ CORRIGIDO: Usar APENAS codigo_completo para evitar conflitos
+    # "88316" e "S88316S" são itens diferentes e devem ser encontrados corretamente
     # ============================================
     mapa_codigos_titulo = {}
 
@@ -61,16 +63,16 @@ def verificar_e_adicionar_formulas(workbook, dados):
                 codigo_limpo = (
                     codigo.replace("\u200b", "").replace("\ufeff", "").strip()
                 )
-                parte_numerica = "".join(c for c in codigo_limpo if c.isdigit())[:8]
-                codigo_completo = codigo_limpo.replace(" ", "").upper()
+                # Pegar apenas o primeiro elemento (código numérico)
+                codigo_limpo = codigo_limpo.split()[0] if codigo_limpo.split() else ""
+                codigo_completo = codigo_limpo.upper()
 
-                if parte_numerica:
-                    mapa_codigos_titulo[parte_numerica] = merged_range.min_row
-                if len(codigo_completo) >= 5 and not codigo_completo[0].isdigit():
+                if len(codigo_completo) >= 5:
                     mapa_codigos_titulo[codigo_completo] = merged_range.min_row
 
     # ============================================
     # Segundo: mapa de códigos -> linha de "VALOR:"
+    # ✅ CORRIGIDO: Usar APENAS codigo_completo para evitar conflitos
     # ============================================
     mapa_codigos_valor = {}
 
@@ -82,10 +84,11 @@ def verificar_e_adicionar_formulas(workbook, dados):
                 codigo_limpo = (
                     codigo.replace("\u200b", "").replace("\ufeff", "").strip()
                 )
-                parte_numerica = "".join(c for c in codigo_limpo if c.isdigit())[:8]
-                codigo_completo = codigo_limpo.replace(" ", "").upper()
+                # Pegar apenas o primeiro elemento (código numérico)
+                codigo_limpo = codigo_limpo.split()[0] if codigo_limpo.split() else ""
+                codigo_completo = codigo_limpo.upper()
 
-                if parte_numerica or codigo_completo:
+                if len(codigo_completo) >= 5:
                     linha_valor = -1
                     for j in range(merged_range.min_row + 1, max_row + 1):
                         cell_e = sheet.cell(row=j, column=5).value
@@ -94,13 +97,7 @@ def verificar_e_adicionar_formulas(workbook, dados):
                             break
 
                     if linha_valor > 0:
-                        if parte_numerica:
-                            mapa_codigos_valor[parte_numerica] = linha_valor
-                        if (
-                            len(codigo_completo) >= 5
-                            and not codigo_completo[0].isdigit()
-                        ):
-                            mapa_codigos_valor[codigo_completo] = linha_valor
+                        mapa_codigos_valor[codigo_completo] = linha_valor
 
     print(f">> Códigos com referência a 'VALOR:': {len(mapa_codigos_valor)}")
 
@@ -136,18 +133,22 @@ def verificar_e_adicionar_formulas(workbook, dados):
         tem_formula = cell_f and isinstance(cell_f, str) and cell_f.startswith("=")
 
         codigo_limpo = codigo.replace("\u200b", "").replace("\ufeff", "").strip()
+        # Pegar apenas o primeiro elemento (código numérico)
+        codigo_limpo = codigo_limpo.split()[0] if codigo_limpo.split() else ""
         codigo_upper = codigo_limpo.upper()
-        parte_numerica = "".join(c for c in codigo_limpo if c.isdigit())[:8]
-        codigo_completo = codigo_limpo.replace(" ", "").upper()
+        codigo_completo = codigo_limpo.upper()
 
         # ============================================
         # Criar hyperlink para itens com fórmula existente
+        # ✅ CORRIGIDO: Usar apenas codigo_completo
         # ============================================
         if tem_formula:
             linha_titulo = -1
-            if parte_numerica and parte_numerica in mapa_codigos_titulo:
-                linha_titulo = mapa_codigos_titulo[parte_numerica]
-            elif codigo_completo and codigo_completo in mapa_codigos_titulo:
+            if (
+                codigo_completo
+                and len(codigo_completo) >= 5
+                and codigo_completo in mapa_codigos_titulo
+            ):
                 linha_titulo = mapa_codigos_titulo[codigo_completo]
 
             if linha_titulo > 0:
@@ -195,19 +196,10 @@ def verificar_e_adicionar_formulas(workbook, dados):
 
         # ============================================
         # Adicionar fórmula e hyperlink
+        # ✅ CORRIGIDO: Usar APENAS codigo_completo
         # ============================================
         chave_encontrada = None
-        if (
-            parte_numerica
-            and len(parte_numerica) >= 5
-            and parte_numerica in mapa_codigos_valor
-        ):
-            chave_encontrada = parte_numerica
-        elif (
-            len(codigo_completo) >= 5
-            and not codigo_completo[0].isdigit()
-            and codigo_completo in mapa_codigos_valor
-        ):
+        if len(codigo_completo) >= 5 and codigo_completo in mapa_codigos_valor:
             chave_encontrada = codigo_completo
 
         if chave_encontrada:
@@ -220,9 +212,11 @@ def verificar_e_adicionar_formulas(workbook, dados):
 
                     # Criar hyperlink
                     linha_titulo = -1
-                    if parte_numerica and parte_numerica in mapa_codigos_titulo:
-                        linha_titulo = mapa_codigos_titulo[parte_numerica]
-                    elif codigo_completo and codigo_completo in mapa_codigos_titulo:
+                    if (
+                        codigo_completo
+                        and len(codigo_completo) >= 5
+                        and codigo_completo in mapa_codigos_titulo
+                    ):
                         linha_titulo = mapa_codigos_titulo[codigo_completo]
 
                     if linha_titulo > 0:

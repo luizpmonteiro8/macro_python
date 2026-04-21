@@ -50,10 +50,15 @@ def verificar_e_adicionar_fator(workbook, dados):
 
     # Construir lista de itens que precisam de fator (MANTER INDIVIDUAL)
     # Cada item é processado separadamente com seus próprios filtros
+    # IMPORTANTE: Não incluir itens com buscarAuxiliar: "Sim" pois eles devem receber
+    # fórmula de referência (buscar_auxiliar), não fórmula de fator
     itens_fator = []
 
     for key, item in dados_itens.items():
         if key.startswith("item") and isinstance(item, dict):
+            # Pular itens que têm buscarAuxiliar: "Sim" - eles recebem fórmula de referência
+            if item.get("buscarAuxiliar") == "Sim":
+                continue
             if item.get("adicionarFator") == "Sim":
                 itens_fator.append(
                     {
@@ -350,12 +355,10 @@ def verificar_e_adicionar_planilha(
 
                 # Verificar se iniciaPor está definido e se o código começa com ele
                 if inicia_por and not codigo_upper.startswith(inicia_por.upper()):
-                    # Se iniciaPor é "I", só processa códigos que começam com "I"
                     continue
 
                 # Verificar se naoIniciaPor está definido e se o código NÃO começa com ele
                 if nao_inicia_por and codigo_upper.startswith(nao_inicia_por.upper()):
-                    # Se naoIniciaPor é "I", NÃO processa códigos que começam com "I"
                     continue
 
                 # Adicionar fórmula
@@ -370,17 +373,29 @@ def verificar_e_adicionar_planilha(
                             and cell_coef.value.startswith("=")
                         ):
                             pass  # já tem fórmula, não sobrescrever
-                        # NÃO sobrescrever se a descrição indica que não é um item (não começa com dígito ou código)
-                        elif (
-                            desc_upper and desc_upper[0] and not desc_upper[0].isdigit()
-                        ):
-                            pass  # texto descritivo, não item, não sobrescrever
                         else:
-                            formula = (
-                                f"={get_column_letter(col_coef_antigo_idx)}{y}*FATOR"
-                            )
-                            cell_coef.value = formula
-                            linhas_adicionadas.append(f"L{y}: {desc[:30]} -> {formula}")
+                            # Verificar se a coluna A (código) contém um código válido de item
+                            # Códigos válidos começam com dígito OU letra seguida de números (ex: I00378S, S10555, I00081)
+                            # Textos descritivos como "Material", "Mão de Obra" não devem receber fórmula
+                            cell_item_val = sheet.cell(row=y, column=col_desc_idx).value
+                            adicionar_formula = True
+                            if cell_item_val:
+                                cell_item_str = str(cell_item_val).strip()
+                                if cell_item_str:
+                                    is_digit_start = cell_item_str[0].isdigit()
+                                    is_alpha_with_digits = cell_item_str[
+                                        0
+                                    ].isalpha() and any(
+                                        c.isdigit() for c in cell_item_str
+                                    )
+                                    if not is_digit_start and not is_alpha_with_digits:
+                                        adicionar_formula = False
+                            if adicionar_formula:
+                                formula = f"={get_column_letter(col_coef_antigo_idx)}{y}*FATOR"
+                                cell_coef.value = formula
+                                linhas_adicionadas.append(
+                                    f"L{y}: {desc[:30]} -> {formula}"
+                                )
                 else:
                     # Adicionar na coluna F (preço unitário)
                     cell_preco = sheet.cell(row=y, column=col_preco_idx)
@@ -389,9 +404,28 @@ def verificar_e_adicionar_planilha(
                             not isinstance(cell_preco.value, str)
                             or not cell_preco.value.startswith("=")
                         ):
-                            formula = f"=ROUND({get_column_letter(col_preco_antigo_idx)}{y}*FATOR, 2)"
-                            cell_preco.value = formula
-                            linhas_adicionadas.append(f"L{y}: {desc[:30]} -> {formula}")
+                            # Verificar se a coluna A (código) contém um código válido de item
+                            # Códigos válidos começam com dígito OU letra seguida de números (ex: I00378S, S10555, I00081)
+                            # Textos descritivos como "Material", "Mão de Obra" não devem receber fórmula
+                            cell_item_val = sheet.cell(row=y, column=col_desc_idx).value
+                            adicionar_formula = True
+                            if cell_item_val:
+                                cell_item_str = str(cell_item_val).strip()
+                                if cell_item_str:
+                                    is_digit_start = cell_item_str[0].isdigit()
+                                    is_alpha_with_digits = cell_item_str[
+                                        0
+                                    ].isalpha() and any(
+                                        c.isdigit() for c in cell_item_str
+                                    )
+                                    if not is_digit_start and not is_alpha_with_digits:
+                                        adicionar_formula = False
+                            if adicionar_formula:
+                                formula = f"=ROUND({get_column_letter(col_preco_antigo_idx)}{y}*FATOR, 2)"
+                                cell_preco.value = formula
+                                linhas_adicionadas.append(
+                                    f"L{y}: {desc[:30]} -> {formula}"
+                                )
 
         if count_processadas > 0:
             print(f"   Processadas {count_processadas} seções de '{nome_upper}'")

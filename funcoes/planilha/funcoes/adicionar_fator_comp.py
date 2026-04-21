@@ -4,7 +4,7 @@ from funcoes.common.valor_bdi_final import valor_bdi_final
 from funcoes.get.get_linhas_json import *
 
 
-def criar_link_composicao(
+def criar_link_composicao_orcamentaria(
     sheet_origem,
     col_desc,
     linha_origem,

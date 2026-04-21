@@ -151,8 +151,8 @@
       "adicionarFator": "Sim",
       "fatorCoeficiente": "Sim",
       "buscarAuxiliar": "Não",
-      "iniciaPor": "Mão de Obra",
-      "naoIniciaPor": "Mão de Obra Com"
+      "iniciaPor": "",
+      "naoIniciaPor": ""
     }
   }
 ]

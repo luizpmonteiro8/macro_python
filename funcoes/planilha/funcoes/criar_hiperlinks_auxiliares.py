@@ -150,28 +150,25 @@ def criar_hiperlinks_auxiliares(workbook, dados, todos_item):
         # Hyperlink em COMPOSICOES col descrição -> AUXILIARES item Não alterar esta funcionando
         cell_link = sheet_comp.cell(row=x, column=col_desc_link_idx)
         if not isinstance(cell_link, MergedCell):
-            location = f"{planilha_aux}!{col_desc_aux}{linha_ini}"
             cell_link.hyperlink = f"#'{planilha_aux}'!{col_desc_aux}{linha_ini}"
             hyperlinks_criados += 1
 
-        # Hyperlink interno em AUXILIARES -> linha do item encontrado (descrição)
-        cell_aux_link = sheet_aux.cell(row=int(linha_ini), column=int(col_desc_aux_idx))
-        if not isinstance(cell_aux_link, MergedCell):
-            location = f"{planilha_aux}!{col_desc_aux}{int(linha_ini)}"
-            cell_aux_link.hyperlink = Hyperlink(
-                ref=f"{col_desc_aux}{int(linha_ini)}",
-                location=location,
-                display=cell_aux_link.value,
-            )
-
-        # Fórmula em PREÇO UNITÁRIO
+        # Fórmula em PREÇO UNITÁRIO (NÃO coloca se coluna C tem "FONTE")
         cell_preco = sheet_comp.cell(row=x, column=col_preco_idx)
         if isinstance(cell_preco, MergedCell):
             continue
-        if not (
-            cell_preco.value
-            and isinstance(cell_preco.value, str)
-            and cell_preco.value.startswith("=")
+
+        # Verificar se a coluna C tem "FONTE" (título de seção)
+        cell_fonte = sheet_comp.cell(row=x, column=col_item_idx + 2).value
+        tem_fonte = cell_fonte and "FONTE" in str(cell_fonte).upper()
+
+        if (
+            not (
+                cell_preco.value
+                and isinstance(cell_preco.value, str)
+                and cell_preco.value.startswith("=")
+            )
+            and not tem_fonte
         ):
             cell_preco.value = f"='{planilha_aux}'!{col_valor_aux}{linha_fim}"
             formulas_criadas += 1

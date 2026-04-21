@@ -13,7 +13,9 @@ from funcoes.get.get_linhas_json import (
     get_valor_totais_comp,
     get_valor_com_bdi_string,
 )
-from funcoes.planilha.funcoes.adicionar_fator_comp import criar_link_composicao
+from funcoes.planilha.funcoes.adicionar_fator_comp import (
+    criar_link_composicao_orcamentaria,
+)
 
 
 def criar_hiperlinks_composicao(workbook, dados, lin_ini, lin_fim):
@@ -87,9 +89,7 @@ def criar_hiperlinks_composicao(workbook, dados, lin_ini, lin_fim):
             print(f"⚠️ Item não encontrado na composição: {cod} {descricao}")
             continue
 
-        print(
-            f"encontrado item {cod} {descricao} -> linha do título: {linha_ini_comp}"
-        )
+        print(f"encontrado item {cod} {descricao} -> linha do título: {linha_ini_comp}")
 
         # Busca a linha com "VALOR COM BDI" após o título da composição
         linha_valor_bdi = buscar_palavra_com_linha(
@@ -101,14 +101,16 @@ def criar_hiperlinks_composicao(workbook, dados, lin_ini, lin_fim):
         )
 
         if linha_valor_bdi <= 0:
-            itens_nao_encontrados.append(f"{cod} {descricao} (VALOR COM BDI não encontrado)")
+            itens_nao_encontrados.append(
+                f"{cod} {descricao} (VALOR COM BDI não encontrado)"
+            )
             print(f"⚠️ VALOR COM BDI não encontrado para: {cod} {descricao}")
             continue
 
         print(f">>> VALOR COM BDI encontrado na linha: {linha_valor_bdi}")
 
         # Cria hyperlink na descrição (aponta para o título da composição)
-        criar_link_composicao(
+        criar_link_composicao_orcamentaria(
             sheet_origem=sheet,
             col_desc=col_desc,
             linha_origem=x,
@@ -128,6 +130,9 @@ def criar_hiperlinks_composicao(workbook, dados, lin_ini, lin_fim):
         print(f"\n⚠️ Itens não encontrados ({len(itens_nao_encontrados)}):")
         for item in itens_nao_encontrados:
             print(f"  - {item}")
-        return False, f"ERRO: {len(itens_nao_encontrados)} itens não encontrados na composição"
+        return (
+            False,
+            f"ERRO: {len(itens_nao_encontrados)} itens não encontrados na composição",
+        )
 
     return True, None

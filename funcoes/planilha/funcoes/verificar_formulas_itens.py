@@ -140,15 +140,14 @@ def verificar_e_adicionar_formulas(workbook, dados):
 
         # ============================================
         # Criar hyperlink para itens com fórmula existente
-        # ✅ CORRIGIDO: Usar apenas codigo_completo
+        # ✅ CORRIGIDO: Verificar se o código é válido antes de procurar na mapa
         # ============================================
         if tem_formula:
+            # Verificar se o código é válido (não é texto como "Material", "Mão de Obra", etc)
+            codigo_valido = codigo_completo and len(codigo_completo) >= 5
+
             linha_titulo = -1
-            if (
-                codigo_completo
-                and len(codigo_completo) >= 5
-                and codigo_completo in mapa_codigos_titulo
-            ):
+            if codigo_valido and codigo_completo in mapa_codigos_titulo:
                 linha_titulo = mapa_codigos_titulo[codigo_completo]
 
             if linha_titulo > 0:
@@ -165,30 +164,36 @@ def verificar_e_adicionar_formulas(workbook, dados):
         # Filtro por código do item
         # ============================================
         codigo_aprovado = False
-        for item_info in itens_auxiliares:
-            inicia_por = item_info.get("iniciaPor", "")
-            nao_inicia_por = item_info.get("naoIniciaPor", "")
 
-            if not inicia_por and not nao_inicia_por:
-                codigo_aprovado = True
-                break
-
-            inicia_ok = True
-            if inicia_por and not codigo_upper.startswith(inicia_por.upper()):
-                inicia_ok = False
-
-            nao_ok = True
-            if nao_inicia_por and codigo_upper.startswith(nao_inicia_por.upper()):
-                nao_ok = False
-
-            if inicia_ok and nao_ok:
-                codigo_aprovado = True
-                break
-
-        if not any(
+        # Primeiro: verificar se algum item tem filtros específicos definidos
+        algum_filtro_especifico = any(
             item.get("iniciaPor") or item.get("naoIniciaPor")
             for item in itens_auxiliares
-        ):
+        )
+
+        if algum_filtro_especifico:
+            # Se algum item tem filtro específico, verificar se este código corresponde
+            for item_info in itens_auxiliares:
+                inicia_por = item_info.get("iniciaPor", "")
+                nao_inicia_por = item_info.get("naoIniciaPor", "")
+
+                # Ignorar itens com filtros vazios - não devem aprovar por padrão
+                if not inicia_por and not nao_inicia_por:
+                    continue
+
+                inicia_ok = True
+                if inicia_por and not codigo_upper.startswith(inicia_por.upper()):
+                    inicia_ok = False
+
+                nao_ok = True
+                if nao_inicia_por and codigo_upper.startswith(nao_inicia_por.upper()):
+                    nao_ok = False
+
+                if inicia_ok and nao_ok:
+                    codigo_aprovado = True
+                    break
+        else:
+            # Se nenhum item tem filtro específico, aprovar (comportamento original)
             codigo_aprovado = True
 
         if not codigo_aprovado:
@@ -196,10 +201,14 @@ def verificar_e_adicionar_formulas(workbook, dados):
 
         # ============================================
         # Adicionar fórmula e hyperlink
-        # ✅ CORRIGIDO: Usar APENAS codigo_completo
+        # ✅ CORRIGIDO: Verificar se o código é válido (>= 5 caracteres) antes de adicionar
         # ============================================
         chave_encontrada = None
-        if len(codigo_completo) >= 5 and codigo_completo in mapa_codigos_valor:
+        if (
+            codigo_completo
+            and len(codigo_completo) >= 5
+            and codigo_completo in mapa_codigos_valor
+        ):
             chave_encontrada = codigo_completo
 
         if chave_encontrada:
@@ -212,12 +221,8 @@ def verificar_e_adicionar_formulas(workbook, dados):
 
                     # Criar hyperlink
                     linha_titulo = -1
-                    if (
-                        codigo_completo
-                        and len(codigo_completo) >= 5
-                        and codigo_completo in mapa_codigos_titulo
-                    ):
-                        linha_titulo = mapa_codigos_titulo[codigo_completo]
+                    if chave_encontrada in mapa_codigos_titulo:
+                        linha_titulo = mapa_codigos_titulo[chave_encontrada]
 
                     if linha_titulo > 0:
                         cell_desc = sheet.cell(row=i, column=col_desc_idx)

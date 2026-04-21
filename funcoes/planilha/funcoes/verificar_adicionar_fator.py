@@ -149,6 +149,9 @@ def encontrar_todas_secoes(
     Retorna lista de tuplas (inicio, fim) para cada seção.
     ONLY retorna seções onde o título começa com inicia_por (se fornecido)
     e NÃO começa com nao_inicia_por (se fornecido).
+
+    ✅ CORRIGIDO: Usar startswith EXATO para evitar substring matches
+    Ex: "Material" não deve ser confundido com "MATERIAIS" ou outras seções similares
     """
     secoes = []
     colunas_busca = list(range(col_desc_idx, col_desc_idx + 10))
@@ -172,16 +175,16 @@ def encontrar_todas_secoes(
                         if not cell_str.startswith(inicia_por):
                             continue
                     else:
-                        # Quando inicia_por é vazio, usar startswith EXATO para evitar substring matches
-                        # A seção deve começar exatamente com nome_upper (possivelmente seguido de ":")
-                        if not (
-                            cell_upper.startswith(nome_upper)
-                            and (
-                                len(cell_upper) == len(nome_upper)
-                                or cell_upper[len(nome_upper)] in [" ", ":"]
-                            )
-                        ):
+                        # ✅ CORRIGIDO: Usar startswith EXATO para evitar substring matches
+                        # A seção deve começar exatamente com nome_upper seguido de ":" ou ser exatamente igual
+                        # NÃO permitir espaço como delimitador (para evitar "Mão de Obra" matching "Mão de Obra com Encargos")
+                        if not cell_upper.startswith(nome_upper):
                             continue
+                        if len(cell_upper) > len(nome_upper):
+                            next_char = cell_upper[len(nome_upper)]
+                            # Apenas ":" é delimitador válido, não espaço
+                            if next_char not in [":"]:
+                                continue
                     # Se nao_inicia_por fornecido, verificar que o título NÃO começa com ele
                     if nao_inicia_por and cell_upper.startswith(nao_inicia_por.upper()):
                         continue
@@ -400,10 +403,14 @@ def verificar_e_adicionar_planilha(
                     # Adicionar na coluna F (preço unitário)
                     cell_preco = sheet.cell(row=y, column=col_preco_idx)
                     if not isinstance(cell_preco, MergedCell):
-                        if cell_preco.value is None or (
-                            not isinstance(cell_preco.value, str)
-                            or not cell_preco.value.startswith("=")
+                        # NÃO sobrescrever se já tiver uma fórmula (=G... de referência)
+                        if (
+                            cell_preco.value
+                            and isinstance(cell_preco.value, str)
+                            and cell_preco.value.startswith("=")
                         ):
+                            pass  # já tem fórmula, não sobrescrever
+                        else:
                             # Verificar se a coluna A (código) contém um código válido de item
                             # Códigos válidos começam com dígito OU letra seguida de números (ex: I00378S, S10555, I00081)
                             # Textos descritivos como "Material", "Mão de Obra" não devem receber fórmula

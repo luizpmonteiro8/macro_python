@@ -8,11 +8,14 @@ import openpyxl
 from funcoes.common.buscar_palavras import buscar_palavra
 from funcoes.planilha.funcoes.validar_arquivo_excel import validar_arquivo_excel
 
-from funcoes.planilha.funcoes.verificar_formulas_itens import (
-    verificar_e_adicionar_formulas,
-)
-from funcoes.planilha.funcoes.verificar_adicionar_fator import (
-    verificar_e_adicionar_fator,
+# from funcoes.planilha.funcoes.verificar_formulas_itens import (
+#     verificar_e_adicionar_formulas,
+# )
+# from funcoes.planilha.funcoes.verificar_adicionar_fator import (
+#     verificar_e_adicionar_fator,
+# )
+from funcoes.planilha.funcoes.verificar_auxiliar_fator import (
+    verificar_auxiliar_fator,
 )
 from funcoes.planilha.funcoes.criar_hiperlinks_auxiliares import (
     criar_hiperlinks_auxiliares,
@@ -29,7 +32,9 @@ from funcoes.planilha.funcoes.adicionar_bdi import adicionar_bdi
 from funcoes.planilha.funcoes.adicionar_fator import adicionar_fator
 from funcoes.planilha.funcoes.adicionar_fator_aux import adicionar_fator_aux
 from funcoes.planilha.funcoes.adicionar_fator_comp import adicionar_fator_comp
-from funcoes.planilha.funcoes.criar_hiperlinks_composicao import criar_hiperlinks_composicao
+from funcoes.planilha.funcoes.criar_hiperlinks_composicao import (
+    criar_hiperlinks_composicao,
+)
 from funcoes.planilha.funcoes.formula_planilha import (
     copiar_coluna_planilha,
     formula_planilha,
@@ -151,15 +156,14 @@ def selecionar_arquivo_excel(self):
             resumo_totais(workbook, self.dados)
 
             # ============================================
-            # ÚLTIMAS VERIFICAÇÕES - Antes de salvar
+            # ÚLTIMAS VERIFICAÇÕES - Antes de salvar (FUNÇÃO UNIFICADA)
             # ============================================
-            print(">>> Verificando fórmulas dos itens auxiliares...")
-            adicionadas = verificar_e_adicionar_formulas(workbook, self.dados)
-            print(f">>> {adicionadas} fórmulas adicionadas")
-
-            print(">>> Verificando e adicionando fatores dos itens...")
-            fatores_adicionados = verificar_e_adicionar_fator(workbook, self.todos_item)
-            print(f">>> {fatores_adicionados} fatores adicionados")
+            print(">>> Verificando fórmulas e fatores dos itens (função unificada)...")
+            resultados = verificar_auxiliar_fator(workbook, self.dados)
+            print(
+                f">>> Total fórmulas: {resultados['formulas_auxiliares_comp'] + resultados['formulas_auxiliares_aux'] + resultados['formulas_fator_comp'] + resultados['formulas_fator_aux']}"
+            )
+            print(f">>> Total hyperlinks: {resultados['hyperlinks_criados']}")
 
             # ============================================
             # SALVAR ARQUIVO
@@ -192,4 +196,3 @@ def selecionar_arquivo_excel(self):
 
         finally:
             pass
-

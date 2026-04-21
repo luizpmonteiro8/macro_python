@@ -1,5 +1,6 @@
 from openpyxl.utils import column_index_from_string
 from openpyxl.cell.cell import MergedCell
+from openpyxl.worksheet.hyperlink import Hyperlink
 from funcoes.common.buscar_palavras import (
     buscar_palavra_contem,
     buscar_palavra_com_linha,
@@ -146,16 +147,22 @@ def criar_hiperlinks_auxiliares(workbook, dados, todos_item):
             print(f"⚠️ VALOR: não encontrado para: {cod}")
             continue
 
-        # Hyperlink em COMPOSICOES col descrição -> AUXILIARES item
+        # Hyperlink em COMPOSICOES col descrição -> AUXILIARES item Não alterar esta funcionando
         cell_link = sheet_comp.cell(row=x, column=col_desc_link_idx)
         if not isinstance(cell_link, MergedCell):
+            location = f"{planilha_aux}!{col_desc_aux}{linha_ini}"
             cell_link.hyperlink = f"#'{planilha_aux}'!{col_desc_aux}{linha_ini}"
             hyperlinks_criados += 1
 
         # Hyperlink interno em AUXILIARES -> linha do item encontrado (descrição)
         cell_aux_link = sheet_aux.cell(row=int(linha_ini), column=int(col_desc_aux_idx))
         if not isinstance(cell_aux_link, MergedCell):
-            cell_aux_link.hyperlink = f"#'{planilha_aux}'!{col_desc_aux}{linha_ini}"
+            location = f"{planilha_aux}!{col_desc_aux}{int(linha_ini)}"
+            cell_aux_link.hyperlink = Hyperlink(
+                ref=f"{col_desc_aux}{int(linha_ini)}",
+                location=location,
+                display=cell_aux_link.value,
+            )
 
         # Fórmula em PREÇO UNITÁRIO
         cell_preco = sheet_comp.cell(row=x, column=col_preco_idx)

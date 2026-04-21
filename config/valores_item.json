@@ -28,15 +28,6 @@
       "iniciaPor": "Mão de Obra",
       "naoIniciaPor": "Mão de Obra Com"
     },
-    "item4": {
-      "nome": "Mão de Obra",
-      "total": "TOTAL Mão de Obra:",
-      "adicionarFator": "Sim",
-      "fatorCoeficiente": "Sim",
-      "buscarAuxiliar": "Não",
-      "iniciaPor": "I",
-      "naoIniciaPor": ""
-    },
     "item5": {
       "nome": "Mão de Obra com Encargos Complementares",
       "total": "TOTAL Mão de Obra com Encargos Complementares:",
@@ -155,15 +146,6 @@
       "naoIniciaPor": ""
     },
     "item18": {
-      "nome": "Mão de Obra",
-      "total": "TOTAL Mão de Obra:",
-      "adicionarFator": "Sim",
-      "fatorCoeficiente": "Sim",
-      "buscarAuxiliar": "Não",
-      "iniciaPor": "09",
-      "naoIniciaPor": ""
-    },
-    "item19": {
       "nome": "Mão de Obra",
       "total": "TOTAL Mão de Obra:",
       "adicionarFator": "Sim",

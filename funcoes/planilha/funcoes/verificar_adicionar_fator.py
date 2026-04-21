@@ -225,31 +225,32 @@ def verificar_e_adicionar_planilha(
         {}
     )  # cache_key (nome_upper, iniciaPor, naoIniciaPor) -> [(inicio, fim), ...]
 
-    # Primeiro pass: encontrar todas as seções únicas
+    # Primeiro pass: encontrar todas as seções únicas (SEM FILTRO de iniciaPor/naoIniciaPor no título)
+    # O filtro de código será aplicado quando processar as linhas dentro das seções
+    nomes_processados = set()
     for item_info in itens_fator:
         nome = item_info["nome"]
         total_str = item_info["total"]
         nome_upper = nome.upper()
         total_upper = total_str.upper() if total_str else ""
-        inicia_por = item_info["iniciaPor"]
-        nao_inicia_por = item_info["naoIniciaPor"]
 
-        # Criar chave única que inclui os filtros iniciaPor e naoIniciaPor
-        cache_key = (nome_upper, inicia_por, nao_inicia_por)
+        # Criar chave única só pelo nome (sem iniciaPor/naoIniciaPor)
+        cache_key = nome_upper
 
-        # Se já buscamos essa seção com os mesmos filtros, não buscar de novo
-        if cache_key in secoes_encontradas:
+        # Se já buscamos essa seção, não buscar de novo
+        if cache_key in nomes_processados:
             continue
 
-        # Buscar todas as seções com esse nome (passando inicia_por e nao_inicia_por para filtrar na busca)
+        nomes_processados.add(cache_key)
+
+        # Buscar todas as seções com esse nome (SEM filtro iniciaPor/naoIniciaPor)
+        # O filtro de código será aplicado quando processar as linhas
         secoes = encontrar_todas_secoes(
-            sheet, col_desc_idx, nome_upper, total_upper, inicia_por, nao_inicia_por
+            sheet, col_desc_idx, nome_upper, total_upper, "", ""
         )
         if secoes:
             secoes_encontradas[cache_key] = secoes
-            print(
-                f"   Encontradas {len(secoes)} seções de '{nome_upper}' (iniciaPor='{inicia_por}', naoIniciaPor='{nao_inicia_por}')"
-            )
+            print(f"   Encontradas {len(secoes)} seções de '{nome_upper}'")
 
     # Processar cada item em TODAS as seções correspondentes
     for item_info in itens_fator:
@@ -260,7 +261,9 @@ def verificar_e_adicionar_planilha(
         nao_inicia_por = item_info["naoIniciaPor"]
 
         nome_upper = nome.upper()
-        cache_key = (nome_upper, inicia_por, nao_inicia_por)
+        # ✅ CORRIGIDO: Usar cache_key simples (só nome_upper) para acessar as seções
+        # que foram armazenadas com a mesma chave simples na linha 238
+        cache_key = nome_upper
 
         # Obter lista de seções para este nome
         if cache_key not in secoes_encontradas:
@@ -334,6 +337,23 @@ def verificar_e_adicionar_planilha(
                     # Pular linhas que contêm VALOR, VALOR BDI ou VALOR COM BDI usando valores do JSON
                     if any(x in coef_upper for x in valores_pular):
                         continue
+
+                # ============================================
+                # FILTRO POR CÓDIGO DO ITEM (iniciaPor/naoIniciaPor)
+                # Aplicar filtro ao código do item (coluna desc)
+                # ============================================
+                codigo_item = desc.strip()
+                codigo_upper = codigo_item.upper()
+
+                # Verificar se iniciaPor está definido e se o código começa com ele
+                if inicia_por and not codigo_upper.startswith(inicia_por.upper()):
+                    # Se iniciaPor é "I", só processa códigos que começam com "I"
+                    continue
+
+                # Verificar se naoIniciaPor está definido e se o código NÃO começa com ele
+                if nao_inicia_por and codigo_upper.startswith(nao_inicia_por.upper()):
+                    # Se naoIniciaPor é "I", NÃO processa códigos que começam com "I"
+                    continue
 
                 # Adicionar fórmula
                 if fator_coef:

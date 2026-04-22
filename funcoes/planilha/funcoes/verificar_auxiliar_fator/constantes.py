@@ -1,0 +1,12 @@
+TEXTOS_SKIP = {
+    "MATERIAL",
+    "MÃO DE OBRA",
+    "SERVIÇO",
+    "EQUIPAMENTO",
+    "TOTAL",
+    "PREÇO",
+    "ENCARGOS",
+}
+TEXTOS_VALOR_SKIP = {"TOTAL", "VALOR", "VALOR BDI", "VALOR COM BDI"}
+
+VALOR_LABEL = "VALOR:"

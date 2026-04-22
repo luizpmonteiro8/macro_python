@@ -50,15 +50,20 @@ def _add_hyperlink(sheet, row, col, planilha, linha_ref):
             )
 
 
-def _construir_mapa_titulos(sheet, col_item_idx):
-    """Constrói mapa de códigos para hyperlinks."""
+def _construir_mapa_mescladas(sheet, col_item_idx):
+    """Constrói mapa de códigos para hyperlinks usando APENAS células mescladas.
+
+    Isso garante que apenas títulos principais sejam mapeados,
+    evitando sub-itens dentro de composições.
+    """
     mapa_titulos = {}
     for mr in sheet.merged_cells.ranges:
+        # Verificar se a célula mesclada inclui a coluna de descrição
         if mr.min_col <= col_item_idx <= mr.max_col:
             val = sheet.cell(row=mr.min_row, column=col_item_idx).value
             if val:
                 codigo = _limpar_codigo(str(val))
-                if len(codigo) >= 5:
+                if codigo and len(codigo) >= 5:
                     mapa_titulos[codigo.upper()] = mr.min_row
     return mapa_titulos
 
@@ -71,10 +76,11 @@ def verificar_auxiliar_fator(workbook, dados, todos_item):
        - mapa_nome_inicia: nome, iniciaPor, naoIniciaPor
        - mapa_config: nome, total, adicionarFator, buscarAuxiliar
 
-    2. Para cada planilha (COMPOSICOES primeiro, depois AUXILIARES):
-       - Faz um FOR percorrendo TODAS as linhas
-       - Identifica a seção atual baseado no nome/total
-       - Para cada linha entre nome e total: aplica fator ou busca auxiliar
+    2. PROCESSAR COMPOSICOES AUXILIARES primeiro:
+       - Durante o FOR, monta mapa_titulos_aux
+
+    3. PROCESSAR COMPOSICOES depois:
+       - Usa o mapa construído para criar hyperlinks
     """
     dados_itens = dados[0] if isinstance(dados, list) else dados
 
@@ -134,23 +140,30 @@ def verificar_auxiliar_fator(workbook, dados, todos_item):
     sheet_comp = workbook[planilha_comp]
     sheet_aux = workbook[planilha_aux]
 
-    # Construir mapa de títulos para hyperlinks na planilha auxiliar
-    mapa_titulos_aux = _construir_mapa_titulos(sheet_aux, col_desc)
-
-    # Resultados
-    resultado_comp = {
-        "formulas_fator": 0,
-        "formulas_auxiliar": 0,
-        "hyperlinks": 0,
-    }
-    resultado_aux = {
-        "formulas_fator": 0,
-        "formulas_auxiliar": 0,
-        "hyperlinks": 0,
-    }
+    # ==========================================
+    # CONSTRUIR MAPA DE TÍTULOS DA AUXILIAR
+    # Usando células mescladas (apenas títulos principais)
+    # ==========================================
+    mapa_titulos_aux = _construir_mapa_mescladas(sheet_aux, col_desc)
 
     # ==========================================
-    # PROCESSAR COMPOSICOES
+    # PROCESSAR COMPOSICOES AUXILIARES
+    # ==========================================
+    resultado_aux = _processar_planilha_auxiliar(
+        sheet_aux,
+        col_desc,
+        col_coef,
+        col_preco,
+        col_coef_antigo,
+        col_preco_antigo,
+        mapa_nome_inicia,
+        mapa_config,
+        planilha_aux,
+    )
+
+    # ==========================================
+    # PROCESSAR COMPOSICOES DEPOIS
+    # Usa o mapa_titulos_aux construído na AUXILIARES
     # ==========================================
     resultado_comp = _processar_planilha(
         sheet_comp,
@@ -161,26 +174,8 @@ def verificar_auxiliar_fator(workbook, dados, todos_item):
         col_preco_antigo,
         mapa_nome_inicia,
         mapa_config,
-        None,
-        None,
-        None,
-    )
-
-    # ==========================================
-    # PROCESSAR COMPOSICOES AUXILIARES
-    # ==========================================
-    resultado_aux = _processar_planilha(
-        sheet_aux,
-        col_desc,
-        col_coef,
-        col_preco,
-        col_coef_antigo,
-        col_preco_antigo,
-        mapa_nome_inicia,
-        mapa_config,
         mapa_titulos_aux,
         planilha_aux,
-        sheet_comp,
     )
 
     return {
@@ -204,7 +199,6 @@ def _processar_planilha(
     mapa_config,
     mapa_titulos_aux,
     planilha_aux,
-    sheet_origem,
 ):
     """Processa uma planilha: FOR percorrendo todas as linhas."""
     resultado = {
@@ -214,14 +208,12 @@ def _processar_planilha(
     }
 
     max_row = min(sheet.max_row, 20000)
-
-    # Mapa de seção atual: {nome, linha_inicio, linha_fim, adicionarFator, buscarAuxiliar, fatorCoeficiente, iniciaPor, naoIniciaPor}
     secao_atual = None
 
-    # Primeiro, encontrar todas as seções (linha_inicio e linha_fim)
+    # Encontrar todas as seções
     secoes_encontradas = _encontrar_todas_secoes(sheet, col_desc, mapa_config)
 
-    # Criar mapa de busca de códigos na planilha auxiliar
+    # Mapa de busca de códigos na planilha auxiliar
     mapa_busca = {}
     if mapa_titulos_aux:
         mapa_busca = mapa_titulos_aux
@@ -230,7 +222,6 @@ def _processar_planilha(
     for linha in range(1, max_row + 1):
         cell_desc = sheet.cell(row=linha, column=col_desc)
 
-        # Pular células mescladas que não são a master
         if isinstance(cell_desc, MergedCell):
             continue
 
@@ -241,12 +232,11 @@ def _processar_planilha(
         valor_str = str(valor).strip()
         valor_upper = valor_str.upper()
 
-        # Atualizar seção atual se necessário
+        # Atualizar seção atual
         secao_atual = _verificar_troca_secao(
             linha, valor_upper, secoes_encontradas, secao_atual, mapa_nome_inicia
         )
 
-        # Se não está em nenhuma seção conhecida, pular
         if not secao_atual:
             continue
 
@@ -256,11 +246,11 @@ def _processar_planilha(
         if any(x in valor_upper for x in TEXTOS_VALOR_SKIP):
             continue
 
-        # Verificar se a linha está dentro de uma seção válida
+        # Verificar se está dentro de seção válida
         if linha <= secao_atual["linha_inicio"] or linha >= secao_atual["linha_fim"]:
             continue
 
-        # Verificar se é linha de cabeçalho (COEFICIENTE, PREÇO UNITÁRIO)
+        # Verificar se é linha de cabeçalho
         if "COEFICIENTE" in valor_upper or "PREÇO UNITÁRIO" in valor_upper:
             continue
 
@@ -272,12 +262,12 @@ def _processar_planilha(
         if cell_unid and "UNID" in str(cell_unid).upper():
             continue
 
-        # Verificar filtros de código
+        # Verificar se é código válido
         codigo_upper = valor_str.upper()
         if not _codigo_valido(sheet, linha, col_desc):
             continue
 
-        # Verificar iniciaPor/naoIniciaPor
+        # Verificar filtros
         iniciaPor = secao_atual.get("iniciaPor", "")
         naoIniciaPor = secao_atual.get("naoIniciaPor", "")
 
@@ -290,7 +280,6 @@ def _processar_planilha(
         # ADICIONAR FATOR
         # ==========================================
         if secao_atual.get("adicionarFator"):
-            # Verificar se já tem fórmula com fator
             val_coef = sheet.cell(row=linha, column=col_coef).value
             val_preco = sheet.cell(row=linha, column=col_preco).value
 
@@ -317,19 +306,16 @@ def _processar_planilha(
                     resultado["formulas_fator"] += 1
 
         # ==========================================
-        # BUSCAR AUXILIAR (criar hyperlink e fórmula)
+        # BUSCAR AUXILIAR (criar hyperlink)
         # ==========================================
         if secao_atual.get("buscarAuxiliar") and mapa_busca:
-            # Verificar se já tem hyperlink
             if cell_desc.hyperlink:
                 continue
 
-            # Buscar código e verificar se existe na planilha auxiliar
             codigo_limpo = _limpar_codigo(valor_str)
             if codigo_limpo and len(codigo_limpo) >= 5:
                 codigo_upper_limpo = codigo_limpo.upper()
                 if codigo_upper_limpo in mapa_busca:
-                    # Criar hyperlink na descrição
                     _add_hyperlink(
                         sheet,
                         linha,
@@ -339,17 +325,149 @@ def _processar_planilha(
                     )
                     resultado["hyperlinks"] += 1
 
-                    # Na COMPOSICOES AUXILIARES, adicionar fórmula =G{linha} no preço unitário
-                    # procurar "VALOR:" após este código na seção
-                    if mapa_titulos_aux and planilha_aux:
-                        for linha_valor in range(linha + 1, secao_atual["linha_fim"]):
-                            val_e = sheet.cell(row=linha_valor, column=5).value
-                            if val_e and VALOR_LABEL.upper() in str(val_e).upper():
-                                cell_preco = sheet.cell(row=linha, column=col_preco)
-                                if not isinstance(cell_preco, MergedCell):
-                                    cell_preco.value = f"=G{linha_valor}"
-                                    resultado["formulas_auxiliar"] += 1
-                                break
+    return resultado
+
+
+def _processar_planilha_auxiliar(
+    sheet,
+    col_desc,
+    col_coef,
+    col_preco,
+    col_coef_antigo,
+    col_preco_antigo,
+    mapa_nome_inicia,
+    mapa_config,
+    nome_planilha,
+):
+    """Processa planilha AUXILIAR: aplica fator e hyperlinks internos."""
+    resultado = {
+        "formulas_fator": 0,
+        "formulas_auxiliar": 0,
+        "hyperlinks": 0,
+    }
+
+    max_row = min(sheet.max_row, 20000)
+    secao_atual = None
+
+    # Encontrar todas as seções
+    secoes_encontradas = _encontrar_todas_secoes(sheet, col_desc, mapa_config)
+
+    # FOR percorrendo todas as linhas
+    for linha in range(1, max_row + 1):
+        cell_desc = sheet.cell(row=linha, column=col_desc)
+
+        if isinstance(cell_desc, MergedCell):
+            continue
+
+        valor = cell_desc.value
+        if not valor:
+            continue
+
+        valor_str = str(valor).strip()
+        valor_upper = valor_str.upper()
+
+        # Atualizar seção atual
+        secao_atual = _verificar_troca_secao(
+            linha, valor_upper, secoes_encontradas, secao_atual, mapa_nome_inicia
+        )
+
+        if not secao_atual:
+            continue
+
+        # Pular linhas com TEXTOS_SKIP
+        if any(x in valor_upper for x in TEXTOS_SKIP):
+            continue
+        if any(x in valor_upper for x in TEXTOS_VALOR_SKIP):
+            continue
+
+        # Verificar se está dentro de seção válida
+        if linha <= secao_atual["linha_inicio"] or linha >= secao_atual["linha_fim"]:
+            continue
+
+        # Verificar se é linha de cabeçalho
+        if "COEFICIENTE" in valor_upper or "PREÇO UNITÁRIO" in valor_upper:
+            continue
+
+        # Verificar fonte/unidade
+        cell_fonte = sheet.cell(row=linha, column=col_desc + 2).value
+        cell_unid = sheet.cell(row=linha, column=col_desc + 3).value
+        if cell_fonte and "FONTE" in str(cell_fonte).upper():
+            continue
+        if cell_unid and "UNID" in str(cell_unid).upper():
+            continue
+
+        # Verificar se é código válido
+        codigo_upper = valor_str.upper()
+        if not _codigo_valido(sheet, linha, col_desc):
+            continue
+
+        # Verificar filtros
+        iniciaPor = secao_atual.get("iniciaPor", "")
+        naoIniciaPor = secao_atual.get("naoIniciaPor", "")
+
+        if iniciaPor and not codigo_upper.startswith(iniciaPor.upper()):
+            continue
+        if naoIniciaPor and codigo_upper.startswith(naoIniciaPor.upper()):
+            continue
+
+        # ==========================================
+        # ADICIONAR FATOR
+        # ==========================================
+        if secao_atual.get("adicionarFator"):
+            val_coef = sheet.cell(row=linha, column=col_coef).value
+            val_preco = sheet.cell(row=linha, column=col_preco).value
+
+            if (
+                val_coef and isinstance(val_coef, str) and "*FATOR" in val_coef.upper()
+            ) or (
+                val_preco
+                and isinstance(val_preco, str)
+                and "*FATOR" in val_preco.upper()
+            ):
+                continue
+
+            if secao_atual.get("fatorCoeficiente"):
+                cell = sheet.cell(row=linha, column=col_coef)
+                if not isinstance(cell, MergedCell):
+                    cell.value = f"={get_column_letter(col_coef_antigo)}{linha}*FATOR"
+                    resultado["formulas_fator"] += 1
+            else:
+                cell = sheet.cell(row=linha, column=col_preco)
+                if not isinstance(cell, MergedCell):
+                    cell.value = (
+                        f"=ROUND({get_column_letter(col_preco_antigo)}{linha}*FATOR, 2)"
+                    )
+                    resultado["formulas_fator"] += 1
+
+        # ==========================================
+        # BUSCAR AUXILIAR (criar hyperlink interno e fórmula)
+        # ==========================================
+        if secao_atual.get("buscarAuxiliar"):
+            if cell_desc.hyperlink:
+                continue
+
+            codigo_limpo = _limpar_codigo(valor_str)
+
+            # Criar hyperlink interno (aponta para própria planilha)
+            if codigo_limpo and len(codigo_limpo) >= 5:
+                _add_hyperlink(
+                    sheet,
+                    linha,
+                    col_desc,
+                    nome_planilha,
+                    linha,
+                )
+                resultado["hyperlinks"] += 1
+
+                # Adicionar fórmula =G{linha} no preço unitário
+                for linha_valor in range(linha + 1, secao_atual["linha_fim"]):
+                    val_e = sheet.cell(row=linha_valor, column=5).value
+                    if val_e and VALOR_LABEL.upper() in str(val_e).upper():
+                        cell_preco = sheet.cell(row=linha, column=col_preco)
+                        if not isinstance(cell_preco, MergedCell):
+                            cell_preco.value = f"=G{linha_valor}"
+                            resultado["formulas_auxiliar"] += 1
+                        break
 
     return resultado
 
@@ -361,7 +479,7 @@ def _encontrar_todas_secoes(sheet, col_desc, mapa_config):
     colunas_busca = list(range(col_desc, col_desc + 10))
 
     # Primeiro, encontrar TODAS as linhas onde aparece o nome de alguma seção
-    linhas_nomes = {}  # nome_upper -> [(linha, nome_original)]
+    linhas_nomes = {}
 
     for linha in range(1, max_row + 1):
         for col in colunas_busca:
@@ -402,7 +520,6 @@ def _encontrar_todas_secoes(sheet, col_desc, mapa_config):
 
     # Para cada seção encontrada, encontrar o total correspondente
     for nome_upper, ocorrencias in linhas_nomes.items():
-        # Encontrar config pelo nome
         config_encontrada = None
         for config in mapa_config:
             if config["nome"].upper() == nome_upper:
@@ -478,19 +595,15 @@ def _verificar_troca_secao(
     linha, valor_upper, secoes_encontradas, secao_atual, mapa_nome_inicia
 ):
     """Verifica se há troca de seção na linha atual."""
-    # Se já está em uma seção, verificar se saiu dela
     if secao_atual:
         if linha == secao_atual["linha_inicio"]:
-            # Está na linha do nome da seção atual
             return secao_atual
         if linha >= secao_atual["linha_fim"]:
-            # Passou da linha fim, sair da seção
             secao_atual = None
 
     # Verificar se entrou em uma nova seção
     for secao in secoes_encontradas:
         if linha == secao["linha_inicio"]:
-            # Encontrar filtros para esta seção
             iniciaPor = ""
             naoIniciaPor = ""
             for item in mapa_nome_inicia:

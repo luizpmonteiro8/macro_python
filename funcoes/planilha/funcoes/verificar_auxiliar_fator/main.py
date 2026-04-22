@@ -5,13 +5,19 @@ from .mapa_mescladas import construir_mapa_mescladas
 from .processar import processar_planilha
 
 
-def verificar_auxiliar_fator(workbook, dados, todos_item):
+def verificar_auxiliar_fator(workbook, dados, todos_item, mapa_titulos_aux=None):
     """Processa composições e auxiliares.
 
     Fluxo:
     1. Extrai config do valores_item.json
-    2. Processa COMPOSICOES AUXILIARES primeiro (constrói mapa de códigos)
+    2. Processa COMPOSICOES AUXILIARES primeiro (constrói mapa de códigos se não fornecido)
     3. Processa COMPOSICOES depois (usa mapa para hyperlinks)
+
+    Args:
+        workbook: Workbook do openpyxl
+        dados: Configurações do JSON
+        todos_item: Itens do JSON
+        mapa_titulos_aux: Mapa pré-construído (opcional - recomendado para evitar deslocamento de linhas)
     """
     dados_itens = dados[0] if isinstance(dados, list) else dados
 
@@ -38,8 +44,9 @@ def verificar_auxiliar_fator(workbook, dados, todos_item):
     sheet_comp = workbook[planilha_comp]
     sheet_aux = workbook[planilha_aux]
 
-    # Mapa de códigos - construído ANTES de processar_planilha usando células mescladas
-    mapa_titulos_aux = construir_mapa_mescladas(sheet_aux, col_desc)
+    # Mapa de códigos - usa o fornecido OU constrói se não fornecido
+    if mapa_titulos_aux is None:
+        mapa_titulos_aux = construir_mapa_mescladas(sheet_aux, col_desc, mapa_config)
 
     # Processar COMPOSICOES AUXILIARES primeiro (já tem mapa pré-construído)
     resultado_aux = processar_planilha(

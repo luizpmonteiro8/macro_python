@@ -2,6 +2,7 @@ TEXTOS_SKIP = {
     "MATERIAL",
     "MÃO DE OBRA",
     "SERVIÇO",
+    "SERVICO",
     "EQUIPAMENTO",
     "TOTAL",
     "PREÇO",

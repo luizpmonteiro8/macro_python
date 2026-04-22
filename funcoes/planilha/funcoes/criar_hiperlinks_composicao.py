@@ -19,6 +19,7 @@ from funcoes.planilha.funcoes.adicionar_fator_comp import (
 
 
 def criar_hiperlinks_composicao(workbook, dados, lin_ini, lin_fim):
+    # usado no planilha orcamentaria
     sheet = workbook[get_planilha_orcamentaria(dados)]
     sheet_comp = workbook[get_planilha_comp(dados)]
     sheet_comp_max = sheet_comp.max_row + 1

@@ -12,15 +12,18 @@ sys.stdout.reconfigure(encoding="utf-8")
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from openpyxl import load_workbook
+from openpyxl.utils import column_index_from_string
 import openpyxl
 
 # Importar funções da macro
 from config.open_config import open_valores_colunas, open_valores_item
 from funcoes.common.buscar_palavras import buscar_palavra
 from funcoes.planilha.funcoes.verificar_auxiliar_fator import verificar_auxiliar_fator
-from funcoes.planilha.funcoes.criar_hiperlinks_auxiliares import (
-    criar_hiperlinks_auxiliares,
-)
+
+# DESATIVADO: criar_hiperlinks_auxiliares agora é feito por verificar_auxiliar_fator
+# from funcoes.planilha.funcoes.criar_hiperlinks_auxiliares import (
+#     criar_hiperlinks_auxiliares,
+# )
 from funcoes.common.custo_unitario import custo_unitario_execucao
 from funcoes.planilha.funcoes.resume import resumo_totais
 from funcoes.planilha.funcoes.adicionar_bdi import adicionar_bdi
@@ -60,6 +63,21 @@ def processar_arquivo(caminho_entrada, caminho_saida, dados, todos_item):
     sheet_name = get_planilha_orcamentaria(dados)
     print(f"    Planilha: {sheet_name}")
     sheet_planilha = workbook[sheet_name]
+
+    # Construir mapa de códigos ANTES das modificações (evita deslocamento de linhas)
+    print(">>> Construindo mapa de códigos para hyperlinks...")
+    from funcoes.planilha.funcoes.verificar_auxiliar_fator.mapa_mescladas import (
+        construir_mapa_mescladas,
+    )
+    from funcoes.planilha.funcoes.verificar_auxiliar_fator.config import (
+        extrair_configuracoes,
+    )
+
+    dados_itens = dados[0] if isinstance(dados, list) else dados
+    mapa_nome_inicia, mapa_config = extrair_configuracoes(todos_item)
+    sheet_aux = workbook[dados_itens.get("planilhaAuxiliar", "COMPOSICOES AUXILIARES")]
+    col_desc = column_index_from_string(dados_itens.get("composicaoDescricao", "A"))
+    mapa_titulos_aux = construir_mapa_mescladas(sheet_aux, col_desc, mapa_config)
 
     # Obter colunas e valores
     print(">>> Obtendo colunas e valores do JSON...")
@@ -101,8 +119,9 @@ def processar_arquivo(caminho_entrada, caminho_saida, dados, todos_item):
     print(">>> Criando hyperlinks com COMPOSICOES...")
     criar_hiperlinks_composicao(workbook, dados, linhaIni, linhafinal)
 
-    print(">>> Criando hyperlinks para itens auxiliares...")
-    criar_hiperlinks_auxiliares(workbook, dados, todos_item)
+    # DESATIVADO: agora verificar_auxiliar_fator faz isso com base em valores_item.json
+    # print(">>> Criando hyperlinks para itens auxiliares...")
+    # criar_hiperlinks_auxiliares(workbook, dados, todos_item)
 
     print(">>> Calculando custo unitário de execução...")
     custo_unitario_execucao(workbook, dados)

@@ -17,9 +17,6 @@ from funcoes.planilha.funcoes.validar_arquivo_excel import validar_arquivo_excel
 from funcoes.planilha.funcoes.verificar_auxiliar_fator import (
     verificar_auxiliar_fator,
 )
-from funcoes.planilha.funcoes.criar_hiperlinks_auxiliares import (
-    criar_hiperlinks_auxiliares,
-)
 from funcoes.common.custo_unitario import custo_unitario_execucao
 from funcoes.get.get_linhas_json import (
     get_coluna_final,
@@ -145,9 +142,6 @@ def selecionar_arquivo_excel(self):
 
             print(">>> Criando hyperlinks com COMPOSICOES...")
             criar_hiperlinks_composicao(workbook, self.dados, linhaIni, linhafinal)
-
-            print(">>> Criando hyperlinks para itens auxiliares...")
-            criar_hiperlinks_auxiliares(workbook, self.dados, self.todos_item)
 
             print(">>> Calculando custo unitário de execução...")
             custo_unitario_execucao(workbook, self.dados)

@@ -62,27 +62,32 @@ def processar_planilha(
 
         # ==========================================
         # IDENTIFICAR INÍCIO DE SEÇÃO (pelo nome)
+        # Mudar de seção quando encontrar nome de seção conhecido,
+        # mesmo que já esteja em outra seção (serve quando seção anterior não tem TOTAL)
         # ==========================================
-        if secao_atual is None:
-            for config in mapa_config:
-                if valor_upper == config["nome"].upper():
-                    # Encontrou início de nova seção
-                    secao_atual = config["nome"]
-                    linha_inicio_secao = linha
-                    config_secao = config
-                    # Reset mapa da seção para evitar contaminação de seções anteriores
-                    mapa_secao_atual = {}
+        secao_encontrada = None
+        for config in mapa_config:
+            if valor_upper == config["nome"].upper():
+                secao_encontrada = config
+                break
 
-                    # Se for auxiliar, construir mapa de códigos da seção
-                    if is_auxiliar:
-                        codigo = _limpar_codigo(valor_str)
-                        if codigo and len(codigo) >= 5:
-                            # Buscar linha com VALOR: abaixo
-                            linha_valor = buscar_linha_valor(sheet, linha, max_row)
-                            if linha_valor:
-                                mapa_titulos_aux[codigo.upper()] = linha_valor
-                                mapa_secao_atual[codigo.upper()] = linha_valor
-                    break
+        if secao_encontrada:
+            secao_atual = secao_encontrada["nome"]
+            linha_inicio_secao = linha
+            config_secao = secao_encontrada
+            # Reset mapa da seção para evitar contaminação de seções anteriores
+            mapa_secao_atual = {}
+
+            # Se for auxiliar, construir mapa de códigos da seção
+            if is_auxiliar:
+                codigo = _limpar_codigo(valor_str)
+                if codigo and len(codigo) >= 5:
+                    # Buscar linha com VALOR: abaixo
+                    linha_valor = buscar_linha_valor(sheet, linha, max_row)
+                    if linha_valor:
+                        mapa_titulos_aux[codigo.upper()] = linha_valor
+                        mapa_secao_atual[codigo.upper()] = linha_valor
+            continue
 
         # ==========================================
         # IDENTIFICAR FIM DE SEÇÃO (pelo total)
@@ -94,6 +99,7 @@ def processar_planilha(
                 # Reset para próxima seção
                 secao_atual = None
                 linha_inicio_secao = None
+                linha_fim_secao = None  # IMPORTANTE: reset para permitir próxima seção
                 config_secao = None
                 mapa_secao_atual = {}
                 continue
@@ -195,36 +201,22 @@ def adicionar_fator(
     """Adiciona fórmula de fator na linha."""
     count = 0
     if config_secao.get("adicionarFator") == "Sim":
-        val_coef = sheet.cell(row=linha, column=col_coef).value
-        val_preco = sheet.cell(row=linha, column=col_preco).value
-
-        # Pular se já tem hyperlink (não sobrescrever fórmulas de buscar_auxiliar)
-        cell_desc = sheet.cell(row=linha, column=col_coef)
-        # Verificar se já tem hyperlink na célula de descrição
-        desc_cell = sheet.cell(row=linha, column=col_coef - 2)  # col_desc
-        if desc_cell.hyperlink:
-            return 0
-
-        # Pular se já tem *FATOR
-        if (
-            val_coef and isinstance(val_coef, str) and "*FATOR" in val_coef.upper()
-        ) or (
-            val_preco and isinstance(val_preco, str) and "*FATOR" in val_preco.upper()
-        ):
-            return 0
-
         if config_secao.get("fatorCoeficiente"):
             cell = sheet.cell(row=linha, column=col_coef)
             if not isinstance(cell, MergedCell):
-                cell.value = f"={get_column_letter(col_coef_antigo)}{linha}*FATOR"
-                count = 1
+                # NÃO sobrescrever se já tiver hyperlink (evita referência circular)
+                if not sheet.cell(row=linha, column=1).hyperlink:
+                    cell.value = f"={get_column_letter(col_coef_antigo)}{linha}*FATOR"
+                    count = 1
         else:
             cell = sheet.cell(row=linha, column=col_preco)
             if not isinstance(cell, MergedCell):
-                cell.value = (
-                    f"=ROUND({get_column_letter(col_preco_antigo)}{linha}*FATOR, 2)"
-                )
-                count = 1
+                # NÃO sobrescrever se já tiver hyperlink (evita referência circular)
+                if not sheet.cell(row=linha, column=1).hyperlink:
+                    cell.value = (
+                        f"=ROUND({get_column_letter(col_preco_antigo)}{linha}*FATOR, 2)"
+                    )
+                    count = 1
 
     return count
 
@@ -261,14 +253,19 @@ def buscar_auxiliar(
             linha_valor = mapa_secao_atual[codigo_upper]
 
         if linha_valor:
-            # Criar hyperlink
+            # NÃO criar hyperlink/fórmula se já estamos na aba auxiliar
+            # (evita referência circular: a aba auxiliar não deve referenciar a si mesma)
+            if is_auxiliar:
+                # Apenas marca no mapa, não cria hyperlink nem fórmula
+                return resultado
+
+            # Criar hyperlink apenas na aba principal (não auxiliar)
             _add_hyperlink(sheet, linha, col_desc, planilha_destino, linha_valor)
             resultado["hyperlinks"] = 1
 
-            # Adicionar fórmula no preço unitário
+            # Adicionar fórmula no preço unitário (referenciando a aba auxiliar)
             cell_preco = sheet.cell(row=linha, column=col_preco)
             if not isinstance(cell_preco, MergedCell):
-                # Sempre referenciar a planilha destino para hyperlinks
                 cell_preco.value = f"='{planilha_destino}'!G{linha_valor}"
                 resultado["formulas_auxiliar"] = 1
 

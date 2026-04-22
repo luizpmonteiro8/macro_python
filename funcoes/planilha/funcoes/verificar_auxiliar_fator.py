@@ -50,9 +50,9 @@ def _add_hyperlink(sheet, row, col, planilha, linha_ref):
             )
 
 
-def _construir_mapa_mescladas(sheet, col_item_idx):
+def _construir_mapa_mescladas(sheet, col_item_idx, secoes_encontradas=None):
     """Constrói mapa de códigos para hyperlinks usando APENAS células mescladas
-    com mais de 3 células.
+    com mais de 3 células. Retorna dict com {codigo: {linha_titulo, linha_valor}}.
     """
     mapa_titulos = {}
 
@@ -71,7 +71,83 @@ def _construir_mapa_mescladas(sheet, col_item_idx):
             if val:
                 codigo = _limpar_codigo(str(val))
                 if codigo and len(codigo) >= 5:
-                    mapa_titulos[codigo.upper()] = mr.min_row
+                    linha_titulo = mr.min_row
+                    linha_valor = None
+
+                    # Se temos as seções, buscar o VALOR: correspondente
+                    if secoes_encontradas:
+                        secao_encontrada = None
+
+                        # Encontrar a seção que contém esta linha
+                        for secao in secoes_encontradas:
+                            if (
+                                secao["linha_inicio"]
+                                <= linha_titulo
+                                <= secao["linha_fim"]
+                            ):
+                                secao_encontrada = secao
+                                break
+
+                        # Se encontrou seção que contém o código
+                        if secao_encontrada:
+                            # Buscar VALOR: nesta seção
+                            for linha_busca in range(
+                                linha_titulo + 1, secao_encontrada["linha_fim"]
+                            ):
+                                val_e = sheet.cell(row=linha_busca, column=5).value
+                                if val_e and VALOR_LABEL.upper() in str(val_e).upper():
+                                    linha_valor = linha_busca
+                                    break
+                            # Se não encontrou na seção atual, buscar nas próximas
+                            if not linha_valor:
+                                for secao_prox in secoes_encontradas:
+                                    if (
+                                        secao_prox["linha_inicio"]
+                                        > secao_encontrada["linha_inicio"]
+                                    ):
+                                        for linha_busca in range(
+                                            linha_titulo + 1,
+                                            secao_prox["linha_fim"],
+                                        ):
+                                            val_e = sheet.cell(
+                                                row=linha_busca, column=5
+                                            ).value
+                                            if (
+                                                val_e
+                                                and VALOR_LABEL.upper()
+                                                in str(val_e).upper()
+                                            ):
+                                                linha_valor = linha_busca
+                                                break
+                                        if linha_valor:
+                                            break
+                                    if linha_valor:
+                                        break
+                        else:
+                            # Código fora de qualquer seção - buscar na próxima seção
+                            for secao_prox in secoes_encontradas:
+                                if secao_prox["linha_inicio"] > linha_titulo:
+                                    for linha_busca in range(
+                                        linha_titulo + 1,
+                                        secao_prox["linha_fim"],
+                                    ):
+                                        val_e = sheet.cell(
+                                            row=linha_busca, column=5
+                                        ).value
+                                        if (
+                                            val_e
+                                            and VALOR_LABEL.upper()
+                                            in str(val_e).upper()
+                                        ):
+                                            linha_valor = linha_busca
+                                            break
+                                    if linha_valor:
+                                        break
+
+                    mapa_titulos[codigo.upper()] = {
+                        "linha_titulo": linha_titulo,
+                        "linha_valor": linha_valor,
+                    }
 
     return mapa_titulos
 
@@ -149,13 +225,21 @@ def verificar_auxiliar_fator(workbook, dados, todos_item):
     sheet_aux = workbook[planilha_aux]
 
     # ==========================================
+    # ENCONTRAR TODAS AS SEÇÕES PRIMEIRO
+    # ==========================================
+    secoes_comp = _encontrar_todas_secoes(sheet_comp, col_desc, mapa_config)
+    secoes_aux = _encontrar_todas_secoes(sheet_aux, col_desc, mapa_config)
+
+    # ==========================================
     # CONSTRUIR MAPA DE TÍTULOS DA AUXILIAR
     # Usando células mescladas (apenas títulos principais)
+    # Já inclui linha_valor para cada código
     # ==========================================
-    mapa_titulos_aux = _construir_mapa_mescladas(sheet_aux, col_desc)
+    mapa_titulos_aux = _construir_mapa_mescladas(sheet_aux, col_desc, secoes_aux)
 
     # ==========================================
     # PROCESSAR COMPOSICOES AUXILIARES
+    # Passa o mapa_titulos_aux para usar linha_valor correta
     # ==========================================
     resultado_aux = _processar_planilha_auxiliar(
         sheet_aux,
@@ -167,6 +251,7 @@ def verificar_auxiliar_fator(workbook, dados, todos_item):
         mapa_nome_inicia,
         mapa_config,
         planilha_aux,
+        mapa_titulos_aux,
     )
 
     # ==========================================
@@ -314,7 +399,7 @@ def _processar_planilha(
                     resultado["formulas_fator"] += 1
 
         # ==========================================
-        # BUSCAR AUXILIAR (criar hyperlink)
+        # BUSCAR AUXILIAR (criar hyperlink e fórmula)
         # ==========================================
         if secao_atual.get("buscarAuxiliar") and mapa_busca:
             if cell_desc.hyperlink:
@@ -324,14 +409,26 @@ def _processar_planilha(
             if codigo_limpo and len(codigo_limpo) >= 5:
                 codigo_upper_limpo = codigo_limpo.upper()
                 if codigo_upper_limpo in mapa_busca:
+                    dados_codigo = mapa_busca[codigo_upper_limpo]
+                    linha_titulo = dados_codigo["linha_titulo"]
+                    linha_valor = dados_codigo["linha_valor"]
+
+                    # Criar hyperlink
                     _add_hyperlink(
                         sheet,
                         linha,
                         col_desc,
                         planilha_aux,
-                        mapa_busca[codigo_upper_limpo],
+                        linha_titulo,
                     )
                     resultado["hyperlinks"] += 1
+
+                    # Adicionar fórmula no preço unitário se tiver linha_valor
+                    if linha_valor:
+                        cell_preco = sheet.cell(row=linha, column=col_preco)
+                        if not isinstance(cell_preco, MergedCell):
+                            cell_preco.value = f"='{planilha_aux}'!G{linha_valor}"
+                            resultado["formulas_auxiliar"] += 1
 
     return resultado
 
@@ -346,6 +443,7 @@ def _processar_planilha_auxiliar(
     mapa_nome_inicia,
     mapa_config,
     nome_planilha,
+    mapa_titulos_aux=None,
 ):
     """Processa planilha AUXILIAR: aplica fator e hyperlinks internos."""
     resultado = {
@@ -467,15 +565,35 @@ def _processar_planilha_auxiliar(
                 )
                 resultado["hyperlinks"] += 1
 
-                # Adicionar fórmula =G{linha} no preço unitário
-                for linha_valor in range(linha + 1, secao_atual["linha_fim"]):
-                    val_e = sheet.cell(row=linha_valor, column=5).value
-                    if val_e and VALOR_LABEL.upper() in str(val_e).upper():
-                        cell_preco = sheet.cell(row=linha, column=col_preco)
-                        if not isinstance(cell_preco, MergedCell):
-                            cell_preco.value = f"=G{linha_valor}"
-                            resultado["formulas_auxiliar"] += 1
-                        break
+                # Se temos o mapa de títulos, usar o linha_valor calculado
+                # Em vez de fazer busca dinâmica que pode encontrar VALOR: errado
+                if mapa_titulos_aux:
+                    codigo_upper = codigo_limpo.upper()
+                    if codigo_upper in mapa_titulos_aux:
+                        dados_codigo = mapa_titulos_aux[codigo_upper]
+                        linha_valor = dados_codigo.get("linha_valor")
+
+                        # Adicionar fórmula apenas se linha_valor está depois do código
+                        # e não aponta para a própria seção (evitar referência circular)
+                        if linha_valor and linha_valor > linha:
+                            cell_preco = sheet.cell(row=linha, column=col_preco)
+                            if not isinstance(cell_preco, MergedCell):
+                                cell_preco.value = f"=G{linha_valor}"
+                                resultado["formulas_auxiliar"] += 1
+                else:
+                    # Fallback: busca limitada ao fim da seção atual
+                    linha_fim_busca = secao_atual["linha_fim"]
+                    busca_max = min(linha_fim_busca - 1, linha + 50)
+
+                    for linha_valor in range(linha + 1, busca_max):
+                        val_e = sheet.cell(row=linha_valor, column=5).value
+                        if val_e and VALOR_LABEL.upper() in str(val_e).upper():
+                            cell_preco = sheet.cell(row=linha, column=col_preco)
+                            if not isinstance(cell_preco, MergedCell):
+                                if linha_valor > linha:
+                                    cell_preco.value = f"=G{linha_valor}"
+                                    resultado["formulas_auxiliar"] += 1
+                            break
 
     return resultado
 

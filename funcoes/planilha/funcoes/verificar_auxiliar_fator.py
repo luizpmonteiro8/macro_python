@@ -51,20 +51,28 @@ def _add_hyperlink(sheet, row, col, planilha, linha_ref):
 
 
 def _construir_mapa_mescladas(sheet, col_item_idx):
-    """Constrói mapa de códigos para hyperlinks usando APENAS células mescladas.
-
-    Isso garante que apenas títulos principais sejam mapeados,
-    evitando sub-itens dentro de composições.
+    """Constrói mapa de códigos para hyperlinks usando APENAS células mescladas
+    com mais de 3 células.
     """
     mapa_titulos = {}
+
     for mr in sheet.merged_cells.ranges:
-        # Verificar se a célula mesclada inclui a coluna de descrição
+        # Calcula tamanho da mesclagem
+        total_celulas = (mr.max_row - mr.min_row + 1) * (mr.max_col - mr.min_col + 1)
+
+        # Filtrar apenas mesclagens maiores que 3 células
+        if total_celulas <= 3:
+            continue
+
+        # Verificar se inclui a coluna desejada
         if mr.min_col <= col_item_idx <= mr.max_col:
             val = sheet.cell(row=mr.min_row, column=col_item_idx).value
+
             if val:
                 codigo = _limpar_codigo(str(val))
                 if codigo and len(codigo) >= 5:
                     mapa_titulos[codigo.upper()] = mr.min_row
+
     return mapa_titulos
 
 

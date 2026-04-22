@@ -159,7 +159,7 @@ def selecionar_arquivo_excel(self):
             # ÚLTIMAS VERIFICAÇÕES - Antes de salvar (FUNÇÃO UNIFICADA)
             # ============================================
             print(">>> Verificando fórmulas e fatores dos itens (função unificada)...")
-            resultados = verificar_auxiliar_fator(workbook, self.dados)
+            resultados = verificar_auxiliar_fator(workbook, self.dados, self.todos_item)
             print(
                 f">>> Total fórmulas: {resultados['formulas_auxiliares_comp'] + resultados['formulas_auxiliares_aux'] + resultados['formulas_fator_comp'] + resultados['formulas_fator_aux']}"
             )

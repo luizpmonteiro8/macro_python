@@ -1,6 +1,7 @@
 from openpyxl.utils import column_index_from_string
 
 from .config import extrair_configuracoes
+from .mapa_mescladas import construir_mapa_mescladas
 from .processar import processar_planilha
 
 
@@ -37,10 +38,10 @@ def verificar_auxiliar_fator(workbook, dados, todos_item):
     sheet_comp = workbook[planilha_comp]
     sheet_aux = workbook[planilha_aux]
 
-    # Mapa de códigos (construído na auxiliar, usado na comp)
-    mapa_titulos_aux = {}
+    # Mapa de códigos - construído ANTES de processar_planilha usando células mescladas
+    mapa_titulos_aux = construir_mapa_mescladas(sheet_aux, col_desc)
 
-    # Processar COMPOSICOES AUXILIARES primeiro
+    # Processar COMPOSICOES AUXILIARES primeiro (já tem mapa pré-construído)
     resultado_aux = processar_planilha(
         sheet_aux,
         col_desc,

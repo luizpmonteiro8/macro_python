@@ -556,30 +556,37 @@ def _processar_planilha_auxiliar(
 
             # Criar hyperlink interno (aponta para própria planilha)
             if codigo_limpo and len(codigo_limpo) >= 5:
+                codigo_upper = codigo_limpo.upper()
+
+                # Determinar qual linha usar para o hyperlink
+                linha_hyperlink = linha  # padrão: própria linha
+                linha_valor = None
+
+                # Se temos o mapa de títulos, usar os valores corretos
+                if mapa_titulos_aux and codigo_upper in mapa_titulos_aux:
+                    dados_codigo = mapa_titulos_aux[codigo_upper]
+                    linha_hyperlink = dados_codigo.get("linha_titulo", linha)
+                    linha_valor = dados_codigo.get("linha_valor")
+
                 _add_hyperlink(
                     sheet,
                     linha,
                     col_desc,
                     nome_planilha,
-                    linha,
+                    linha_hyperlink,
                 )
                 resultado["hyperlinks"] += 1
 
-                # Se temos o mapa de títulos, usar o linha_valor calculado
-                # Em vez de fazer busca dinâmica que pode encontrar VALOR: errado
-                if mapa_titulos_aux:
-                    codigo_upper = codigo_limpo.upper()
-                    if codigo_upper in mapa_titulos_aux:
-                        dados_codigo = mapa_titulos_aux[codigo_upper]
-                        linha_valor = dados_codigo.get("linha_valor")
+                # Se temos o linha_valor calculado, adicionar fórmula
+                if linha_valor:
 
-                        # Adicionar fórmula apenas se linha_valor está depois do código
-                        # e não aponta para a própria seção (evitar referência circular)
-                        if linha_valor and linha_valor > linha:
-                            cell_preco = sheet.cell(row=linha, column=col_preco)
-                            if not isinstance(cell_preco, MergedCell):
-                                cell_preco.value = f"=G{linha_valor}"
-                                resultado["formulas_auxiliar"] += 1
+                    # Adicionar fórmula apenas se linha_valor está depois do código
+                    # e não aponta para a própria seção (evitar referência circular)
+                    if linha_valor and linha_valor > linha:
+                        cell_preco = sheet.cell(row=linha, column=col_preco)
+                        if not isinstance(cell_preco, MergedCell):
+                            cell_preco.value = f"=G{linha_valor}"
+                            resultado["formulas_auxiliar"] += 1
                 else:
                     # Fallback: busca limitada ao fim da seção atual
                     linha_fim_busca = secao_atual["linha_fim"]

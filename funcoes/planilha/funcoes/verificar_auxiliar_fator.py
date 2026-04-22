@@ -52,26 +52,52 @@ def _add_hyperlink(sheet, row, col, planilha, linha_ref):
 
 def _construir_mapa_mescladas(sheet, col_item_idx, secoes_encontradas=None):
     """Constrói mapa de códigos para hyperlinks usando APENAS células mescladas
-    com mais de 3 células. Retorna dict com {codigo: {linha_titulo, linha_valor}}.
+    com mais de 3 células na coluna desejada. Retorna dict com
+    {codigo: {linha_titulo, linha_valor}}.
+
+    Percorre linha por linha para encontrar títulos mesclados.
     """
     mapa_titulos = {}
+    max_row = min(sheet.max_row, 20000)
 
-    for mr in sheet.merged_cells.ranges:
-        # Calcula tamanho da mesclagem
-        total_celulas = (mr.max_row - mr.min_row + 1) * (mr.max_col - mr.min_col + 1)
+    # Processar linha por linha
+    for linha in range(1, max_row + 1):
+        cell = sheet.cell(row=linha, column=col_item_idx)
 
-        # Filtrar apenas mesclagens maiores que 3 células
-        if total_celulas <= 3:
-            continue
+        # Verificar se a célula é parte de uma célula mesclada
+        if isinstance(cell, MergedCell):
+            # Encontrar o intervalo mesclado ao qual esta célula pertence
+            merged_range = None
+            for mr in sheet.merged_cells.ranges:
+                if (
+                    mr.min_row <= linha <= mr.max_row
+                    and mr.min_col <= col_item_idx <= mr.max_col
+                ):
+                    merged_range = mr
+                    break
 
-        # Verificar se inclui a coluna desejada
-        if mr.min_col <= col_item_idx <= mr.max_col:
-            val = sheet.cell(row=mr.min_row, column=col_item_idx).value
+            # Se não encontrou intervalo mesclado, continuar
+            if not merged_range:
+                continue
+
+            # Verificar se esta célula é a primeira do intervalo (min_row)
+            if linha != merged_range.min_row:
+                continue
+
+            # Filtrar apenas mesclagens maiores que 3 células
+            total_celulas = (merged_range.max_row - merged_range.min_row + 1) * (
+                merged_range.max_col - merged_range.min_col + 1
+            )
+            if total_celulas <= 3:
+                continue
+
+            # Obter o valor do título
+            val = sheet.cell(row=merged_range.min_row, column=col_item_idx).value
 
             if val:
                 codigo = _limpar_codigo(str(val))
                 if codigo and len(codigo) >= 5:
-                    linha_titulo = mr.min_row
+                    linha_titulo = merged_range.min_row
                     linha_valor = None
 
                     # Se temos as seções, buscar o VALOR: correspondente

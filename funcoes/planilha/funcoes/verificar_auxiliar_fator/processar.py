@@ -27,6 +27,8 @@ def processar_planilha(
     Aplica:
     - adicionarFator: "Sim" → adiciona fórmula com fator
     - buscarAuxiliar: "Sim" → cria hyperlink e fórmula referencing planilha auxiliar
+
+    Suporta múltiplas configs para mesmo nome de seção (ex: dois "Serviço" com filtros diferentes).
     """
     resultado = {
         "formulas_fator": 0,
@@ -40,7 +42,7 @@ def processar_planilha(
     secao_atual = None
     linha_inicio_secao = None
     linha_fim_secao = None
-    config_secao = None
+    configs_secao = []  # Lista de configs para a seção atual (suporta múltiplas)
 
     # Mapa de códigos por seção (evita sobrescrever códigos de outras seções)
     mapa_secao_atual = {}
@@ -61,47 +63,47 @@ def processar_planilha(
 
         # ==========================================
         # IDENTIFICAR INÍCIO DE SEÇÃO (pelo nome)
-        # Mudar de seção quando encontrar nome de seção conhecido,
-        # mesmo que já esteja em outra seção (serve quando seção anterior não tem TOTAL)
+        # Coleta TODAS as configs com mesmo nome (suporta item11 e item18 ambos "Serviço")
         # ==========================================
-        secao_encontrada = None
+        configs_encontradas = []
         for config in mapa_config:
             if valor_upper == config["nome"].upper():
-                secao_encontrada = config
-                break
+                configs_encontradas.append(config)
 
-        if secao_encontrada:
-            secao_atual = secao_encontrada["nome"]
+        if configs_encontradas:
+            secao_atual = configs_encontradas[0]["nome"]
             linha_inicio_secao = linha
-            config_secao = secao_encontrada
+            configs_secao = configs_encontradas  # Armazena TODAS as configs
             # Reset mapa da seção para evitar contaminação de seções anteriores
             mapa_secao_atual = {}
             continue
 
         # ==========================================
         # IDENTIFICAR FIM DE SEÇÃO (pelo total)
+        # Usa a primeira config para determinar o total
         # ==========================================
-        if secao_atual and config_secao:
-            total_upper = config_secao.get("total", "").upper()
+        if secao_atual and configs_secao:
+            config_primeira = configs_secao[0]
+            total_upper = config_primeira.get("total", "").upper()
             if valor_upper == total_upper:
                 linha_fim_secao = linha
                 # Reset para próxima seção
                 secao_atual = None
                 linha_inicio_secao = None
                 linha_fim_secao = None  # IMPORTANTE: reset para permitir próxima seção
-                config_secao = None
+                configs_secao = []
                 mapa_secao_atual = {}
                 continue
 
         # ==========================================
         # PROCESSAR LINHAS DENTRO DA SEÇÃO
         # ==========================================
-        if secao_atual and config_secao and linha > linha_inicio_secao:
+        if secao_atual and configs_secao and linha > linha_inicio_secao:
             # Verificar se não mudou de seção
             if linha_fim_secao and linha >= linha_fim_secao:
                 secao_atual = None
                 linha_inicio_secao = None
-                config_secao = None
+                configs_secao = []
                 mapa_secao_atual = {}
                 continue
 
@@ -127,39 +129,68 @@ def processar_planilha(
             if not _codigo_valido(sheet, linha, col_desc):
                 continue
 
-            # Verificar filtros (iniciaPor, naoIniciaPor)
-            iniciaPor = ""
-            naoIniciaPor = ""
+            # ==========================================
+            # ENCONTRAR CONFIG ESPECÍFICA PARA ESTE CÓDIGO
+            # Baseado nos filtros iniciaPor/naoIniciaPor
+            # Prioridade: itens com filtros (iniciaPor/naoIniciaPor) são verificados primeiro
+            # ==========================================
+            config_especifica = None
+            melhor_prioridade = -1  # -1 = sem filtro, 0 = com filtro, 1 = não aplicável
+
             for item in mapa_nome_inicia:
-                if item["nome"].upper() == secao_atual.upper():
-                    iniciaPor = item.get("iniciaPor", "")
-                    naoIniciaPor = item.get("naoIniciaPor", "")
-                    break
+                if item["nome"].upper() != secao_atual.upper():
+                    continue
 
-            codigo_upper = valor_str.upper()
-            if iniciaPor and not codigo_upper.startswith(iniciaPor.upper()):
-                continue
-            if naoIniciaPor and codigo_upper.startswith(naoIniciaPor.upper()):
-                continue
+                ip = item.get("iniciaPor", "")
+                nip = item.get("naoIniciaPor", "")
+
+                # Verifica naoIniciaPor primeiro (exclusão)
+                if nip and valor_str.upper().startswith(nip.upper()):
+                    continue  # Match na exclusion, pula
+
+                # Verifica iniciaPor
+                if ip:
+                    if not valor_str.upper().startswith(ip.upper()):
+                        continue  # Não match, pula
+                    # Código match com filtro - alta prioridade
+                    prioridade = 0
+                else:
+                    # Sem filtro - baixa prioridade (usar só se não houver match melhor)
+                    prioridade = -1
+
+                # Encontrar config correspondente para este item
+                for cfg in configs_secao:
+                    if cfg["nome"].upper() == item["nome"].upper():
+                        # Seleciona a config com melhor prioridade
+                        # (prioridade menor = mais específico)
+                        if prioridade < melhor_prioridade or melhor_prioridade == -1:
+                            config_especifica = cfg
+                            melhor_prioridade = prioridade
+                        break
+
+            # Se não encontrou config específica, usa a primeira (comportamento original)
+            if not config_especifica:
+                config_especifica = configs_secao[0]
 
             # ==========================================
-            # ADICIONAR FATOR
+            # ADICIONAR FATOR (usando config específica)
             # ==========================================
-            resultado["formulas_fator"] += adicionar_fator(
-                sheet,
-                linha,
-                col_coef,
-                col_preco,
-                col_coef_antigo,
-                col_preco_antigo,
-                config_secao,
-                secao_atual,
-            )
+            if config_especifica:
+                resultado["formulas_fator"] += adicionar_fator(
+                    sheet,
+                    linha,
+                    col_coef,
+                    col_preco,
+                    col_coef_antigo,
+                    col_preco_antigo,
+                    config_especifica,
+                    secao_atual,
+                )
 
             # ==========================================
-            # BUSCAR AUXILIAR
+            # BUSCAR AUXILIAR (usando config específica)
             # ==========================================
-            if config_secao.get("buscarAuxiliar") == "Sim":
+            if config_especifica and config_especifica.get("buscarAuxiliar") == "Sim":
                 resultado_busca = buscar_auxiliar(
                     sheet,
                     linha,
@@ -225,7 +256,7 @@ def buscar_auxiliar(
         return resultado
 
     codigo_limpo = _limpar_codigo(valor_str)
-    if codigo_limpo and len(codigo_limpo) >= 5:
+    if codigo_limpo:
         codigo_upper = codigo_limpo.upper()
 
         # Buscar no mapa pré-construído (mapa_titulos_aux)

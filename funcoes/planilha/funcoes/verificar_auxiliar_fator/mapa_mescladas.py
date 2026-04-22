@@ -50,7 +50,7 @@ def construir_mapa_mescladas(sheet, col_item_idx, mapa_config=None):
                 codigo = partes[0]
                 codigo_upper = codigo.upper()
 
-                if codigo and len(codigo) >= 5:
+                if codigo:
                     # Buscar linha do VALOR: dentro do escopo da seção
                     linha_valor = buscar_linha_valor_escopo(sheet, linha + 1, max_row)
 

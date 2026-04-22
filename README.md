@@ -11,6 +11,7 @@
 3.9 - ler linha final usando max_row
 3.9.1 - busca auxiliares e composição apartir da ultima linha encontrada
 4 - adicionado verificar e adicionar fórmulas para itens com 'buscarAuxiliar': 'Sim' 
+4.1 - melhorado busca por auxiliar e forma de adicionar fator
 
 virtualenv .venv
 

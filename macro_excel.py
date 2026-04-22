@@ -76,7 +76,7 @@ class MacroExcel(tk.Tk):
     def __init__(self):
         super().__init__()
 
-        self.title("Macro excel 4.0")
+        self.title("Macro excel 4.1")
         self.geometry("1200x800")
 
         self.todos_dados = open_valores_colunas()
@@ -197,6 +197,9 @@ class MacroExcel(tk.Tk):
         )
 
         canvas.config(scrollregion=canvas.bbox("all"), yscrollcommand=scrollbar.set)
+
+        # Rolar para o topo ao iniciar
+        canvas.yview_moveto(0)
 
         # Configurar a função de rolagem do canvas
         canvas.bind_all(

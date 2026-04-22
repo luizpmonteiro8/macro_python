@@ -132,43 +132,42 @@ def processar_planilha(
             # ==========================================
             # ENCONTRAR CONFIG ESPECÍFICA PARA ESTE CÓDIGO
             # Baseado nos filtros iniciaPor/naoIniciaPor
-            # Prioridade: itens com filtros (iniciaPor/naoIniciaPor) são verificados primeiro
+            # CRÍTICO: mapa_nome_inicia e mapa_config têm mesma ordem,
+            # usar índice para mapear corretamente
             # ==========================================
             config_especifica = None
-            melhor_prioridade = -1  # -1 = sem filtro, 0 = com filtro, 1 = não aplicável
+            melhor_prioridade = -1  # -1 = sem filtro, 0 = com filtro
 
-            for item in mapa_nome_inicia:
+            for idx, item in enumerate(mapa_nome_inicia):
                 if item["nome"].upper() != secao_atual.upper():
                     continue
 
                 ip = item.get("iniciaPor", "")
                 nip = item.get("naoIniciaPor", "")
 
-                # Verifica naoIniciaPor primeiro (exclusão)
+                # Verifica naoIniciaPor (exclusão)
                 if nip and valor_str.upper().startswith(nip.upper()):
-                    continue  # Match na exclusion, pula
+                    continue
 
                 # Verifica iniciaPor
                 if ip:
                     if not valor_str.upper().startswith(ip.upper()):
-                        continue  # Não match, pula
-                    # Código match com filtro - alta prioridade
-                    prioridade = 0
+                        continue
+                    prioridade = 0  # Com filtro = alta prioridade
                 else:
-                    # Sem filtro - baixa prioridade (usar só se não houver match melhor)
-                    prioridade = -1
+                    prioridade = -1  # Sem filtro = baixa prioridade
 
-                # Encontrar config correspondente para este item
-                for cfg in configs_secao:
+                # Usar índice para encontrar config correta
+                if idx < len(mapa_config):
+                    cfg = mapa_config[idx]
+                    # Verificar se cfg corresponde a este item
                     if cfg["nome"].upper() == item["nome"].upper():
-                        # Seleciona a config com melhor prioridade
-                        # (prioridade menor = mais específico)
+                        # Seleciona config com melhor prioridade
                         if prioridade < melhor_prioridade or melhor_prioridade == -1:
                             config_especifica = cfg
                             melhor_prioridade = prioridade
-                        break
 
-            # Se não encontrou config específica, usa a primeira (comportamento original)
+            # Fallback: usar primeira config
             if not config_especifica:
                 config_especifica = configs_secao[0]
 

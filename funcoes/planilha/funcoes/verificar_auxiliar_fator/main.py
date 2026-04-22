@@ -48,7 +48,7 @@ def verificar_auxiliar_fator(workbook, dados, todos_item, mapa_titulos_aux=None)
     if mapa_titulos_aux is None:
         mapa_titulos_aux = construir_mapa_mescladas(sheet_aux, col_desc, mapa_config)
 
-    # Processar COMPOSICOES AUXILIARES primeiro (já tem mapa pré-construído)
+    # Processar COMPOSICOES AUXILIARES
     resultado_aux = processar_planilha(
         sheet_aux,
         col_desc,
@@ -60,10 +60,9 @@ def verificar_auxiliar_fator(workbook, dados, todos_item, mapa_titulos_aux=None)
         mapa_config,
         planilha_aux,
         mapa_titulos_aux,
-        is_auxiliar=True,
     )
 
-    # Processar COMPOSICOES depois
+    # Processar COMPOSICOES
     resultado_comp = processar_planilha(
         sheet_comp,
         col_desc,
@@ -75,7 +74,6 @@ def verificar_auxiliar_fator(workbook, dados, todos_item, mapa_titulos_aux=None)
         mapa_config,
         planilha_aux,
         mapa_titulos_aux,
-        is_auxiliar=False,
     )
 
     return {

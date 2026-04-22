@@ -17,7 +17,6 @@ def processar_planilha(
     mapa_config,
     planilha_destino,
     mapa_titulos_aux,
-    is_auxiliar=False,
 ):
     """FOR único percorrendo linhas, identificando seções e aplicando regras.
 
@@ -77,16 +76,6 @@ def processar_planilha(
             config_secao = secao_encontrada
             # Reset mapa da seção para evitar contaminação de seções anteriores
             mapa_secao_atual = {}
-
-            # Se for auxiliar, construir mapa de códigos da seção
-            if is_auxiliar:
-                codigo = _limpar_codigo(valor_str)
-                if codigo and len(codigo) >= 5:
-                    # Buscar linha com VALOR: abaixo
-                    linha_valor = buscar_linha_valor(sheet, linha, max_row)
-                    if linha_valor:
-                        mapa_titulos_aux[codigo.upper()] = linha_valor
-                        mapa_secao_atual[codigo.upper()] = linha_valor
             continue
 
         # ==========================================
@@ -178,9 +167,7 @@ def processar_planilha(
                     col_preco,
                     valor_str,
                     planilha_destino,
-                    mapa_secao_atual,  # Passar mapa da seção atual, não mapa_titulos_aux
-                    is_auxiliar,
-                    mapa_titulos_aux,  # Passar mapa completo para referência
+                    mapa_titulos_aux,
                 )
                 resultado["hyperlinks"] += resultado_busca["hyperlinks"]
                 resultado["formulas_auxiliar"] += resultado_busca["formulas_auxiliar"]
@@ -228,9 +215,7 @@ def buscar_auxiliar(
     col_preco,
     valor_str,
     planilha_destino,
-    mapa_secao_atual,
-    is_auxiliar,
-    mapa_titulos_aux=None,
+    mapa_titulos_aux,
 ):
     """Busca código no mapa e cria hyperlink/fórmula."""
     resultado = {"hyperlinks": 0, "formulas_auxiliar": 0}
@@ -243,31 +228,20 @@ def buscar_auxiliar(
     if codigo_limpo and len(codigo_limpo) >= 5:
         codigo_upper = codigo_limpo.upper()
 
-        # PRIORIDADE: buscar primeiro no mapa pré-construído (mapa_titulos_aux)
-        # Este mapa foi construído ANTES de processar_planilha usando células mescladas
-        linha_valor = None
+        # Buscar no mapa pré-construído (mapa_titulos_aux)
         if mapa_titulos_aux and codigo_upper in mapa_titulos_aux:
             linha_valor = mapa_titulos_aux[codigo_upper]
-        elif mapa_secao_atual and codigo_upper in mapa_secao_atual:
-            # Fallback para mapa da seção atual (construído durante processamento)
-            linha_valor = mapa_secao_atual[codigo_upper]
 
-        if linha_valor:
-            # NÃO criar hyperlink/fórmula se já estamos na aba auxiliar
-            # (evita referência circular: a aba auxiliar não deve referenciar a si mesma)
-            if is_auxiliar:
-                # Apenas marca no mapa, não cria hyperlink nem fórmula
-                return resultado
+            if linha_valor:
+                # Criar hyperlink
+                _add_hyperlink(sheet, linha, col_desc, planilha_destino, linha_valor)
+                resultado["hyperlinks"] = 1
 
-            # Criar hyperlink apenas na aba principal (não auxiliar)
-            _add_hyperlink(sheet, linha, col_desc, planilha_destino, linha_valor)
-            resultado["hyperlinks"] = 1
-
-            # Adicionar fórmula no preço unitário (referenciando a aba auxiliar)
-            cell_preco = sheet.cell(row=linha, column=col_preco)
-            if not isinstance(cell_preco, MergedCell):
-                cell_preco.value = f"='{planilha_destino}'!G{linha_valor}"
-                resultado["formulas_auxiliar"] = 1
+                # Adicionar fórmula no preço unitário (referenciando a aba auxiliar)
+                cell_preco = sheet.cell(row=linha, column=col_preco)
+                if not isinstance(cell_preco, MergedCell):
+                    cell_preco.value = f"='{planilha_destino}'!G{linha_valor}"
+                    resultado["formulas_auxiliar"] = 1
 
     return resultado
 

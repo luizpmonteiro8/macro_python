@@ -1,4 +1,5 @@
 from openpyxl import Workbook
+from openpyxl.utils import get_column_letter
 
 from funcoes.common.buscar_palavras import buscar_palavra_com_linha
 from funcoes.get.get_linhas_json import (
@@ -8,6 +9,23 @@ from funcoes.get.get_linhas_json import (
     get_planilha_preco_total,
     get_valor_total_resumo_string,
 )
+
+
+def _unmerge_and_set_cell(ws, cell_address, value):
+    """
+    Define o valor de uma célula, desfazendo mesclagem (merged cells)
+    se necessário para evitar o erro 'MergedCell' object attribute 'value' is read-only'.
+    """
+    try:
+        ws[cell_address].value = value
+    except AttributeError:
+        # É um MergedCell - precisa desfazer a mesclagem primeiro
+        for merged_range in list(ws.merged_cells.ranges):
+            if cell_address in merged_range:
+                ws.unmerge_cells(str(merged_range))
+                break
+        # Agora a célula é regular, pode escrever
+        ws[cell_address].value = value
 
 
 # pega nome no resumo buscao na planilha orcamentaria, adiciona forma da porcentagem adiciona os totais
@@ -21,7 +39,11 @@ def resumo_totais(workbook: Workbook, dados):
     resumoLinhaFinal = ws.max_row + 1
 
     linha_resumo_total = buscar_palavra_com_linha(
-        ws, get_coluna_total_resumo(dados), get_valor_total_resumo_string(dados), 1, resumoLinhaFinal
+        ws,
+        get_coluna_total_resumo(dados),
+        get_valor_total_resumo_string(dados),
+        1,
+        resumoLinhaFinal,
     )
 
     for x in range(1, ws.max_row + 1):
@@ -31,8 +53,12 @@ def resumo_totais(workbook: Workbook, dados):
                 wsOrcamento, "B", nome, 1, orcamentoLinhaFinal
             )
             if linha_inicial != -1:
-                ws[f'{"D"}{x}'].value = f"='{sheet_name}'!{coluna_total}{linha_inicial}"
-                ws[f'{"E"}{x}'].value = f"=(D{x}/$D${linha_resumo_total})*100"
+                _unmerge_and_set_cell(
+                    ws, f"D{x}", f"='{sheet_name}'!{coluna_total}{linha_inicial}"
+                )
+                _unmerge_and_set_cell(
+                    ws, f"E{x}", f"=(D{x}/$D${linha_resumo_total})*100"
+                )
 
     # totais
     linha_orcamento_total = buscar_palavra_com_linha(
@@ -43,12 +69,18 @@ def resumo_totais(workbook: Workbook, dados):
         orcamentoLinhaFinal,
     )
     if linha_orcamento_total != -1:
-        ws[f'{"D"}{linha_resumo_total}'].value = (
-            f"='{sheet_name}'!{coluna_total}{linha_orcamento_total}"
+        _unmerge_and_set_cell(
+            ws,
+            f"D{linha_resumo_total}",
+            f"='{sheet_name}'!{coluna_total}{linha_orcamento_total}",
         )
-        ws[f'{"D"}{linha_resumo_total-1}'].value = (
-            f"='{sheet_name}'!{coluna_total}{linha_orcamento_total-1}"
+        _unmerge_and_set_cell(
+            ws,
+            f"D{linha_resumo_total-1}",
+            f"='{sheet_name}'!{coluna_total}{linha_orcamento_total-1}",
         )
-        ws[f'{"D"}{linha_resumo_total-2}'].value = (
-            f"='{sheet_name}'!{coluna_total}{linha_orcamento_total-2}"
+        _unmerge_and_set_cell(
+            ws,
+            f"D{linha_resumo_total-2}",
+            f"='{sheet_name}'!{coluna_total}{linha_orcamento_total-2}",
         )
